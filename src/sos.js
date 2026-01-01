@@ -155,15 +155,44 @@ const Siervo = () => {
             return {};
         }
     }
+    
    
+// =====================================================================
+// 
+//  FUNCIONES AUXILIADORAS DE USO GENERAL
+//  
+// =====================================================================
+    
     /**
      * mapear
      * Función de ayuda para remapear el valor de un número
      * (parámetro "valor") perteneciente al rango inicial 
-     * [ini1-fin1], hacia el rango destino [ini2-fin2].
+     * [ini1-fin1] hacia el rango destino [ini2-fin2].
      */
     function mapear(valor, ini1, fin1, ini2, fin2) {
         return (valor - ini1) / (fin1 - ini1) * (fin2 - ini2) + ini2;
+    }
+    
+    /**
+     * aleatorio
+     * Devuelve un número al azar (float) mayor o igual al mínimo 
+     * especificado y menor que el máximo. Si estos parámetros no 
+     * son definidos, retorna un número aleatorio entre 0 y 1.
+     * El tercer parámetro indica, además, si el signo del número
+     * resultante también debe ser aleatorio.
+     */
+    function aleatorio(minimo, maximo, signoAleatorio = false) {
+        let numero = 0;
+        if (minimo === undefined || maximo === undefined) {
+            numero = Math.random();
+        }
+        else {
+            numero = Math.random() * (maximo - minimo) + minimo;
+        }
+        if (signoAleatorio) {
+            numero *= Math.sign(aleatorio(-1, 1, false)) ?? 1;
+        }
+        return numero;
     }
     
     
@@ -300,18 +329,17 @@ const Siervo = () => {
     
     
     // ===============================================================
-    // ===> Se exponen únicamente las funciones públicas del siervo
+    // ==> Se exponen únicamente las funciones públicas del siervo
     // ==> ("Revealing Module Pattern")
     // ===============================================================
     return {socorrista,
             obtenerClave,
             revelar,
-            recibirMensaje,
-            recuperarMensajes,
+            mapear,
+            aleatorio,
             crearEscena,
-            crearEscenaP5,
-            Contenedor
-          };
+            crearEscenaP5
+           };
 };
 
 

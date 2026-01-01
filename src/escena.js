@@ -91,6 +91,7 @@ function Escena(sos) {
             if (rendererP5) {
                 S.O.S.P5.push();
                 S.O.S.P5.noStroke();
+                S.O.S.P5.shader(_p5Shader);
                 S.O.S.P5.plane(_contenedor.geometria.ancho, _contenedor.geometria.alto);
                 S.O.S.P5.pop();           
             }
@@ -180,6 +181,9 @@ function Escena(sos) {
                 else if (valor.hasOwnProperty('x') && valor.hasOwnProperty('y')) {
                     _p5Shader.setUniform(nombre, [valor.x, valor.y]);
                 }
+                else if (valor.hasOwnProperty('contenido')) {
+                    _p5Shader.setUniform(nombre, valor.contenido());
+                }
                 else {
                     _p5Shader.setUniform(nombre, valor);
                 }
@@ -254,7 +258,7 @@ function Escena(sos) {
      * para llevar a cabo el "render" de la escena.
      */
     function lienzo() {
-        _contenedor.lienzo(rendererP5.canvas);  
+        _contenedor.lienzo();  
     }
     
     /**
@@ -332,7 +336,6 @@ function Escena(sos) {
             (_fragmentShader && _fragmentShader.contenido())) {
             let _vshader = _vertexShader && _vertexShader.contenido() ? _vertexShader.contenido() : CONFIG.VERTEX_SHADER_P5;
             _p5Shader = S.O.S.P5.createShader(_vshader, _fragmentShader.contenido());
-            S.O.S.P5.shader(_p5Shader);
             
             // Se definen los valores iniciales de los "uniforms"
             // que hayan sido creados hasta el momento.

@@ -6,6 +6,7 @@
  * =============================================================================
  */
 import CONFIG from './config';
+import VariadorDeValores from './variador.js';
 
 
 /**
@@ -30,8 +31,9 @@ import CONFIG from './config';
  */
 function Orquestador(sos, contenedor) {
     const S = sos.socorrista();
-    let   _processing = false;
-    let   _reloj; 
+    let   _utilizaP5 = false;
+    let   _reloj;
+    let   _cuadros = 0;
     let   _funcionActuaria;
     let   _contenedor = contenedor;
     let   _escena;
@@ -60,22 +62,17 @@ function Orquestador(sos, contenedor) {
 
     /**
      * Archivo
-     * Objeto simple para almacenar el contenido
-     * de un archivo de texto.
+     * Objeto simple para almacenar el contenido de un archivo
      */
-    function Archivo(nombre, texto) {
-        const _nombre = nombre;
-        let _contenido = texto;
-        let _cargado = texto ? true : false;
-        function contenido(texto) {
-            if (texto) {
-                _contenido = texto;
-                _cargado = true;
-            }
+    function Archivo(nombre, datos) {
+        let _contenido = datos;
+        function contenido(datos) {
+            if (datos !== undefined)
+                _contenido = datos;
             return _contenido;
         }
         function cargado() {
-            return _cargado;
+            return _contenido !== undefined ? true : false;
         }
         return {contenido, cargado};
     }
@@ -92,37 +89,53 @@ function Orquestador(sos, contenedor) {
      * Gestor para la carga asincrónica de archivos.
      */
     function Cargador() {
-        const _shaders = [];
+        const _archivos = [];
         const _texturas = [];
-        const _gestorDeCarga = new S.O.S.THREE.LoadingManager();
-        const _cargador = new S.O.S.THREE.TextureLoader(_gestorDeCarga);
+        let   _gestorTHREE, _cargadorTHREE;
         let   _texturasCargadas = false;
-        _gestorDeCarga.onLoad = () => {
-            _texturasCargadas = true;
-        };
 
         function cargarShader(archivo) {
             let _shader = Archivo(archivo);
-            _shaders.push(_shader);
+            _archivos.push(_shader);
             _leerArchivo(archivo, _shader);
             return _shader;
         }
 
         function cargarTextura2D(archivo) {
-            let _textura = _cargador.load(archivo);
-            _texturas.push(_textura);
-            return _textura;
+            if (!_utilizaP5) {
+                _inicializarGestorTHREE();
+                let _textura = _cargadorTHREE.load(archivo);
+                _texturas.push(_textura);
+                return _textura;
+            }
+            else {
+                let _imagen = Archivo(archivo);
+                _archivos.push(_imagen);
+                _cargarImagenP5(archivo, _imagen);
+                return _imagen;
+            }
+        }
+        
+        function cargarFuente(archivo) {
+            if (!_utilizaP5) {
+                // No soportado por el momento
+                return Archivo(archivo, "");
+            }
+            else {
+                let _fuente = Archivo(archivo);
+                _archivos.push(_fuente);
+                _cargarFuenteP5(archivo, _fuente);
+                return _fuente;
+            }
         }
 
         function cargaCompletada() {
-            for (let i = 0; i < _shaders.length; i++) {
-                if (!_shaders[i].cargado()) {
+            for (let i = 0; i < _archivos.length; i++) {
+                if (!_archivos[i].cargado())
                     return false;
-                }
             }
-            if (_texturas.length > 0 && !_texturasCargadas) {
+            if (_texturas.length > 0 && !_texturasCargadas)
                 return false;
-            }
             return true;
         }
 
@@ -130,10 +143,57 @@ function Orquestador(sos, contenedor) {
             let objeto = await fetch(nombre);
             archivo.contenido(await objeto.text());
         }
-
-        return {cargarShader, cargarTextura2D, cargaCompletada};
+        
+        async function _cargarImagenP5(nombre, archivo) {
+            let imagen = await S.O.S.P5.loadImage(nombre, (img) => {
+                archivo.contenido(img);
+            });
+        }
+        
+        async function _cargarFuenteP5(nombre, archivo) {
+            let fuente = await S.O.S.P5.loadFont(nombre, (font) => {
+                archivo.contenido(font);
+            });
+        }
+        
+        function _inicializarGestorTHREE() {
+            if (_gestorTHREE === undefined) {
+                _gestorTHREE = new S.O.S.THREE.LoadingManager();
+                _cargadorTHREE = new S.O.S.THREE.TextureLoader(_gestorTHREE);
+                _texturasCargadas = false;
+                _gestorTHREE.onLoad = () => {
+                    _texturasCargadas = true;
+                };
+            }
+        }
+        
+        return {cargarShader, cargarTextura2D, cargarFuente, cargaCompletada};
     }
     
+    
+    // ==========================================================
+    // 
+    //  DEFINICIÓN DE LA FUNCIÓN AUXILIADORA
+    //  
+    // ==========================================================
+    
+    /**
+     * Auxiliadora
+     * Función con rutinas de auxilio de uso general.
+     */
+    function Auxiliadora() {
+
+        function recuentoDeCuadros() {
+            return _utilizaP5 ? S.O.S.P5.frameCount : _conteoDeCuadros();
+        }
+
+        function Variador(valorIni, valorFin, cuadrosDuracion, cuadrosRetardo) {
+            return VariadorDeValores(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, recuentoDeCuadros);
+        }
+
+        return {recuentoDeCuadros,
+                Variador};
+    }
     
     
 // ==============================================================
@@ -145,7 +205,7 @@ function Orquestador(sos, contenedor) {
     /**
      * vincular
      * Se estalece el vínculo entre el orquestador, la escena y
-     * el cargador a utilizar durante el acto de "Preparación".
+     * el cargador a usar durante el acto de "Preparación".
      * Esto se lleva a cabo concediéndole al siervo convocado
      * al momento de la creación del orquestador, la información
      * necesaria para convertirlo en el socorrista designado.
@@ -158,7 +218,7 @@ function Orquestador(sos, contenedor) {
         if (S.O.S.hasOwnProperty('P5')) {
             _escena.asociar('P5', S.O.S.P5);
         }
-        S.O.S.revelar(S.O.S, Cargador(), escena);
+        S.O.S.revelar(S.O.S, Auxiliadora(), Cargador(), escena);
     }  
     
     /**
@@ -174,7 +234,7 @@ function Orquestador(sos, contenedor) {
         }
         else if (nombre == 'P5') {
             S.O.S.P5 = componente;
-            _processing = true;
+            _utilizaP5 = true;
             if (_escena)
                 _escena.asociar(nombre, componente);
         }
@@ -200,7 +260,7 @@ function Orquestador(sos, contenedor) {
     function funcionActuaria(funcion) {
         if (funcion) {
             _funcionActuaria = funcion;
-            if (!_processing) {
+            if (!_utilizaP5) {
                 const _funcion = {};
                 _funcionActuaria(_funcion); 
                 if (_funcion.hasOwnProperty(CONFIG.ACTO_PREPARACION)) {
@@ -231,6 +291,7 @@ function Orquestador(sos, contenedor) {
     function orquestar() {
         if (_actoEjecucionIniciado && _funcionEjecucion) {
             _orquestarActo3();
+            _cuadros++;
         }
         else {
             if (_funcionPreparacion && !_actoPreparacionIniciado) {
@@ -254,6 +315,7 @@ function Orquestador(sos, contenedor) {
                     (_funcionPreparacion && _actoPreparacionFinalizado && !_funcionIniciacion) ||
                     _actoIniciacionIniciado) {
                     _orquestarActo3();
+                    _cuadros++;
                     _actoEjecucionIniciado = true;
                     return;
                 }
@@ -262,11 +324,20 @@ function Orquestador(sos, contenedor) {
     }
     
     /**
+     * _conteoDeCuadros
+     * Función privada del orquestador que devuelve
+     * el número del fotograma actual.
+     */
+    function _conteoDeCuadros() {
+        return _cuadros;
+    }
+    
+    /**
      * _orquestarActo1
      * Función orquestadora del acto #1: "Preparación"
      */
     function _orquestarActo1() {
-        if (!_processing) {
+        if (!_utilizaP5) {
             _funcionPreparacion();
         }
     }
@@ -276,7 +347,7 @@ function Orquestador(sos, contenedor) {
      * Función orquestadora del acto #2: "Iniciación"
      */
     function _orquestarActo2() {
-        if (!_processing) {
+        if (!_utilizaP5) {
             _funcionIniciacion();
         }
     }
@@ -286,7 +357,7 @@ function Orquestador(sos, contenedor) {
      * Función orquestadora del acto #3: "Ejecución"
      */
     function _orquestarActo3() {
-        if (!_processing) {
+        if (!_utilizaP5) {
             _funcionEjecucion();
         }
     }
@@ -320,7 +391,7 @@ function Orquestador(sos, contenedor) {
         const _movimientoMouse = (evt) => {
             _valorUniformMouse[CONFIG.UNIFORM_VALOR].x = evt.offsetX / _valorUniformResolucion[CONFIG.UNIFORM_VALOR].x;
             _valorUniformMouse[CONFIG.UNIFORM_VALOR].y = evt.offsetY / _valorUniformResolucion[CONFIG.UNIFORM_VALOR].y;
-            if (_processing) {
+            if (_utilizaP5) {
                 _escena.uniformMouseP5(_valorUniformMouse[CONFIG.UNIFORM_VALOR]);
             }
         };
@@ -343,7 +414,7 @@ function Orquestador(sos, contenedor) {
                 if (_valorUniformResolucion) {
                     _valorUniformResolucion[CONFIG.UNIFORM_VALOR].x = _contenedor.geometria.ancho;
                     _valorUniformResolucion[CONFIG.UNIFORM_VALOR].y = _contenedor.geometria.alto;
-                    if (_processing) {
+                    if (_utilizaP5) {
                         _escena.uniformResolucionP5(_valorUniformResolucion[CONFIG.UNIFORM_VALOR]);
                     }
                 }
@@ -351,7 +422,7 @@ function Orquestador(sos, contenedor) {
             // Se actualiza el "uniform" para el tiempo
             if (_valorUniformTiempo) {
                 _valorUniformTiempo[CONFIG.UNIFORM_VALOR] += _reloj.getDelta();
-                if (_processing) {
+                if (_utilizaP5) {
                     _escena.uniformTiempoP5(_valorUniformTiempo[CONFIG.UNIFORM_VALOR]);
                 }
             }
@@ -383,7 +454,7 @@ function Orquestador(sos, contenedor) {
      * (p5js) para la orquestación.
      */
     function processing() {
-        return _processing;
+        return _utilizaP5;
     }
     
     /**

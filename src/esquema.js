@@ -10,6 +10,7 @@ import CONFIG from './config';
 const ESQUEMA_VAL = "__ESQUEMA__";
 const ESQUEMA_DEF = "__ESQUEMA_DEF__";
 
+
 /**
  * Esquema
  * Un esquema es un objeto genérico para almacenar datos junto con sus metadatos.
