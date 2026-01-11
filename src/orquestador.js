@@ -6,7 +6,8 @@
  * =============================================================================
  */
 import CONFIG from './config';
-import VariadorDeValores from './variador.js';
+import EfectoInterno from './efectos';
+import VariadorInterno from './variador';
 
 
 /**
@@ -182,16 +183,37 @@ function Orquestador(sos, contenedor) {
      * Función con rutinas de auxilio de uso general.
      */
     function Auxiliadora() {
+        
+        function tiempo() {
+            return _utilizaP5 ? S.O.S.P5.millis() : _reloj.getElapsedTime();
+        }
 
-        function recuentoDeCuadros() {
+        function cuadros() {
             return _utilizaP5 ? S.O.S.P5.frameCount : _conteoDeCuadros();
+        }
+        
+        function ruido(min = 0.0, max = 1.0, variacion = 0.1) {
+            let desplazamiento = 0.0;
+            let f = () => {
+              let valorRuido = (S.O.S.P5.noise(desplazamiento) * (max - min) + min);
+              desplazamiento += variacion;
+              return valorRuido;
+            };
+            return f;
+        }
+
+        function Efecto() {
+            return EfectoInterno(S);
         }
 
         function Variador(valorIni, valorFin, cuadrosDuracion, cuadrosRetardo) {
-            return VariadorDeValores(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, recuentoDeCuadros);
-        }
+            return VariadorInterno(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, cuadros);
+        }        
 
-        return {recuentoDeCuadros,
+        return {tiempo,
+                cuadros,
+                ruido,
+                Efecto,
                 Variador};
     }
     

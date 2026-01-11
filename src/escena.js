@@ -11,24 +11,23 @@ import Esquema from './esquema';
 
 /**
  * Escena
- * Entidad principal de la Obra que articula la reproducción
- * de contenidos en el lienzo del navegador (el "canvas").
- * La Obra puede estar compuesta por una o múltiples escenas.
+ * Entidad principal de la "Obra" que articula la reproducción de los
+ * contenidos visuales en el lienzo del navegador (el "canvas").
+ * La "Obra" puede estar compuesta por una o múltiples escenas.
  * 
- * A cada escena se le asigna un "orquestador" encargado de
- * instrumentar los tres actos en los que ésta se divide:
+ * A cada escena se le asigna un "orquestador" encargado de instrumentar
+ * ordenadamente los tres actos en los que ésta se divide:
  * 
- * - ACTO 1 ("Preparación"): Cargar archivos que van a utilizarse.
- * - ACTO 2 ("Iniciación") : Configuración y armado inicial de la escena.
- * - ACTO 3 ("Ejecución")  : Despliegue (cuadro a cuadro) de la escena.
+ * - ACTO 1 ("Preparación"): Cargar archivos que van a utilizarse (preload).
+ * - ACTO 2 ("Iniciación") : Configuración y armado inicial de la escena (setup).
+ * - ACTO 3 ("Ejecución")  : Despliegue (cuadro a cuadro) de la escena (draw).
  * 
  * NOTA 1: La escena es la entidad que permite encapsular el uso de las 
  *         librerías para la generación de gráficos (p5js o Three.js).
- * NOTA 2: La escena hereda las funciones del esquema.
+ * NOTA 2: La escena hace uso del objeto esquema (es un esquema).
  * 
  */
-function Escena(sos) {
-    const S = sos.socorrista();
+function Escena(S) {
     let _contenedor;
 
     // Shaders
@@ -295,7 +294,7 @@ function Escena(sos) {
         _contenedor.lienzo(rendererTHREE.domElement);
 
         
-        // 2. CREACIÓN DE VERDADERA ESCENA
+        // 2. CREACIÓN DE LA VERDADERA ESCENA DE THREE
         // Una vez que el lienzo fue creado y emplazado en la página, se procede
         // con la creación de la escena mediante la libreraí Three.js
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -364,6 +363,7 @@ function Escena(sos) {
     function inicializar() {
     }
     
+    
     /**
      * asociar
      * Asocia componentes como parte del socorrista designado.
@@ -405,8 +405,8 @@ function Escena(sos) {
                          asociar,
                          inicializar
                          }, 
-                         functionActuaria(),                     // Se adicionan los métodos de la "Función Actuaria"
-                         Esquema(S.O.S, CONFIG.NOMBRE_ESCENA));  // Se heredan las funciones públicas del "Esquema"
+                         functionActuaria(),                // Se adicionan los métodos de la "Función Actuaria"
+                         Esquema(S, CONFIG.NOMBRE_ESCENA)); // Se heredan las funciones públicas del "Esquema"
 }
 
 

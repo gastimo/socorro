@@ -18,7 +18,26 @@ const Config = (() => {
         NOMBRE_ESCENA           : 'ESCENA',     // Entidad principal para representar la obra
         NOMBRE_ESQUEMA          : 'ESQUEMA',    // Definición de los atributos y valores de una entidad
         NOMBRE_ATRIBUTO         : 'ATRIBUTO',   // Definición de cada uno de los atributos de un esquema
+        NOMBRE_EFECTO           : 'EFECTO',     // Definición de los "efectos" de la escena
         
+        // Nombre de atributos especiales
+        ATR_SINCRONIZADO        : 'sincronizado',
+        ATR_VISIBLE             : 'visible',
+        
+        // Métodos de obtención del valor origen de un "Efecto" para su evaluación
+        METODO_EVAL_FIJO            : 'fijo',
+        METODO_EVAL_X_CICLO         : 'ciclo',
+        METODO_EVAL_X_CONTRACICLO   : 'contraciclo',
+        METODO_EVAL_X_LAPSO         : 'lapso',
+        METODO_EVAL_X_AZAR          : 'azar',
+        METODO_EVAL_X_RUIDO         : 'perlin',
+        METODO_EVAL_X_ORDEN         : 'orden',
+        METODO_EVAL_X_CANTIDAD      : 'cantidad',
+        METODO_EVAL_X_DISTANCIA     : 'distancia',
+        METODO_EVAL_X_DISTANCIA_X   : 'distanciaX',
+        METODO_EVAL_X_DISTANCIA_Y   : 'distanciaY',
+        METODO_EVAL_X_DISTANCIA_Z   : 'distanciaZ',
+                
         // Uniforms estándares
         UNIFORM_VALOR           : "value",
         UNIFORM_TIEMPO          : "u_time",
@@ -43,11 +62,11 @@ void main() {
   gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
 }
 `,
-
     };
     
     return _parametros;
     
 })();
+
 
 export default Config;

@@ -174,6 +174,25 @@ const Siervo = () => {
     }
     
     /**
+     * repetidor
+     * Método que retorna una función "repetidora" que, aunque sea invocada
+     * en cada iteración del bucle de la "Obra", sólo ejecutará la función
+     * indicada como argumento, una vez por cada intervalo indicado.
+     */
+    function repetidor(argumentoRepeticion, intervaloEspera) {
+        let c = 0;
+        let f = (funcionRepeticion) => {
+          if (c <= 0) {
+            c = intervaloEspera ?? 1;
+            funcionRepeticion(argumentoRepeticion);
+          }
+          c--;
+        };
+        return f;
+    }
+
+    
+    /**
      * aleatorio
      * Devuelve un número al azar (float) mayor o igual al mínimo 
      * especificado y menor que el máximo. Si estos parámetros no 
@@ -268,7 +287,7 @@ const Siervo = () => {
             // este momento. El "canvas" aún no es creado.
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             FUNCION[CONFIG.ACTO_PREPARACION] = () => {
-                _escenas[_indice] = Escena(S.O.S);
+                _escenas[_indice] = Escena(_orquestador.socorrista());
                 _orquestador.vincular(_escenas[_indice]);
                 const _ACTO1 = _escenificadorCarga ? _escenificadorCarga(_orquestador.socorrista()): 
                                                    _escenas[_indice][CONFIG.ACTO_PREPARACION]();

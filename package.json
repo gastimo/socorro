@@ -1,10 +1,10 @@
 {
   "name": "socorro",
-  "version": "0.0.41",
+  "version": "0.1.0",
   "description": "Siervos de la Obra del Socorro (S.O.S)",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "mkdir -p dist && cp src/*.js dist"
+    "build": "mkdir dist && cp src/*.js dist"
   },
   "keywords": [
     "sos",
