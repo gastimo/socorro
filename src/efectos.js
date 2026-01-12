@@ -32,21 +32,22 @@ import Esquema from './esquema';
  * 
  * Por último, vale aclarar que un "Efecto" es también un "Esquema", por lo tanto,
  * hereda todas las funciones de éste (y, también, incorpora nuevas):
- *  - def()   - Definición de atributo. Función heredada de "Esquema", tal cual.
+ *  - def()   - Definición de atributo. Función heredada de "Esquema".
  *  - map()   - Configuración del "Método de Evaluación" para realizar el mapeo dinámico.
  *  - ruido() - Define el ruido aleatorio a incorporar al resultado final de la evaluación.
  *  - val()   - Obtención del valor. Redefine la función heredada de "Esquema" para hacer el mapeo.
  */
 function Efecto(S) {
-    let _esquema;
-    let _valorDinamico = null;
+    let _esquema = Esquema(S, CONFIG.NOMBRE_EFECTO);
+    let _efectivador = null;
+    _inicializar();
+    const _EFECTO = S.O.S.revelar({}, _esquema);
     
     /**
      * _inicializar
      * Método privado de inicialización de las propiedades del "Efecto".
      */
     function _inicializar() {
-        _esquema = Esquema(S, CONFIG.NOMBRE_EFECTO);
         _esquema.def({metodo         : CONFIG.METODO_EVAL_FIJO});
         _esquema.def({valor          : null});
         _esquema.def({modulador      : null});
@@ -56,9 +57,19 @@ function Efecto(S) {
         _esquema.def({valorHasta     : null});
         _esquema.def({ruidoVelocidad : null});
         _esquema.def({ruidoEscala    : null});
-        return _esquema;
     }
 
+    /**
+     * def
+     * Esta función es la misma que la del objeto "Esquema" del quien el
+     * "Efecto" extiende. Se redefine acá simplemente para retornar al final
+     * el objeto "Efecto" actual para permitir definiciones encadenadas.
+     */
+    _EFECTO.def = (atributos) => {
+        _esquema.def(atributos);
+        return _EFECTO;
+    };
+    
     /**
      * map
      * Define los parámetros del "Efecto" para realizar, en tiempo de ejecución, el mapeo o cálculo 
@@ -73,7 +84,7 @@ function Efecto(S) {
      *   ef.map(EVAL.azar,   <valorDesde>,   <valorHasta>);
      *   ef.map(EVAL.perlin, <valorDesde>,   <valorHasta>, <modulador>);
      *   ef.map(EVAL.azar,   <arrayValores>);
-     *   ef.map(EVAL.ruido, <arrayValores>, <modulador>); 
+     *   ef.map(EVAL.ruido,  <arrayValores>, <modulador>); 
      * 
      * 3. CATEGORÍA TIEMPO - Mapea intervalos de tiempo. El "modulador" permite acelerar o enlentecer:
      *   ef.map(EVAL.ciclo,  <valorDesde>,   <valorHasta>, <modulador>);
@@ -91,9 +102,9 @@ function Efecto(S) {
      *       <valorDesde> y <valorHasta> o, en su lugar, se puede especificar un nombre de rango predefinido
      *       (<arrayValores>). Por ejemplo, para trabajar con "Gradientes" de colores se usa esta opción.
      */
-    function map(...parametros) {
+    _EFECTO.map = (...parametros) => {
         _inicializar();  // Primero, se inicializan TODOS los parámetros del "Efecto" en nulo
-        _valorDinamico = null;
+        _efectivador = null;
         let _metodoEvaluacion = _esquema.val('metodo');
         if (parametros.length >= 1) {
             if (_esUnMetodoDeEvaluacion(parametros[0])) {
@@ -102,14 +113,14 @@ function Efecto(S) {
             }
             else {
                 _esquema.def({valor : parametros[0]});
-                return;
+                return _EFECTO;
             } 
             // ---------------------------------------------------------------------------
             // ANÁLISIS DE LOS ARGUMENTOS DE LA INVOCACIÓN (2+ ARGUMENTOS)
             if (parametros.length >= 2) {
                 if (_metodoEvaluacion == CONFIG.METODO_EVAL_FIJO) {
                     _esquema.def({valor : parametros[1]});
-                    return;
+                    return _EFECTO;
                 }                
                 // 2 ARGUMENTOS ---------------------------------------------------------
                 if (_esUnRangoDeValores(parametros[1])) { 
@@ -168,7 +179,8 @@ function Efecto(S) {
                 }
             }
         }
-    } 
+        return _EFECTO;
+    }; 
     
     /**
      * ruido
@@ -181,24 +193,25 @@ function Efecto(S) {
      *                 el valor calculado. Es decir, el ruido generado será siempre
      *                 un porcentaje de la escala.
      */
-    function ruido(velocidad = 0.1, escala = 1.0) {
+    _EFECTO.ruido = (velocidad = 0.012, escala = 1.0) => {
         _esquema.def({ruidoVelocidad : velocidad});
         _esquema.def({ruidoEscala    : escala});
-    }
+        return _EFECTO;
+    };
     
     /**
      * val
      * Función que se ocupa de calcular, en tiempo de ejecución, el valor del "Efecto"
      * según el "Método de Evaluación" que se haya configurado durante su definición.
      */
-    function val(S) {
+    _EFECTO.val = (S) => {
         let _contextoEjecucion;
 
-        // 1. CREACIÓN DEL OBJETO AUXILIAR "VALOR DINÁMICO"
-        // La primera vez que es invocado este método, se crea su "ValorDinámico"
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        if (!_valorDinamico) {
-            _valorDinamico = ValorDinamico();
+        // 1. CREACIÓN DEL OBJETO AUXILIAR "EFECTIVADOR"
+        // La primera vez que es invocado este método, se crea su "Efectivador"
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        if (!_efectivador) {
+            _efectivador = Efectivador();
             let _valorEfecto = _esquema.val('valor');
             let _valorDesde  = _esquema.val('valorDesde');
             let _valorHasta  = _esquema.val('valorHasta');
@@ -206,32 +219,32 @@ function Efecto(S) {
                 let _valoresRango = []; 
                 if (COLOR.GRADIENTES.hasOwnProperty(_valorEfecto))  // TODO: ¿Podrían ser otros rangos además de colores?
                     _valoresRango = COLOR.GRADIENTES[_valorEfecto](S);
-                _valorDinamico.desde(_esquema.val('metodo'), _esquema.val('origenDesde'), _esquema.val('origenHasta')).hasta(..._valoresRango);
+                _efectivador.desde(_esquema.val('metodo'), _esquema.val('origenDesde'), _esquema.val('origenHasta')).hasta(..._valoresRango);
             }
             else if (_valorDesde || _valorHasta)
-                _valorDinamico.desde(_esquema.val('metodo'), _esquema.val('origenDesde'), _esquema.val('origenHasta')).hasta(_valorDesde, _valorHasta);
+                _efectivador.desde(_esquema.val('metodo'), _esquema.val('origenDesde'), _esquema.val('origenHasta')).hasta(_valorDesde, _valorHasta);
             else 
-                _valorDinamico.desde(_esquema.val('metodo'), _esquema.val('origenDesde'), _esquema.val('origenHasta')).hasta(_valorEfecto);
+                _efectivador.desde(_esquema.val('metodo'), _esquema.val('origenDesde'), _esquema.val('origenHasta')).hasta(_valorEfecto);
         }
 
-        // 2. PREPARACIÓN DEL CONTEXTO DE EJECUCIÓN Y CÁLCULO DINÁMICO
-        // Se pone a disposición el contexto de ejecución y ser realiza la "Evaluación Dinámica"
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        _contextoEjecucion = _valorDinamico.contexto(S.O.S.clave());
+        // 2. PREPARACIÓN DEL CONTEXTO DE EJECUCIÓN Y CÁLCULO DINÁMICO (EFECTIVACIÓN)
+        // Se pone a disposición el contexto de ejecución y se realiza la evaluación o "efectivación"
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        _contextoEjecucion = _efectivador.contexto(S.O.S.clave());
         if (_contextoEjecucion.hasOwnProperty('nuevo')) {
             let _ruidoVelocidad = _esquema.val('ruidoVelocidad');
             _contextoEjecucion.aux       = undefined;
-            _contextoEjecucion.modulador = _esquema.val('modulador');
+            _contextoEjecucion.modulador = _esquema.val('modulador') ?? 1.0;
             _contextoEjecucion.perlin    = S.O.S.ruido(0.0, 1.0, _contextoEjecucion.modulador ?? 0.016);
             _contextoEjecucion.ruido = _ruidoVelocidad ? S.O.S.ruido(0.0, 1.0, _ruidoVelocidad) : () => {return 1.0;};
             delete _contextoEjecucion.nuevo;
         }
-        let _ruidoEscala = _esquema.def('ruidoEscala');
+        let _ruidoEscala = _esquema.val('ruidoEscala');
         S.O.S.PARAM = _contextoEjecucion;
-        let _v = _valorDinamico.calcular(S);
-        return _v.hasOwnProperty("mode") ? _v : _v + (_contextoEjecucion.ruido() * (_ruidoEscala ?? 1.0));
-    }
-    
+        let _v = _efectivador.calcular(S);
+        return _EFECTO.esUnColor(_v) ? _v : _v + (_ruidoEscala ? _contextoEjecucion.ruido() * _ruidoEscala : 0);
+    };
+        
     /**
      * _esUnRangoDeValores
      * Retorna "true" o "false" indicando si el argumento corresponde a un 
@@ -255,7 +268,7 @@ function Efecto(S) {
     // ===> Se exponen únicamente las funciones públicas del figurante
     // ==> ("Revealing Module Pattern") y se implementa la herencia.
     // ===============================================================
-    return S.O.S.revelar({map, val}, _inicializar());
+    return _EFECTO;
 }
 
 
@@ -263,22 +276,23 @@ function Efecto(S) {
 /*
  * =============================================================================
  * 
- *                          V A L O R    D I N Á M I C O
+ *                           E F E C T I V A D O R
  * 
  * =============================================================================
  */
   
 /**
- * ValorDinamico
- * Objeto auxiliar usado internamente para llevar a cabo el cálculo dinámico del valor de
- * un "Efecto". Este objeto en particular admite tanto valores estáticos como valores dinámicos, 
+ * Efectivador
+ * Objeto auxiliar usado sólo internamente dentro del módulo para llevar a cabo el cálculo 
+ * del valor de un "Efecto", en otras palabras, para hacer efectivo su valor de forma dinámica.
+ * Este objeto en particular admite tanto valores estáticos como un rango de valores posibles, 
  * que son interpolados en tiempo de ejecución, en el momento que sean requeridos.
  * Este objeto provee tres funciones básicas:
  *  - desde()   : Define la función de origen de mapeo y el rango de valores de dicha función. 
  *  - hasta()   : Define el valor o los valores de destino (como una lista o rangos ponderados).
  *  - calcular(): Realiza el cálculo o mapeo del rango origen con el rango destino.
  */
-function ValorDinamico() {
+function Efectivador() {
     const _contexto = {};
     const _VAL = {
         valorSimple     : null,
@@ -339,10 +353,10 @@ function ValorDinamico() {
 
    /**
     * calcular
-    * Aplica la configuración para realizar el cálculo del valor, llevando a cabo el mapeo
-    * entre el "rango origen" y el "rango destino". Es decir, ejecuta la "Función de
-    * Mapeo Dinámico" (si fue indicada) y mapea su resultado con el rango de valores
-    * de destino.
+    * Aplica la configuración para realizar la "efectivación" o cálculo del valor. Para esto
+    * realiza el mapeo entre el "rango origen" y el "rango destino". Es decir, ejecuta la 
+    * "Función de Mapeo Dinámico" (si fue indicada) y mapea su resultado con el rango efectivo
+    * de valores de destino.
     */
     _VAL.calcular = (S) => {
         if (_VAL.valorSimple !== null && _VAL.valorSimple !== undefined) {
@@ -358,7 +372,7 @@ function ValorDinamico() {
           let fin = {pos: 1.0, val: null};
           for (let i = _VAL.valoresEnRangos.length - 1; i >= 0; i--) {
             let _valorActual = _VAL.valoresEnRangos[i];
-            if (!_valorActual.val.hasOwnProperty("mode")) {                 // Significa que el valor es un color
+            if (!_esUnColor(_valorActual.val)) {
               funcionInterpolacion = _interpolarNumero;
             }
             if (_valorActual.pos == pos) {
@@ -373,7 +387,7 @@ function ValorDinamico() {
               }
             }
           }
-          return funcionInterpolacion(S, pos, ini.pos, fin.pos, ini.val ?? fin.val, fin.val ?? ini.val);  
+          return funcionInterpolacion(S, pos, ini.pos, fin.pos, ini.val, fin.val);  
         }
         else {
           return _VAL.valoresEnRangos.length > 0 ? _VAL.valoresEnRangos[0].val : null;          
@@ -383,7 +397,7 @@ function ValorDinamico() {
     /**
      * contexto
      * Retorna un objeto que almacena las variables dinámicas del contexto
-     * de ejecución dinámico para la clave recibida como argumento.
+     * de ejecución para la clave recibida como argumento.
      */
     _VAL.contexto = (clave) => {
         if (!_contexto.hasOwnProperty(clave)) {
@@ -392,6 +406,15 @@ function ValorDinamico() {
         }
         return _contexto[clave];
     };
+
+    /**
+     * esUnColor
+     * Retorna "true" o "false" indicando si el argumento recibido es un
+     * tipo de dato de p5js utilizado para almacenar un color.
+     */        
+    function _esUnColor(valor) {
+        return valor && valor.hasOwnProperty("mode");
+    }
     
     /**
      * _interpolarNumero

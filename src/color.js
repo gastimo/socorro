@@ -19,7 +19,7 @@ const Color = (() => {
         GRAD_TIZADO       : 'tizado',
         GRAD_LUCINTI      : 'lucinti',
         GRAD_FLAMINGO     : 'flamingo',
-        GRAD_CADET        : 'cadet',
+        GRAD_CADET        : 'cadete',
     };
     
     return _esquemaDeColores;

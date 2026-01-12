@@ -46,8 +46,9 @@ import CONFIG from './config';
  * debe preguntar si sus esquemas asociados se encuentran "desincronizados" y, de ser
  * así, encargarse de la actualización.
  */
-function Esquema(S, nombre) {
-    const _nombre = nombre ?? CONFIG.NOMBRE_ESQUEMA;
+function Esquema(S, nombreEsquema) {
+    const _ESQUEMA = {};
+    const _nombre = nombreEsquema ?? CONFIG.NOMBRE_ESQUEMA;
     const _clave  = S.O.S.obtenerClave(_nombre);
     const _DEF = {};
     const _VAL = {};
@@ -109,7 +110,6 @@ function Esquema(S, nombre) {
     }
 
 
-
   
 /*
  * =============================================================================
@@ -142,7 +142,7 @@ function Esquema(S, nombre) {
      * Esta misma función puede ser usada para definir el esquema a partir
      * de los datos importados desde un archivo JSON.
      */  
-    function def(atributos) {
+    _ESQUEMA.def = (atributos) => {
       if (atributos) {
         const _defRecursiva = (atrVector, subatributos) => {
           for (const [atrNombre, atrValor] of Object.entries(subatributos)) {
@@ -150,6 +150,10 @@ function Esquema(S, nombre) {
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (atrValor !== null && atrValor !== undefined && typeof atrValor === 'object' && !Array.isArray(atrValor)) {
               if (_esUnEfecto(atrValor)) {
+                  atrVector[atrNombre] = atrValor;
+                  continue;
+              }
+              else if (_esUnaDefinicionDeEfecto(atrValor)) {
                   atrVector[atrNombre] = S.O.S.Efecto();
                   atrVector[atrNombre].def(atrValor);
                   continue;
@@ -173,7 +177,8 @@ function Esquema(S, nombre) {
         };
         _defRecursiva(_VAL, atributos);
       }
-    }
+      return _ESQUEMA;
+    };
   
     /**
      * val
@@ -192,7 +197,7 @@ function Esquema(S, nombre) {
      *                             un "subesquema". Se retorna, entonces, el valor
      *                             del atributo <nombre2> del subesquema <nombre1>.
      */
-    function val(...atributos) {
+    _ESQUEMA.val = (...atributos) => {
       if (atributos.length == 0) {
         return _VAL;
       }
@@ -201,13 +206,7 @@ function Esquema(S, nombre) {
         for (let i = 0; i < atributos.length; i++) {
           if (_valoresDeAtributos.hasOwnProperty(atributos[i])) {
             if (i == atributos.length - 1) {
-              let _valor = _valoresDeAtributos[atributos[i]];
-              if (_valor && _valor.hasOwnProperty('val') && _valor.val && typeof _valor.val === 'function') {
-                return _valor.val(S);
-              }
-              else {
-                return _valor;
-              }
+              return _obtenerValor(_valoresDeAtributos, atributos[i]);
             }
             else {
               _valoresDeAtributos = _valoresDeAtributos[atributos[i]];
@@ -218,9 +217,35 @@ function Esquema(S, nombre) {
           }
         }
       }
-    }
-    
+    };
   
+  
+    /**
+     * _obtenerValor
+     * Función privada para extraer el valor del atributo existente en el esquema.
+     * Esta función tiene en cuenta lo siguiente:
+     * - Si el valor buscado está representado como un "Efecto", entonces los "efectiva" (hace el cálculo)
+     * - Si el valor obtenido es un color, verifica si existe el atributo asociado que define su opacidad
+     *   y la aplica al color obtenido antes de devolverlo
+     * - Si no se trata de un "Efecto" ni de un color, retorna el valor sin cambios.
+     */
+    function _obtenerValor(_valores, atrNombre) {
+      let _valor = _valores[atrNombre];
+      if (_valor && _esUnEfecto(_valor)) {
+        _valor = _valor.val(S);
+      }
+      if (_valor && _ESQUEMA.esUnColor(_valor)) {
+        let _atrNombreExtra = atrNombre + "$alfa";
+        if (_valores.hasOwnProperty(_atrNombreExtra)) {
+          let _alfa = _obtenerValor(_valores, _atrNombreExtra);
+          if (_alfa) {
+            _valor.setAlpha(_alfa * 255);
+          }
+        }
+      }
+      return _valor;
+    }
+
     /**
      * config
      * Función para obtener o definir la configuración de un atributo del esquema. 
@@ -246,7 +271,7 @@ function Esquema(S, nombre) {
      *          En otras palabras, no es posible definir "subconfiguraciones" 
      *          dentro de una configuración. Esa debe resolverlo la GUI.
      */
-    function config(...parametros) {
+    _ESQUEMA.config = (...parametros) => {
       // 1. Sin argumentos, se devuelve la configuración completa del esquema
       // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
       if (parametros.length == 0) {
@@ -293,26 +318,25 @@ function Esquema(S, nombre) {
         }
         return _atributo;
       }
-    }
+    };
   
       
     /**
      * clave
-     * Devuelve la clave interna de identificación del objeto
+     * Devuelve la clave interna unívoca de identificación del objeto
      */
-    function clave() {
+    _ESQUEMA.clave = () => {
       return _clave;
-    }
-  
-    /**
-     * inicializar
-     * Función que crea la "Definición" del esquema asociado a la escena.
-     * Los atributos que se inicialicen en este punto podrán ser importados,
-     * exportados y/o manipulados desde la GUI del "Panel Conrolador".
-     */
-    function inicializar() {
-    }
+    };
 
+    /**
+     * nombre
+     * Retorna el nombre interno del esquema
+     */
+    _ESQUEMA.nombre = () => {
+      return _nombre;
+    };
+  
   
     /**
      * sincronizar
@@ -327,7 +351,7 @@ function Esquema(S, nombre) {
      * en ese caso, debe actualizar los datos del objeto que hace uso del esquema
      * (por ejemplo, una "Escena") para que ambos concuerden.
      */
-    function sincronizar(subesquema) {
+    _ESQUEMA.sincronizar = (subesquema) => {
       if (!subesquema) {
         _VAL[CONFIG.ATR_SINCRONIZADO] = true;
       }
@@ -336,9 +360,8 @@ function Esquema(S, nombre) {
           _VAL[subesquema][CONFIG.ATR_SINCRONIZADO] = true;
         }
       }
-    }
+    };
 
-  
     /**
      * estaSincronizado
      * Indica si los contenidos del esquema están sincronizados. Si se indica
@@ -351,7 +374,7 @@ function Esquema(S, nombre) {
      * "desincronización" puede darse cuando el esquema es modificado de forma
      * externa, por ejmplo, desde una GUI.
      */
-    function estaSincronizado(subesquema) {
+    _ESQUEMA.estaSincronizado = (subesquema) => {
       if (!subesquema) {
         return _VAL[CONFIG.ATR_SINCRONIZADO];
       }
@@ -363,8 +386,7 @@ function Esquema(S, nombre) {
           return true;
         }
       }
-    }
-
+    };
   
     /**
      * visible
@@ -372,23 +394,30 @@ function Esquema(S, nombre) {
      * contenidos del esquema pueden ser visualizados por el usuario
      * (desplegados en pantalla).
      */
-    function visible(valor) {
+    _ESQUEMA.visible = (valor) => {
       if (valor !== undefined) {
         _VAL[CONFIG.ATR_VISIBLE] = valor;
       }
       return _VAL[CONFIG.ATR_VISIBLE];
-    }
+    };
 
-  
+    /**
+     * esUnColor
+     * Retorna "true" o "false" indicando si el argumento recibido es un
+     * tipo de dato de p5js utilizado para almacenar un color.
+     */        
+    _ESQUEMA.esUnColor = (valor) => {
+        return valor.hasOwnProperty("mode");
+    };
+
     /**
      * exportar
      * Devuelve una cadena de caracteres con el contenido del esquema
      * convertido a texto (en formato JSON).
      */
-    function exportar(indentacion = "") {
+    _ESQUEMA.exportar = (indentacion = "") => {
       return _convertirATexto(_VAL, indentacion);
-    }
-  
+    };
   
     /**
      * _convertirATexto
@@ -421,33 +450,32 @@ function Esquema(S, nombre) {
       salida += indentacion + "}";
       return existenValores ? salida : null;      
     }
-  
+
     /**
      * _esUnEfecto
      * Función privada para indicar si el objeto recibido como
-     * argumento es un "Efecto"
+     * argumento es un objeto de tipo "Efecto"
      */
-    function _esUnEfecto(esquema) {
-      return esquema.hasOwnProperty('metodo') &&
-            (esquema.hasOwnProperty('valor') || esquema.hasOwnProperty('valorDesde') || esquema.hasOwnProperty('valorDesde'));
+    function _esUnEfecto(objeto) {
+      let _aux = objeto.nombre?.();
+      return _aux !== undefined && _aux === CONFIG.NOMBRE_EFECTO;
     }
 
+    /**
+     * _esUnaDefinicionDeEfecto
+     * Función privada para indicar si el objeto recibido como
+     * argumento es la definición para crear un "Efecto"
+     */
+    function _esUnaDefinicionDeEfecto(objeto) {
+      return objeto.hasOwnProperty('metodo') &&
+            (objeto.hasOwnProperty('valor') || objeto.hasOwnProperty('valorDesde') || objeto.hasOwnProperty('valorDesde'));
+    }
   
-
     // ===============================================================
     // ===> Se exponen únicamente las funciones públicas del esquema 
     // ==> ("Revealing Module Pattern")
     // ===============================================================
-    return {config,
-           val,
-           def,
-           clave,
-           inicializar,
-           sincronizar,
-           estaSincronizado,
-           visible,
-           exportar,
-          };
+    return _ESQUEMA;
 }
 
 
