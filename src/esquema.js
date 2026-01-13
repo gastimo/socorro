@@ -149,12 +149,12 @@ function Esquema(S, nombreEsquema) {
             // DEFINCIÓN DE VALORES DE SUBESQUEMA
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (atrValor !== null && atrValor !== undefined && typeof atrValor === 'object' && !Array.isArray(atrValor)) {
-              if (_esUnEfecto(atrValor)) {
+              if (_esUnaVariable(atrValor)) {
                   atrVector[atrNombre] = atrValor;
                   continue;
               }
-              else if (_esUnaDefinicionDeEfecto(atrValor)) {
-                  atrVector[atrNombre] = S.O.S.Efecto();
+              else if (_esUnaDefinicionDeVariable(atrValor)) {
+                  atrVector[atrNombre] = S.O.S.Variable();
                   atrVector[atrNombre].def(atrValor);
                   continue;
               }
@@ -224,14 +224,14 @@ function Esquema(S, nombreEsquema) {
      * _obtenerValor
      * Función privada para extraer el valor del atributo existente en el esquema.
      * Esta función tiene en cuenta lo siguiente:
-     * - Si el valor buscado está representado como un "Efecto", entonces los "efectiva" (hace el cálculo)
+     * - Si el valor buscado está representado como una "Variable", entonces realiza el cálculo dinámico.
      * - Si el valor obtenido es un color, verifica si existe el atributo asociado que define su opacidad
      *   y la aplica al color obtenido antes de devolverlo
-     * - Si no se trata de un "Efecto" ni de un color, retorna el valor sin cambios.
+     * - Si no se trata de una "Variable" ni de un color, retorna el valor sin ningún tipo de procesamiento.
      */
     function _obtenerValor(_valores, atrNombre) {
       let _valor = _valores[atrNombre];
-      if (_valor && _esUnEfecto(_valor)) {
+      if (_valor && _esUnaVariable(_valor)) {
         _valor = _valor.val(S);
       }
       if (_valor && _ESQUEMA.esUnColor(_valor)) {
@@ -452,21 +452,21 @@ function Esquema(S, nombreEsquema) {
     }
 
     /**
-     * _esUnEfecto
+     * _esUnaVariable
      * Función privada para indicar si el objeto recibido como
-     * argumento es un objeto de tipo "Efecto"
+     * argumento es un objeto de tipo "Variable".
      */
-    function _esUnEfecto(objeto) {
+    function _esUnaVariable(objeto) {
       let _aux = objeto.nombre?.();
-      return _aux !== undefined && _aux === CONFIG.NOMBRE_EFECTO;
+      return _aux !== undefined && _aux === CONFIG.NOMBRE_VARIABLE;
     }
 
     /**
-     * _esUnaDefinicionDeEfecto
+     * _esUnaDefinicionDeVariable
      * Función privada para indicar si el objeto recibido como
-     * argumento es la definición para crear un "Efecto"
+     * argumento es la definición para crear una "Variable".
      */
-    function _esUnaDefinicionDeEfecto(objeto) {
+    function _esUnaDefinicionDeVariable(objeto) {
       return objeto.hasOwnProperty('metodo') &&
             (objeto.hasOwnProperty('valor') || objeto.hasOwnProperty('valorDesde') || objeto.hasOwnProperty('valorDesde'));
     }

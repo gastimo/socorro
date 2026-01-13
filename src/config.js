@@ -17,8 +17,7 @@ const Config = (() => {
         NOMBRE_SOS              : 'SOS',        // Singleton del Obsequioso Socorro
         NOMBRE_ESCENA           : 'ESCENA',     // Entidad principal para representar la obra
         NOMBRE_ESQUEMA          : 'ESQUEMA',    // Definición de los atributos y valores de una entidad
-        NOMBRE_ATRIBUTO         : 'ATRIBUTO',   // Definición de cada uno de los atributos de un esquema
-        NOMBRE_EFECTO           : 'EFECTO',     // Definición de los "efectos" de la escena
+        NOMBRE_VARIABLE         : 'VARIABLE',   // Definición de variables dinámicas de la "Escena"
         
         // Nombre de atributos especiales
         ATR_SINCRONIZADO        : 'sincronizado',

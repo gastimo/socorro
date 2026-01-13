@@ -55,7 +55,8 @@ const Obra = (() => {
      */
     function orquestar(orquestador) {
         // Simplemente se encola el orquestador para
-        // convocarlo, luego, en cada iteración del bucle.
+        // convocarlo, luego, en cada iteración del 
+        // del bucle (ver función "cicloEterno").
         _orquestadores.push(orquestador);
     }
     
@@ -159,7 +160,7 @@ const Siervo = () => {
    
 // =====================================================================
 // 
-//  FUNCIONES AUXILIADORAS DE USO GENERAL
+//  FUNCIONES "AUXILIADORAS" DE USO GENERAL
 //  
 // =====================================================================
     

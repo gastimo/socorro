@@ -6,29 +6,26 @@
  * =============================================================================
  */
 import CONFIG from './config';
-import EfectoInterno from './efectos';
+import VariableInterna from './variable';
 import VariadorInterno from './variador';
 
 
 /**
  * Orquestador
- * Se encarga de ir ejecutando, en el orden adecuado y sin
- * producir superposiciones, cada uno de los actos de la 
- * función. La "Función Actuaria" es simplemente una función
- * JavaScript que especifica las funciones (actos) que se 
- * deben llevar a cabo. El orquestador está preparado para 
- * coordinar tres actos:
+ * Se encarga de ir ejecutando, en el orden adecuado y sin producir superposiciones, 
+ * cada uno de los actos de la función. La "Función Actuaria" es simplemente una 
+ * función JavaScript que especifica las funciones (actos) que se deben llevar a 
+ * cabo. El orquestador está preparado para coordinar tres actos:
  * - ACTO 1 ("Preparación"): Cargar archivos que van a utilizarse.
  * - ACTO 2 ("Iniciación"): Configuración y armado inicial de la escena.
  * - ACTO 3 ("Ejecución"): Despliegue (cuadro a cuadro) de la escena.
  * 
- * El orquestador debe garantizar que cada acto haya concluido 
- * efectivamente antes de comenzar con el siguiente. Esto es
- * importante, principalmente con el "Acto 1", ya que todos los
- * archivos deben estar cargados antes de iniciar el "Acto 2".
+ * El orquestador debe garantizar que cada acto haya concluido efectivamente antes 
+ * de comenzar con el siguiente. Esto es importante, principalmente con el "Acto 1", 
+ * ya que todos los archivos deben estar cargados antes de iniciar el "Acto 2".
  * 
- * Si se indica el uso de la librería de "Processing" (p5js)
- * se le delega, entonces, la orquestación a ésta.
+ * Si se indica el uso de la librería de "Processing" (p5js) se le delega, entonces, 
+ * la orquestación a esta librería.
  */
 function Orquestador(sos, contenedor) {
     const S = sos.socorrista();
@@ -193,7 +190,7 @@ function Orquestador(sos, contenedor) {
         }
         
         function ruido(min = 0.0, max = 1.0, variacion = 0.1) {
-            let desplazamiento = 0.0;
+            let desplazamiento = S.O.S.aleatorio(0, 100000);
             let f = () => {
               let valorRuido = (S.O.S.P5.noise(desplazamiento) * (max - min) + min);
               desplazamiento += variacion;
@@ -202,8 +199,8 @@ function Orquestador(sos, contenedor) {
             return f;
         }
 
-        function Efecto() {
-            return EfectoInterno(S);
+        function Variable() {
+            return VariableInterna(S);
         }
 
         function Variador(valorIni, valorFin, cuadrosDuracion, cuadrosRetardo) {
@@ -213,7 +210,7 @@ function Orquestador(sos, contenedor) {
         return {tiempo,
                 cuadros,
                 ruido,
-                Efecto,
+                Variable,
                 Variador};
     }
     
