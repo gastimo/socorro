@@ -1,7 +1,7 @@
 /*
  * =============================================================================
  * 
- *                          C O N F I G U R A C I Ó N
+ *                           C O N F I G U R A C I Ó N
  * 
  * =============================================================================
  */
@@ -11,19 +11,52 @@ const Config = (() => {
     // DEFINICIÓN DE PARÁMETROS
     // Configuración general de las opciones de la aplicación
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    const _parametros = {
+    const _PARAM = {
         
-        // Nombres de las entidades de la aplicación
-        NOMBRE_SOS              : 'SOS',        // Singleton del Obsequioso Socorro
-        NOMBRE_ESCENA           : 'ESCENA',     // Entidad principal para representar la obra
-        NOMBRE_ESQUEMA          : 'ESQUEMA',    // Definición de los atributos y valores de una entidad
-        NOMBRE_VARIABLE         : 'VARIABLE',   // Definición de variables dinámicas de la "Escena"
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+        // > ENTIDADES DEL SOCORRO
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+        // Nombres de las entidades principales del socorro
+        NOMBRE_SOS              : 'SOS',        // Singleton del Obsequioso Socorro (S.O.S)
+        NOMBRE_ESCENA           : 'ESCENA',     // Entidad principal para representación de la obra
+        NOMBRE_ESQUEMA          : 'ESQUEMA',    // Estructura de definición atributos y valores de una entidad
+        NOMBRE_VARIABLE         : 'VARIABLE',   // Variables para cálculo dinámico de valores de atributos
         
-        // Nombre de atributos especiales
+        
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+        // > ESQUEMAS
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+        // Nombres de las entidades principales del socorro
         ATR_SINCRONIZADO        : 'sincronizado',
         ATR_VISIBLE             : 'visible',
+
+        // Sufijo para cálculo de valores dinámicos de atributos
+        ATR_VARIABLE_ALFA       : "$alfa",
         
-        // Métodos de obtención del valor origen de un "Efecto" para su evaluación
+        
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+        // > ESCENAS
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+        // Actos de la orquestación (funciones de la "Escena")
+        ACTO_PREPARACION        : 'cargar',        // "preload" de Processing
+        ACTO_INICIACION         : 'comenzar',      // "setup" de Processing
+        ACTO_EJECUCION          : 'desplegar',     // "draw" de Processing
+
+        // Nombres por defecto para las variables "uniform" estándares
+        UNIFORM_VALOR           : "value",
+        UNIFORM_TIEMPO          : "u_time",
+        UNIFORM_RESOLUCION      : "u_resolution",
+        UNIFORM_MOUSE           : "u_mouse",
+
+        
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+        // > VARIABLES
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        
+        // Métodos de evalaución dinámica de las "Variables"
         METODO_EVAL_FIJO            : 'fijo',
         METODO_EVAL_X_CICLO         : 'ciclo',
         METODO_EVAL_X_CONTRACICLO   : 'contraciclo',
@@ -36,21 +69,19 @@ const Config = (() => {
         METODO_EVAL_X_DISTANCIA_X   : 'distanciaX',
         METODO_EVAL_X_DISTANCIA_Y   : 'distanciaY',
         METODO_EVAL_X_DISTANCIA_Z   : 'distanciaZ',
-                
-        // Uniforms estándares
-        UNIFORM_VALOR           : "value",
-        UNIFORM_TIEMPO          : "u_time",
-        UNIFORM_RESOLUCION      : "u_resolution",
-        UNIFORM_MOUSE           : "u_mouse",
+    };
+    
+    return _PARAM;
+    
+})();
 
-        // Actos de la orquestación
-        ACTO_PREPARACION        : 'cargar',
-        ACTO_INICIACION         : 'comenzar',
-        ACTO_EJECUCION          : 'desplegar',
-        
-        // Código shader por defecto
-        VERTEX_SHADER_THREE     : 'void main() { gl_Position = vec4( position, 1.0 ); }',
-        VERTEX_SHADER_P5        : `
+
+// CÓDIGO POR DEFECTO PARA "VERTEX" SHADERS
+// Código GLSL utilizado por defecto para definir un "vertex" shader
+// básico, tanto para la librería de Three.js como para p5js.
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+Config.VERTEX_SHADER_THREE = 'void main() { gl_Position = vec4( position, 1.0 ); }';
+Config.VERTEX_SHADER_P5    = `
 precision highp float;
 attribute vec3 aPosition;
 uniform mat4 uProjectionMatrix;
@@ -59,13 +90,7 @@ varying vec3 vPosition;
 void main() {
   vPosition = aPosition;
   gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
-}
-`,
-    };
-    
-    return _parametros;
-    
-})();
+}`;
 
 
 export default Config;

@@ -47,9 +47,9 @@ import CONFIG from './config';
  * así, encargarse de la actualización.
  */
 function Esquema(S, nombreEsquema) {
-    const _ESQUEMA = {};
     const _nombre = nombreEsquema ?? CONFIG.NOMBRE_ESQUEMA;
     const _clave  = S.O.S.obtenerClave(_nombre);
+    const _ESQ = {};
     const _DEF = {};
     const _VAL = {};
     _VAL[CONFIG.ATR_VISIBLE] = true;
@@ -142,7 +142,7 @@ function Esquema(S, nombreEsquema) {
      * Esta misma función puede ser usada para definir el esquema a partir
      * de los datos importados desde un archivo JSON.
      */  
-    _ESQUEMA.def = (atributos) => {
+    _ESQ.def = (atributos) => {
       if (atributos) {
         const _defRecursiva = (atrVector, subatributos) => {
           for (const [atrNombre, atrValor] of Object.entries(subatributos)) {
@@ -177,7 +177,7 @@ function Esquema(S, nombreEsquema) {
         };
         _defRecursiva(_VAL, atributos);
       }
-      return _ESQUEMA;
+      return _ESQ;
     };
   
     /**
@@ -197,7 +197,7 @@ function Esquema(S, nombreEsquema) {
      *                             un "subesquema". Se retorna, entonces, el valor
      *                             del atributo <nombre2> del subesquema <nombre1>.
      */
-    _ESQUEMA.val = (...atributos) => {
+    _ESQ.val = (...atributos) => {
       if (atributos.length == 0) {
         return _VAL;
       }
@@ -234,8 +234,8 @@ function Esquema(S, nombreEsquema) {
       if (_valor && _esUnaVariable(_valor)) {
         _valor = _valor.val(S);
       }
-      if (_valor && _ESQUEMA.esUnColor(_valor)) {
-        let _atrNombreExtra = atrNombre + "$alfa";
+      if (_valor && _ESQ.esUnColor(_valor)) {
+        let _atrNombreExtra = atrNombre + CONFIG.ATR_VARIABLE_ALFA;
         if (_valores.hasOwnProperty(_atrNombreExtra)) {
           let _alfa = _obtenerValor(_valores, _atrNombreExtra);
           if (_alfa) {
@@ -271,7 +271,7 @@ function Esquema(S, nombreEsquema) {
      *          En otras palabras, no es posible definir "subconfiguraciones" 
      *          dentro de una configuración. Esa debe resolverlo la GUI.
      */
-    _ESQUEMA.config = (...parametros) => {
+    _ESQ.config = (...parametros) => {
       // 1. Sin argumentos, se devuelve la configuración completa del esquema
       // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
       if (parametros.length == 0) {
@@ -325,7 +325,7 @@ function Esquema(S, nombreEsquema) {
      * clave
      * Devuelve la clave interna unívoca de identificación del objeto
      */
-    _ESQUEMA.clave = () => {
+    _ESQ.clave = () => {
       return _clave;
     };
 
@@ -333,7 +333,7 @@ function Esquema(S, nombreEsquema) {
      * nombre
      * Retorna el nombre interno del esquema
      */
-    _ESQUEMA.nombre = () => {
+    _ESQ.nombre = () => {
       return _nombre;
     };
   
@@ -351,7 +351,7 @@ function Esquema(S, nombreEsquema) {
      * en ese caso, debe actualizar los datos del objeto que hace uso del esquema
      * (por ejemplo, una "Escena") para que ambos concuerden.
      */
-    _ESQUEMA.sincronizar = (subesquema) => {
+    _ESQ.sincronizar = (subesquema) => {
       if (!subesquema) {
         _VAL[CONFIG.ATR_SINCRONIZADO] = true;
       }
@@ -374,7 +374,7 @@ function Esquema(S, nombreEsquema) {
      * "desincronización" puede darse cuando el esquema es modificado de forma
      * externa, por ejmplo, desde una GUI.
      */
-    _ESQUEMA.estaSincronizado = (subesquema) => {
+    _ESQ.estaSincronizado = (subesquema) => {
       if (!subesquema) {
         return _VAL[CONFIG.ATR_SINCRONIZADO];
       }
@@ -394,7 +394,7 @@ function Esquema(S, nombreEsquema) {
      * contenidos del esquema pueden ser visualizados por el usuario
      * (desplegados en pantalla).
      */
-    _ESQUEMA.visible = (valor) => {
+    _ESQ.visible = (valor) => {
       if (valor !== undefined) {
         _VAL[CONFIG.ATR_VISIBLE] = valor;
       }
@@ -406,7 +406,7 @@ function Esquema(S, nombreEsquema) {
      * Retorna "true" o "false" indicando si el argumento recibido es un
      * tipo de dato de p5js utilizado para almacenar un color.
      */        
-    _ESQUEMA.esUnColor = (valor) => {
+    _ESQ.esUnColor = (valor) => {
         return valor.hasOwnProperty("mode");
     };
 
@@ -415,7 +415,7 @@ function Esquema(S, nombreEsquema) {
      * Devuelve una cadena de caracteres con el contenido del esquema
      * convertido a texto (en formato JSON).
      */
-    _ESQUEMA.exportar = (indentacion = "") => {
+    _ESQ.exportar = (indentacion = "") => {
       return _convertirATexto(_VAL, indentacion);
     };
   
@@ -475,7 +475,7 @@ function Esquema(S, nombreEsquema) {
     // ===> Se exponen únicamente las funciones públicas del esquema 
     // ==> ("Revealing Module Pattern")
     // ===============================================================
-    return _ESQUEMA;
+    return _ESQ;
 }
 
 

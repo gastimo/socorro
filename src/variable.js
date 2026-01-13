@@ -1,7 +1,7 @@
 /*
  * =============================================================================
  * 
- *                       M Ó D U L O    E F E C T O S
+ *                       M Ó D U L O    V A R I A B L E
  * 
  * =============================================================================
  */
@@ -218,7 +218,7 @@ function Variable(S) {
         // La primera vez que es invocado este método, se crea su "Calculadora"
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         if (!_calculadora) {
-            _calculadora = Calculadora();
+            _calculadora = _Calculadora();
             let _valorVar   = _ESQ.val('valor');
             let _valorDesde = _ESQ.val('valorDesde');
             let _valorHasta = _ESQ.val('valorHasta');
@@ -289,7 +289,7 @@ function Variable(S) {
  */
   
 /**
- * Calculadora
+ * _Calculadora
  * Objeto auxiliar usado sólo internamente dentro del módulo para llevar a cabo el cálculo 
  * del valor de una "Variable", en otras palabras, Este objeto en particular admite tanto 
  * valores estáticos como un rango de valores posibles, que son interpolados en tiempo de 
@@ -298,7 +298,7 @@ function Variable(S) {
  *  - hasta() : Define el valor o los valores de destino (como una lista o rangos ponderados).
  *  - calc()  : Realiza el cálculo o mapeo del rango origen con el rango destino.
  */
-function Calculadora() {
+function _Calculadora() {
     const _contexto = {};
     const _VAL = {
         valorSimple     : null,

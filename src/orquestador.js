@@ -1,13 +1,12 @@
 /*
  * =============================================================================
  * 
- *                       M Ó D U L O    O R Q U E S T A D O R
+ *                      M Ó D U L O    O R Q U E S T A D O R
  * 
  * =============================================================================
  */
 import CONFIG from './config';
-import VariableInterna from './variable';
-import VariadorInterno from './variador';
+import Auxiliadora from './auxiliadora';
 
 
 /**
@@ -169,51 +168,6 @@ function Orquestador(sos, contenedor) {
     }
     
     
-    // ==========================================================
-    // 
-    //  DEFINICIÓN DE LA FUNCIÓN AUXILIADORA
-    //  
-    // ==========================================================
-    
-    /**
-     * Auxiliadora
-     * Función con rutinas de auxilio de uso general.
-     */
-    function Auxiliadora() {
-        
-        function tiempo() {
-            return _utilizaP5 ? S.O.S.P5.millis() : _reloj.getElapsedTime();
-        }
-
-        function cuadros() {
-            return _utilizaP5 ? S.O.S.P5.frameCount : _conteoDeCuadros();
-        }
-        
-        function ruido(min = 0.0, max = 1.0, variacion = 0.1) {
-            let desplazamiento = S.O.S.aleatorio(0, 100000);
-            let f = () => {
-              let valorRuido = (S.O.S.P5.noise(desplazamiento) * (max - min) + min);
-              desplazamiento += variacion;
-              return valorRuido;
-            };
-            return f;
-        }
-
-        function Variable() {
-            return VariableInterna(S);
-        }
-
-        function Variador(valorIni, valorFin, cuadrosDuracion, cuadrosRetardo) {
-            return VariadorInterno(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, cuadros);
-        }        
-
-        return {tiempo,
-                cuadros,
-                ruido,
-                Variable,
-                Variador};
-    }
-    
     
 // ==============================================================
 // 
@@ -231,13 +185,7 @@ function Orquestador(sos, contenedor) {
      */
     function vincular(escena) {
         _escena = escena;
-        if (S.O.S.hasOwnProperty('THREE')) {
-            _escena.asociar('THREE', S.O.S.THREE);
-        }
-        if (S.O.S.hasOwnProperty('P5')) {
-            _escena.asociar('P5', S.O.S.P5);
-        }
-        S.O.S.revelar(S.O.S, Auxiliadora(), Cargador(), escena);
+        S.O.S.revelar(S.O.S, Auxiliadora(S, _utilizaP5), Cargador(), escena);
     }  
     
     /**
@@ -248,14 +196,10 @@ function Orquestador(sos, contenedor) {
         if (nombre == 'THREE') {
             S.O.S.THREE = componente;
             _reloj = new S.O.S.THREE.Clock();
-            if (_escena)
-                _escena.asociar(nombre, componente);
         }
         else if (nombre == 'P5') {
             S.O.S.P5 = componente;
             _utilizaP5 = true;
-            if (_escena)
-                _escena.asociar(nombre, componente);
         }
         else {
             S.O.S[nombre] = componente;

@@ -157,64 +157,7 @@ const Siervo = () => {
         }
     }
     
-   
-// =====================================================================
-// 
-//  FUNCIONES "AUXILIADORAS" DE USO GENERAL
-//  
-// =====================================================================
-    
-    /**
-     * mapear
-     * Función de ayuda para remapear el valor de un número
-     * (parámetro "valor") perteneciente al rango inicial 
-     * [ini1-fin1] hacia el rango destino [ini2-fin2].
-     */
-    function mapear(valor, ini1, fin1, ini2, fin2) {
-        return (valor - ini1) / (fin1 - ini1) * (fin2 - ini2) + ini2;
-    }
-    
-    /**
-     * repetidor
-     * Método que retorna una función "repetidora" que, aunque sea invocada
-     * en cada iteración del bucle de la "Obra", sólo ejecutará la función
-     * indicada como argumento, una vez por cada intervalo indicado.
-     */
-    function repetidor(argumentoRepeticion, intervaloEspera) {
-        let c = 0;
-        let f = (funcionRepeticion) => {
-          if (c <= 0) {
-            c = intervaloEspera ?? 1;
-            funcionRepeticion(argumentoRepeticion);
-          }
-          c--;
-        };
-        return f;
-    }
 
-    
-    /**
-     * aleatorio
-     * Devuelve un número al azar (float) mayor o igual al mínimo 
-     * especificado y menor que el máximo. Si estos parámetros no 
-     * son definidos, retorna un número aleatorio entre 0 y 1.
-     * El tercer parámetro indica, además, si el signo del número
-     * resultante también debe ser aleatorio.
-     */
-    function aleatorio(minimo, maximo, signoAleatorio = false) {
-        let numero = 0;
-        if (minimo === undefined || maximo === undefined) {
-            numero = Math.random();
-        }
-        else {
-            numero = Math.random() * (maximo - minimo) + minimo;
-        }
-        if (signoAleatorio) {
-            numero *= Math.sign(aleatorio(-1, 1, false)) ?? 1;
-        }
-        return numero;
-    }
-    
     
 // =====================================================================
 // 
@@ -355,8 +298,6 @@ const Siervo = () => {
     return {socorrista,
             obtenerClave,
             revelar,
-            mapear,
-            aleatorio,
             crearEscena,
             crearEscenaP5
            };

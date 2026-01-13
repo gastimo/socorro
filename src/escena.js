@@ -347,42 +347,6 @@ function Escena(S) {
     }
     
     
-// =====================================================================
-// 
-//  FUNCIONES MISCELÁNEAS DE INICIALIZACIÓN Y MANTENIMIENTO
-//  
-// =====================================================================
-    
-    /**
-     * inicializar
-     * Función que crea la "Definición" del esquema asociado a la escena.
-     * Los atributos que se inicialicen en este punto podrán ser importados,
-     * exportados y/o manipulados desde la GUI del "Panel Conrolador".
-     * >>> PENDIENTE DE IMPLEMENTACIÓN
-     */
-    function inicializar() {
-    }
-    
-    
-    /**
-     * asociar
-     * Asocia componentes como parte del socorrista designado.
-     * Se exponen las librerías de p5js y Three.js a través del
-     * socorrista creado para atender a la instancia de la escena.
-     */
-    function asociar(nombre, componente) {
-        if (nombre == 'THREE') {
-            S.O.S.THREE = componente;
-        }
-        else if (nombre == 'P5') {
-            S.O.S.P5 = componente;
-        }
-        else {
-            S.O.S[nombre] = componente;
-        }
-    }    
-    
-    
     // ===============================================================
     // ===> Se exponen únicamente las funciones públicas de la escena
     // ==> ("Revealing Module Pattern") y se implementa la herencia.
@@ -402,8 +366,6 @@ function Escena(S) {
                          dimensionar,
                          lienzo,
                          emplazar,
-                         asociar,
-                         inicializar
                          }, 
                          functionActuaria(),                // Se adicionan los métodos de la "Función Actuaria"
                          Esquema(S, CONFIG.NOMBRE_ESCENA)); // Se heredan las funciones públicas del "Esquema"
