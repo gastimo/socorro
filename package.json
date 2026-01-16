@@ -1,6 +1,6 @@
 {
   "name": "socorro",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Siervos de la Obra del Socorro (S.O.S)",
   "main": "./dist/index.js",
   "scripts": {

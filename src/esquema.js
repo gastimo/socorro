@@ -146,26 +146,32 @@ function Esquema(S, nombreEsquema) {
       if (atributos) {
         const _defRecursiva = (atrVector, subatributos) => {
           for (const [atrNombre, atrValor] of Object.entries(subatributos)) {
+            // --------------------------------------
             // DEFINCIÓN DE VALORES DE SUBESQUEMA
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (atrValor !== null && atrValor !== undefined && typeof atrValor === 'object' && !Array.isArray(atrValor)) {
-              if (_esUnaVariable(atrValor)) {
-                  atrVector[atrNombre] = atrValor;
-                  continue;
-              }
-              else if (_esUnaDefinicionDeVariable(atrValor)) {
-                  atrVector[atrNombre] = S.O.S.Variable();
+              // Se verifica si el valor se corresponde con algún objeto socorrista
+              // (por ejemplo: un "Vector" o una "Variable"
+              let _funcionSocorrista = _obtenerFuncionSocorrista(atrValor);
+              if (_funcionSocorrista !== undefined) {
+                  atrVector[atrNombre] = _funcionSocorrista();
                   atrVector[atrNombre].def(atrValor);
                   continue;
               }
-              // Si el nombre del "subesquema" no está definido (o existe pero no es un "subesquema"), se inicializa
+              else if (_ESQ.esUnVector(atrValor) || _ESQ.esUnaVariable(atrValor)) {
+                  atrVector[atrNombre] = atrValor;
+                  continue;
+              }
+              // Si el nombre del "subesquema" no está definido actualmente o ya
+              // existe pero no es actualmente un "subesquema", se inicializa
               else if (!atrVector.hasOwnProperty(atrNombre) || typeof atrVector[atrNombre] !== 'object' || Array.isArray(atrVector[atrNombre])) {
-                atrVector[atrNombre] = atrValor;  // Esto es intencional, para mantener el puntero al objeto
+                atrVector[atrNombre] = atrValor;    // Esto es intencional, para mantener el puntero al objeto
                 atrVector[atrNombre][CONFIG.ATR_SINCRONIZADO] = true;
               }
               // Invocación recursiva para definir los valores del "subesquema"
               _defRecursiva(atrVector[atrNombre], atrValor);
             }
+            // ------------------------------------------
             // DEFINICIÓN DE VALORES SIMPLES
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             else {
@@ -231,7 +237,7 @@ function Esquema(S, nombreEsquema) {
      */
     function _obtenerValor(_valores, atrNombre) {
       let _valor = _valores[atrNombre];
-      if (_valor && _esUnaVariable(_valor)) {
+      if (_valor && _ESQ.esUnaVariable(_valor)) { 
         _valor = _valor.val(S);
       }
       if (_valor && _ESQ.esUnColor(_valor)) {
@@ -409,6 +415,24 @@ function Esquema(S, nombreEsquema) {
     _ESQ.esUnColor = (valor) => {
         return valor.hasOwnProperty("mode");
     };
+  
+    /**
+     * esUnaVariable
+     * Función para indicar si el objeto recibido como argumento es una "Variable".
+     */
+    _ESQ.esUnaVariable = (objeto) => {
+      let _aux = objeto ? objeto.nombre?.() : undefined;
+      return _aux !== undefined && _aux === CONFIG.NOMBRE_VARIABLE;
+    };
+
+    /**
+     * esUnVector
+     * Función para indicar si el objeto recibido como argumento es un "Vector".
+     */
+    _ESQ.esUnVector = (objeto) => {
+      let _aux = objeto ? objeto.nombre?.() : undefined;
+      return _aux !== undefined && _aux === CONFIG.NOMBRE_VECTOR;
+    };
 
     /**
      * exportar
@@ -452,29 +476,36 @@ function Esquema(S, nombreEsquema) {
     }
 
     /**
-     * _esUnaVariable
-     * Función privada para indicar si el objeto recibido como
-     * argumento es un objeto de tipo "Variable".
+     * _obtenerFuncionSocorrista
+     * Verifica si el objeto recibido como argumento corresponde a alguna de las definiciones
+     * de objetos del módulo del "socorro" (por ejemplo, una "Variable" o un "Vector"). En ese 
+     * caso, retorna la función del socorrista que corresponda para crear el objeto. En caso
+     * contrario, devuelve "undefined".
      */
-    function _esUnaVariable(objeto) {
-      let _aux = objeto.nombre?.();
-      return _aux !== undefined && _aux === CONFIG.NOMBRE_VARIABLE;
-    }
+    function _obtenerFuncionSocorrista(objeto) {
+      // Se verifica si es una "VARIABLE"
+      // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+      if (objeto.hasOwnProperty('metodo') &&
+         (objeto.hasOwnProperty('valor') || objeto.hasOwnProperty('valorDesde') || objeto.hasOwnProperty('valorDesde')))
+        return S.O.S.Variable;
 
-    /**
-     * _esUnaDefinicionDeVariable
-     * Función privada para indicar si el objeto recibido como
-     * argumento es la definición para crear una "Variable".
-     */
-    function _esUnaDefinicionDeVariable(objeto) {
-      return objeto.hasOwnProperty('metodo') &&
-            (objeto.hasOwnProperty('valor') || objeto.hasOwnProperty('valorDesde') || objeto.hasOwnProperty('valorDesde'));
+      // Se verifica si es un "VECTOR"
+      // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+      const _claves = Object.keys(objeto);
+      let _esVector = true;
+      for (let i = 0; i < _claves.length; i++) {
+        if (_claves[i] !== 'x' && _claves[i] !== 'y' && _claves[i] !== 'z') {
+          _esVector = false;
+          break;
+        }
+      }
+      if (_claves.length >= 1 && _claves.length <= 3 && _esVector)
+        return S.O.S.Vector;
+      
+      // Si no corresponde a ningún objeto, se retorna "undefined"
+      return undefined;
     }
   
-    // ===============================================================
-    // ===> Se exponen únicamente las funciones públicas del esquema 
-    // ==> ("Revealing Module Pattern")
-    // ===============================================================
     return _ESQ;
 }
 

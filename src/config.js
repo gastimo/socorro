@@ -22,6 +22,8 @@ const Config = (() => {
         NOMBRE_ESCENA           : 'ESCENA',     // Entidad principal para representación de la obra
         NOMBRE_ESQUEMA          : 'ESQUEMA',    // Estructura de definición atributos y valores de una entidad
         NOMBRE_VARIABLE         : 'VARIABLE',   // Variables para cálculo dinámico de valores de atributos
+        NOMBRE_VECTOR           : 'VECTOR',     // Objeto genérico para operar con vectores
+        NOMBRE_ACTUADOR         : 'ACTUADOR',   // Objetos intérpretes de la "Escena"
         
         
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
@@ -55,6 +57,20 @@ const Config = (() => {
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
         // > VARIABLES
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+        // Métodos de evalaución dinámica de las "Variables"
+        EVAL_FIJO        : 'fijo',
+        EVAL_CICLO       : 'ciclo',
+        EVAL_CONTRACICLO : 'contraciclo',
+        EVAL_LAPSO       : 'lapso',
+        EVAL_AZAR        : 'azar',
+        EVAL_RUIDO       : 'perlin',
+        EVAL_ORDEN       : 'orden',
+        EVAL_CANT        : 'cant',
+        EVAL_DIST        : 'dist',
+        EVAL_DIST_X      : 'distX',
+        EVAL_DIST_Y      : 'distY',
+        EVAL_DIST_Z      : 'distZ',
         
         // Métodos de evalaución dinámica de las "Variables"
         METODO_EVAL_FIJO            : 'fijo',

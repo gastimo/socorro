@@ -8,7 +8,8 @@
 import CONFIG from './config';
 import VariableInterna from './variable';
 import VariadorInterno from './variador';
-
+import VectorInterno from './vector';
+import ActuadorInterno from './actuador';
 
 
 /**
@@ -139,10 +140,17 @@ const Auxiliadora = (S, utilizaP5) => {
             return VariadorInterno(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, cuadros);
         },
         
+        Vector: (x, y, z) => {
+            return VectorInterno(S, x, y, z);
+        },
+        
+        Actuador() {
+          return ActuadorInterno(S);  
+        },
     };
     
     return _AUX;
 };
 
+
 export default Auxiliadora;
-    
