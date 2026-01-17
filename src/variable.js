@@ -264,18 +264,8 @@ function Variable(S) {
         // 2. PREPARACIÓN DEL CONTEXTO DE EJECUCIÓN Y CÁLCULO DINÁMICO DE LA VARIABLE
         // Se pone a disposición el contexto de ejecución y se realiza el cálculo del valor dinámico.
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        _contextoEjecucion = _calculadora.contexto(_ESQ.clave());
-        if (_contextoEjecucion.hasOwnProperty('nuevo') && _contextoEjecucion.nuevo) {
-            let _ruidoVelocidad = _ESQ.val('ruidoVelocidad');
-            _contextoEjecucion.aux    = undefined;
-            _contextoEjecucion.mod    = _ESQ.val('modulador') ?? EVAL[_metodo].mod;
-            _contextoEjecucion.perlin = S.O.S.ruido(0.0, 1.0, _contextoEjecucion.mod);
-            if (_ruidoVelocidad)
-                _contextoEjecucion.ruido = S.O.S.ruido(0.0, 1.0, _ruidoVelocidad);
-            delete _contextoEjecucion.nuevo;
-        }
-        S.O.S.PARAM = _contextoEjecucion;
-        let _v = _calculadora.calc(S);
+        _contextoEjecucion = _calculadora.contexto(S, _ESQ.clave(), _ESQ.val('modulador') ?? EVAL[_metodo].mod, _ESQ.val('ruidoVelocidad'));
+        let _v = _calculadora.calc(S, _contextoEjecucion);
         
         // 3. ADICIÓN DEL RUIDO
         // En caso de haber definido un ruido, se adiciona éste al valor resultante
@@ -343,7 +333,7 @@ function _Calculadora() {
         rangoFin        : null,
         desde           : null,
         hasta           : null,
-        calcular        : null
+        esVector        : false
     };
 
     /**
@@ -379,8 +369,10 @@ function _Calculadora() {
             if (Object.prototype.toString.call(valores[i]) === '[object Object]' && valores[i].hasOwnProperty("pos")) {
                 _VAL.valoresEnRangos.push(valores[i]);
                 _VAL.valorSimple = null;
+                _VAL.esVector = _esUnVector(valores[i].val) ? true : _VAL.esVector;
             }
             else {
+                _VAL.esVector = _esUnVector(valores[i]) ? true : _VAL.esVector;
                 if (valores.length == 1) {
                   _VAL.valoresEnRangos.push({pos: 0.0, val: valores[i]});
                   _VAL.valoresEnRangos.push({pos: 1.0, val: valores[i]});  
@@ -400,15 +392,29 @@ function _Calculadora() {
     * la "Función de Mapeo Dinámico" (si fue indicada) y mapea su resultado contra el 
     * rango de valores de destino. 
     */
-    _VAL.calc = (S) => {
+    _VAL.calc = (S, ctx) => {
         if (_VAL.valorSimple !== null && _VAL.valorSimple !== undefined) {
           return _VAL.valorSimple;
         }
-        if (_VAL.funcionDinamica) {
-          return _mapear(S);
+        
+        if (_VAL.funcionDinamica) {        
+            if (!_VAL.esVector) {
+                S.O.S.PARAM = ctx.PUBX;
+                return _mapear(S, EVAL[_VAL.funcionDinamica].met(S));
+            }
+            else {
+                let _vecFinal = S.O.S.Vector();
+                S.O.S.PARAM = ctx.PUBX;
+                _vecFinal.x = _mapear(S, EVAL[_VAL.funcionDinamica].met(S), 'x');
+                S.O.S.PARAM = ctx.PUBY;
+                _vecFinal.y = _mapear(S, EVAL[_VAL.funcionDinamica].met(S), 'y');
+                S.O.S.PARAM = ctx.PUBZ;
+                _vecFinal.z = _mapear(S, EVAL[_VAL.funcionDinamica].met(S), 'z');
+                return _vecFinal;
+            }
         }
         else {
-          return _VAL.valoresEnRangos.length > 0 ? _VAL.valoresEnRangos[0].val : null;          
+            return _VAL.valoresEnRangos.length > 0 ? _VAL.valoresEnRangos[0].val : null;          
         }
     };
 
@@ -417,10 +423,47 @@ function _Calculadora() {
      * Retorna un objeto que almacena las variables dinámicas del contexto
      * de ejecución para la clave recibida como argumento.
      */
-    _VAL.contexto = (clave) => {
+    _VAL.contexto = (S, clave, modulador, ruidoVelocidad) => {
         if (!_contexto.hasOwnProperty(clave)) {
-            _contexto[clave] = {clave : clave,
-                               nuevo : true};
+            let _contextoEjecucion = {};
+
+            // CONTEXTO DE EJECUCION (RUNTIME)
+            // Estructura con variables públicas y privadas para ser usadas en tiempo de
+            // ejecución. Se crea un contexto diferente (un "scope") por cada combinación
+            // de "Variable" y objeto para el que su atributo está siendo evaluado.
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            if (ruidoVelocidad) {  // Generador de ruido "perlin" interno de la variable
+                _contextoEjecucion.ruido = S.O.S.ruido(0.0, 1.0, ruidoVelocidad);
+            }
+            
+            // CONTEXTO PÚBLICO
+            // Armado del contexto con las variables públicas que pueden ser accedidas
+            // por los "Métodos de Evaluación" dinámicos en tiempo de ejecución.
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            let _pub = {};
+            _pub.clave = clave;
+            _pub.mod = modulador;
+            let _pubX = {};
+            if (_VAL.funcionDinamica === CONFIG.EVAL_RUIDO)
+                _pubX.perlin = S.O.S.ruido(0.0, 1.0, _pub.mod); 
+            _contextoEjecucion.PUBX = S.O.S.revelar(_pubX, _pub);
+            if (_VAL.esVector) {
+                let _pubY = {};
+                if (_VAL.funcionDinamica === CONFIG.EVAL_RUIDO)
+                    _pubY.perlin = S.O.S.ruido(0.0, 1.0, _pub.mod);
+                _contextoEjecucion.PUBY = S.O.S.revelar(_pubY, _pub);
+                let _pubZ = {};
+                if (_VAL.funcionDinamica === CONFIG.EVAL_RUIDO)
+                    _pubZ.perlin = S.O.S.ruido(0.0, 1.0, _pub.mod);
+                _contextoEjecucion.PUBZ = S.O.S.revelar(_pubZ, _pub);
+            }
+            
+            // ALMACENAMIENTO DEL CONTEXTO
+            // Finalmente, el contexto construido es guardado internamente, 
+            // asociado al objeto invocante para ser recuperado cada vez que 
+            // sea necesario calcular un valor dinámico de dicho objeto.
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            _contexto[clave] = _contextoEjecucion;
         }
         return _contexto[clave];
     };
@@ -434,12 +477,11 @@ function _Calculadora() {
      * Esta función permite interpolar tanto valores numéricos simples, como objetos
      * de tipo "color" de p5js y, también, objetos de tipo "Vector".
      */
-    function _mapear(S) {
+    function _mapear(S, pos, coord) {
         // 1. OBTENER VALOR ORIGEN NORMALIZADO
         // En primer lugar, se ejecuta la función de mapeo dinámico (el "Método de Evalución")
         // y se lo termina convirtiendo en un valor normalizado (entre "0" y "1").
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        let pos = EVAL[_VAL.funcionDinamica].met(S);
         if (_VAL.rangoIni || _VAL.rangoFin) {
             pos = S.O.S.mapear(pos, _VAL.rangoIni, _VAL.rangoFin, 0.0, 1.0); // Normalización del dato origen
         }        
@@ -456,7 +498,8 @@ function _Calculadora() {
 
             // Definir la función de interpolación según el tipo de valor (numérico simple, color o "Vector")
             if (!_esUnColor(_valorActual.val)) {
-              funcionInterpolacion = _esUnVector(_valorActual.val) ? _interpolarVector : _interpolarNumero;
+              //funcionInterpolacion = _esUnVector(_valorActual.val) ? _interpolarVector : _interpolarNumero;
+              funcionInterpolacion = _interpolarNumero;
             }
             // Se recorre el "array" de valores de destino para encontrar el valor interpolado
             if (_valorActual.pos == pos) {
@@ -476,7 +519,14 @@ function _Calculadora() {
         // Una vez encontrado el rango dentro del "array" que corresponde a los 
         // valores a interpolar, se invoca a la función correspondiente.
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        return funcionInterpolacion(S, pos, ini.pos, fin.pos, ini.val, fin.val); 
+        if (!coord)
+            return funcionInterpolacion(S, pos, ini.pos, fin.pos, ini.val, fin.val); 
+        else {
+            if (ini.val.hasOwnProperty(coord) || fin.val.hasOwnProperty(coord)) 
+                return funcionInterpolacion(S, pos, ini.pos, fin.pos, ini.val?.[coord], fin.val?.[coord]);
+            else
+                return undefined;
+        }
     }
 
     /**
@@ -587,10 +637,15 @@ EVAL[CONFIG.EVAL_FIJO].met = (S) => {return null;};
 // (la cantidad de milisegundos transcurridos) para devolver valores cíclicos entre "0" y "1".
 // El modulador es un coeficiente que permite acelerar o enlentecer los valores calculados. 
 EVAL[CONFIG.EVAL_CICLO].mod = 1800; 
-EVAL[CONFIG.EVAL_CICLO].met = (S) => {return Math.sin(S.O.S.tiempo() / S.O.S.PARAM.mod) / 2 + 0.5;};
+EVAL[CONFIG.EVAL_CICLO].met = (S) => { if (!S.O.S.PARAM.hasOwnProperty('aux'))
+                                         S.O.S.PARAM.aux = S.O.S.aleatorio(16000, 200000);
+                                     return Math.sin((S.O.S.tiempo() + S.O.S.PARAM.aux) / S.O.S.PARAM.mod) / 2 + 0.5;
+                                    };
 EVAL[CONFIG.EVAL_CONTRACICLO].mod = 1800; 
-EVAL[CONFIG.EVAL_CONTRACICLO].met = (S) => {return Math.cos(S.O.S.tiempo() / S.O.S.PARAM.mod) / 2 + 0.5;};
-
+EVAL[CONFIG.EVAL_CONTRACICLO].met = (S) => { if (!S.O.S.PARAM.hasOwnProperty('aux'))
+                                               S.O.S.PARAM.aux = S.O.S.aleatorio(16000, 200000);
+                                           return Math.cos((S.O.S.tiempo() + S.O.S.PARAM.aux) / S.O.S.PARAM.mod) / 2 + 0.5;
+                                         };
 
 // -----------------------------------------------
 //  MÉTODOS DE EVALUACIÓN: "LAPSO"
@@ -598,8 +653,11 @@ EVAL[CONFIG.EVAL_CONTRACICLO].met = (S) => {return Math.cos(S.O.S.tiempo() / S.O
 // Utiliza el operador de "módulo" sobre el tiempo (la cantidad de milisegundos transcurridos) para
 // producir ciclos repetitivos de valores entre "0" y "1" (que vuelven a iniciarse en "0" cada vez).
 // El modulador es un coeficiente que permite acelerar o enlentecer los valores calculados (el "módulo"). 
-EVAL[CONFIG.EVAL_LAPSO].mod = 444; 
-EVAL[CONFIG.EVAL_LAPSO].met = (S) => {return (S.O.S.tiempo() % S.O.S.PARAM.mod) / S.O.S.PARAM.mod;};
+EVAL[CONFIG.EVAL_LAPSO].mod = 777; 
+EVAL[CONFIG.EVAL_LAPSO].met = (S) => { if (!S.O.S.PARAM.hasOwnProperty('aux'))
+                                         S.O.S.PARAM.aux = S.O.S.aleatorio(16000, 200000);
+                                      return ((S.O.S.tiempo() + S.O.S.PARAM.aux) % S.O.S.PARAM.mod) / S.O.S.PARAM.mod;
+                                   };
 
 
 // -----------------------------------------------
@@ -608,12 +666,11 @@ EVAL[CONFIG.EVAL_LAPSO].met = (S) => {return (S.O.S.tiempo() % S.O.S.PARAM.mod) 
 // Utiliza la función "random" para generar valores entre "0" y "1". El "modulador" indica  
 // cada cuantos milisengundos se vuelve a generar un nuevo valor aleatorio.
 EVAL[CONFIG.EVAL_AZAR].mod = 1200; 
-EVAL[CONFIG.EVAL_AZAR].met = (S) => {
-                                     if (S.O.S.PARAM.aux === undefined || S.O.S.PARAM.aux + S.O.S.PARAM.mod < S.O.S.tiempo()) {
+EVAL[CONFIG.EVAL_AZAR].met = (S) => {if (!S.O.S.PARAM.hasOwnProperty('aux') || S.O.S.PARAM.aux + S.O.S.PARAM.mod < S.O.S.tiempo()) {
                                         S.O.S.PARAM.aux = S.O.S.tiempo();
                                         S.O.S.PARAM.azar = S.O.S.aleatorio();
-                                     }
-                                     return S.O.S.PARAM.azar;
+                                   }
+                                   return S.O.S.PARAM.azar;
                                   };
 
 
@@ -630,7 +687,6 @@ EVAL[CONFIG.EVAL_RUIDO].met = (S) => {return S.O.S.PARAM.perlin();};
 // -----------------------------------------------
 //  OTROS MÉTODOS DE EVALUACIÓN
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
 EVAL[CONFIG.EVAL_ORDEN].mod = 1;
 EVAL[CONFIG.EVAL_ORDEN].met = (S) => {return null;};
 
