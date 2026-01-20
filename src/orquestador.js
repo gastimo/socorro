@@ -367,8 +367,8 @@ function Orquestador(sos, contenedor) {
      * del bucle, justo antes de ejecutar el "Acto 3".
      */
     function verificacionPreActo3() {
-        if (_contenedor && _escena) {
-            // Primero, se verifica si cambiaron las dimensiones del contenedor
+        if (_contenedor && _escena) {            
+            // Se verifica si cambiaron las dimensiones del contenedor
             if (_contenedor.actualizar()) {
                 // Se actualizan las dimensiones de la escena
                 _escena.dimensionar(_contenedor.geometria.ancho, _contenedor.geometria.alto);
@@ -382,6 +382,10 @@ function Orquestador(sos, contenedor) {
                     }
                 }
             }
+            
+            // Inicializar los shaders (ya sea de p5js o de Three.js)
+            _escena.iniciarShader();
+
             // Se actualiza el "uniform" para el tiempo
             if (_valorUniformTiempo) {
                 _valorUniformTiempo[CONFIG.UNIFORM_VALOR] += _reloj.getDelta();

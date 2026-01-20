@@ -51,7 +51,7 @@ const Obra = (() => {
      * en cada iteración del ciclo de la obra para ejecutar
      * los diferentes actos que la componen. Cada escena tiene su 
      * propio orquestador (asignado durante la creación) que 
-     * determina cuándo/cómo cargarla, comenzarla y desplegarla.
+     * determina cuándo/cómo cargarla, comenzarla y reproducirla.
      */
     function orquestar(orquestador) {
         // Simplemente se encola el orquestador para
@@ -127,7 +127,7 @@ const Siervo = () => {
     function obtenerClave(nombre) {
         let _nombre = nombre ?? CONFIG.NOMBRE_SOS;
         if (!_claves.hasOwnProperty(_nombre)) {
-            _claves[_nombre] = 0.0;
+            _claves[_nombre] = 0;
         }
         return _claves[_nombre]++;
     }
@@ -198,9 +198,9 @@ const Siervo = () => {
         // ESCENIFICADOR
         // Intermediario retornado luego de la creación de la escena
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        let _escenificadorCarga      = null;
-        let _escenificadorComienzo   = null;
-        let _escenificadorDespliegue = null;
+        let _escenificadorCarga        = null;
+        let _escenificadorComienzo     = null;
+        let _escenificadorReproduccion = null;
         let _escenificador = (() => {
             function alCargar(funcionCarga) {
                 _escenificadorCarga = funcionCarga;
@@ -208,10 +208,10 @@ const Siervo = () => {
             function alComenzar(funcionComienzo) {
                 _escenificadorComienzo = funcionComienzo;
             }
-            function alDesplegar(funcionDespliegue) {
-                _escenificadorDespliegue = funcionDespliegue;
+            function alReproducir(funcionReproduccion) {
+                _escenificadorReproduccion = funcionReproduccion;
             }
-            return {alCargar, alComenzar, alDesplegar};
+            return {alCargar, alComenzar, alReproducir};
         })();
         
         
@@ -243,9 +243,9 @@ const Siervo = () => {
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             FUNCION[CONFIG.ACTO_INICIACION] = () => {
                 if (_orquestador.acto2ListoParaIniciar()) { 
+                    _escenas[_indice].emplazar(_contenedor);
                     const _ACTO2 = _escenificadorComienzo ? _escenificadorComienzo(_orquestador.socorrista()) : 
                                                           _escenas[_indice][CONFIG.ACTO_INICIACION]();
-                    _escenas[_indice].emplazar(_contenedor);
                     _orquestador.verificacionPosActo2();
                     _orquestador.diferido(false);
                 }
@@ -255,7 +255,7 @@ const Siervo = () => {
             };
             // Redefinición de funciones para el SETUP de psjs
             FUNCION.setup = () => {   
-                FUNCION[CONFIG.ACTO_PREPARACION]();  // El "preload" se eliminó en la v2.0
+                FUNCION[CONFIG.ACTO_PREPARACION]();  // El "preload" se eliminó en la v2.0 de p5js
                 FUNCION[CONFIG.ACTO_INICIACION]();
             };  
             
@@ -267,8 +267,8 @@ const Siervo = () => {
             FUNCION[CONFIG.ACTO_EJECUCION] = () => {
                 if (_orquestador.acto3ListoParaIniciar()) {                    
                     _orquestador.verificacionPreActo3();
-                    const _ACTO3 = _escenificadorDespliegue ? _escenificadorDespliegue(_orquestador.socorrista()) : 
-                                                            _escenas[_indice][CONFIG.ACTO_EJECUCION]();
+                    const _ACTO3 = _escenificadorReproduccion ? _escenificadorReproduccion(_orquestador.socorrista()) : 
+                                                                _escenas[_indice][CONFIG.ACTO_EJECUCION]();
                 }
             };
             // Redefinición de funciones para el DRAW de p5js

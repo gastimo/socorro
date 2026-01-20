@@ -9,6 +9,7 @@ import CONFIG from './config';
 import VariableInterna from './variable';
 import VariadorInterno from './variador';
 import VectorInterno from './vector';
+import EstiloInterno from './estilo';
 import ActuadorInterno from './actuador';
 
 
@@ -28,7 +29,16 @@ const Auxiliadora = (S, utilizaP5) => {
     //  ofrecidas al programador a través del socorrista designado (S.O.S).
     //  
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-        
+
+        /**
+         * obtenerOrden
+         * Función que asigna un número de orden o secuencia para los objetos
+         * internos o subordinados del esquema recibido como argumento.
+         */
+        obtenerOrden: (esquema) => {
+            return S.O.S.obtenerClave(esquema.nombre() + "-" + esquema.clave());
+        },
+
        /**
          * mapear
          * Función de ayuda para remapear el valor de un número
@@ -122,7 +132,62 @@ const Auxiliadora = (S, utilizaP5) => {
             };
             return f;
         },
+        
+        
+        
+    // --------------------------------------------------------------------------------
+    // 
+    //  VERIFICADOR DE TIPOS DE ENTIDADES DEL "SOCORRO"
+    //  Funciones que devuelven "true" o "false", indicando si el argumento recibido
+    //  es del tipo indicado, por ejemplo, "Variable", "Vector", "Estilo", etc.
+    // 
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+        
+        /**
+         * esUnColor
+         * Retorna "true" o "false" indicando si el argumento recibido es un
+         * tipo de dato de p5js utilizado para almacenar un color.
+         */        
+        esUnColor: (valor) => {
+            return valor && valor.hasOwnProperty("mode");
+        },
 
+        /**
+         * esUnaVariable
+         * Función para indicar si el objeto recibido como argumento es una "Variable".
+         */
+        esUnaVariable: (objeto) => {
+          let _aux = objeto ? objeto.nombre?.() : undefined;
+          return _aux !== undefined && _aux === CONFIG.NOMBRE_VARIABLE;
+        },
+
+        /**
+         * esUnVector
+         * Función para indicar si el objeto recibido como argumento es un "Vector".
+         */
+        esUnVector: (objeto) => {
+          let _aux = objeto ? objeto.nombre?.() : undefined;
+          return _aux !== undefined && _aux === CONFIG.NOMBRE_VECTOR;
+        },
+
+        /**
+         * esUnEstilo
+         * Función para indicar si el objeto recibido como argumento es un "Estilo".
+         */
+        esUnEstilo: (objeto) => {
+          let _aux = objeto ? objeto.nombre?.() : undefined;
+          return _aux !== undefined && _aux === CONFIG.NOMBRE_ESTILO;
+        },
+        
+        /**
+         * esUnActuador
+         * Función para indicar si el objeto recibido como argumento es un "Actuador".
+         */
+        esUnActuador: (objeto) => {
+          let _aux = objeto ? objeto.nombre?.() : undefined;
+          return _aux !== undefined && _aux === CONFIG.NOMBRE_ACTUADOR;
+        },
+        
         
     // --------------------------------------------------------------------------------
     // 
@@ -142,6 +207,10 @@ const Auxiliadora = (S, utilizaP5) => {
         
         Vector: (x, y, z) => {
             return VectorInterno(S, x, y, z);
+        },
+        
+        Estilo: (color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo) => {
+            return EstiloInterno(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo);
         },
         
         Actuador() {

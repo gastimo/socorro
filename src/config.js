@@ -23,6 +23,7 @@ const Config = (() => {
         NOMBRE_ESQUEMA          : 'ESQUEMA',    // Estructura de definición atributos y valores de una entidad
         NOMBRE_VARIABLE         : 'VARIABLE',   // Variables para cálculo dinámico de valores de atributos
         NOMBRE_VECTOR           : 'VECTOR',     // Objeto genérico para operar con vectores
+        NOMBRE_ESTILO           : 'ESTILO',     // Definición de las variables para la represención visual de un objeto
         NOMBRE_ACTUADOR         : 'ACTUADOR',   // Objetos intérpretes de la "Escena"
         
         
@@ -36,6 +37,25 @@ const Config = (() => {
 
         // Sufijo para cálculo de valores dinámicos de atributos
         ATR_VARIABLE_ALFA       : "$alfa",
+        ATR_VARIABLE_TRAZO      : "$trazo",
+
+        
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+        // > ESTILOS
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+        // Nombres de los atributos básicos del "Estilo"
+        EST_COLOR        : 'color',
+        EST_GRANDOR      : 'grandor',
+
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+        // > ACTUADORES
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+        // Nombres de los atributos básicos del "Actuador"
+        ACT_ORIGEN          : 'origen',
+        ACT_VELOCIDAD       : 'velocidad',
+        ACT_ESTILO          : 'estilo',
         
         
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
@@ -45,7 +65,7 @@ const Config = (() => {
         // Actos de la orquestación (funciones de la "Escena")
         ACTO_PREPARACION        : 'cargar',        // "preload" de Processing
         ACTO_INICIACION         : 'comenzar',      // "setup" de Processing
-        ACTO_EJECUCION          : 'desplegar',     // "draw" de Processing
+        ACTO_EJECUCION          : 'representar',   // "draw" de Processing
 
         // Nombres por defecto para las variables "uniform" estándares
         UNIFORM_VALOR           : "value",

@@ -245,7 +245,7 @@ function Variable(S) {
         // La primera vez que es invocado este método, se crea su "Calculadora"
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         if (!_calculadora) {
-            _calculadora = _Calculadora();
+            _calculadora = _Calculadora(S);
             let _valorVar   = _ESQ.val('valor');
             let _valorDesde = _ESQ.val('valorDesde');
             let _valorHasta = _ESQ.val('valorHasta');
@@ -272,8 +272,8 @@ function Variable(S) {
         // tanto para números simples como para vectores
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         let _ruido = _contextoEjecucion.ruido?.();
-        if (!_VAR.esUnColor(_v) && _ruido) {
-            if (_VAR.esUnVector(_v))
+        if (!S.O.S.esUnColor(_v) && _ruido) {
+            if (S.O.S.esUnVector(_v))
                 _v.sumar(_ruido * _ESQ.val('ruidoEscala') ?? 1);
             else 
                 _v += _ruido * _ESQ.val('ruidoEscala') ?? 1;
@@ -323,7 +323,7 @@ function Variable(S) {
  *  - hasta() : Define el valor o los valores de destino (como una lista o rangos ponderados).
  *  - calc()  : Realiza el cálculo o mapeo del rango origen con el rango destino.
  */
-function _Calculadora() {
+function _Calculadora(S) {
     const _contexto = {};
     const _VAL = {
         valorSimple     : null,
@@ -369,10 +369,10 @@ function _Calculadora() {
             if (Object.prototype.toString.call(valores[i]) === '[object Object]' && valores[i].hasOwnProperty("pos")) {
                 _VAL.valoresEnRangos.push(valores[i]);
                 _VAL.valorSimple = null;
-                _VAL.esVector = _esUnVector(valores[i].val) ? true : _VAL.esVector;
+                _VAL.esVector = S.O.S.esUnVector(valores[i].val) ? true : _VAL.esVector;
             }
             else {
-                _VAL.esVector = _esUnVector(valores[i]) ? true : _VAL.esVector;
+                _VAL.esVector = S.O.S.esUnVector(valores[i]) ? true : _VAL.esVector;
                 if (valores.length == 1) {
                   _VAL.valoresEnRangos.push({pos: 0.0, val: valores[i]});
                   _VAL.valoresEnRangos.push({pos: 1.0, val: valores[i]});  
@@ -497,8 +497,7 @@ function _Calculadora() {
             let _valorActual = _VAL.valoresEnRangos[i];
 
             // Definir la función de interpolación según el tipo de valor (numérico simple, color o "Vector")
-            if (!_esUnColor(_valorActual.val)) {
-              //funcionInterpolacion = _esUnVector(_valorActual.val) ? _interpolarVector : _interpolarNumero;
+            if (!S.O.S.esUnColor(_valorActual.val)) {
               funcionInterpolacion = _interpolarNumero;
             }
             // Se recorre el "array" de valores de destino para encontrar el valor interpolado
@@ -529,24 +528,6 @@ function _Calculadora() {
         }
     }
 
-    /**
-     * esUnColor
-     * Retorna "true" o "false" indicando si el argumento recibido es un
-     * tipo de dato de p5js utilizado para almacenar un color.
-     */        
-    function _esUnColor(valor) {
-        return valor && valor.hasOwnProperty("mode");
-    }
-    
-    /**
-     * _esUnVector
-     * Función para indicar si el objeto recibido como argumento es un "Vector".
-     */
-    function _esUnVector(objeto) {
-      let _aux = objeto ? objeto.nombre?.() : undefined;
-      return _aux !== undefined && _aux === CONFIG.NOMBRE_VECTOR;
-    }
-    
     /**
      * _interpolarNumero
      * Función privada que interpola dos valores numéricos teniendo en cuenta 

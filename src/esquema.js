@@ -144,42 +144,42 @@ function Esquema(S, nombreEsquema) {
      */  
     _ESQ.def = (atributos) => {
       if (atributos) {
-        const _defRecursiva = (atrVector, subatributos) => {
+        const _defRecursiva = (subesquema, subatributos) => {
           for (const [atrNombre, atrValor] of Object.entries(subatributos)) {
             // --------------------------------------
             // DEFINCIÓN DE VALORES DE SUBESQUEMA
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (atrValor !== null && atrValor !== undefined && typeof atrValor === 'object' && !Array.isArray(atrValor)) {
               // Se verifica si el valor se corresponde con algún objeto socorrista
-              // (por ejemplo: un "Vector" o una "Variable"
+              // (por ejemplo: un "Vector" o una "Variable" o un "Estilo"
               let _funcionSocorrista = _obtenerFuncionSocorrista(atrValor);
               if (_funcionSocorrista !== undefined) {
-                  atrVector[atrNombre] = _funcionSocorrista();
-                  atrVector[atrNombre].def(atrValor);
+                  subesquema[atrNombre] = _funcionSocorrista();
+                  subesquema[atrNombre].def(atrValor);
                   continue;
               }
-              else if (_ESQ.esUnVector(atrValor) || _ESQ.esUnaVariable(atrValor)) {
-                  atrVector[atrNombre] = atrValor;
+              else if (S.O.S.esUnVector(atrValor) || S.O.S.esUnaVariable(atrValor) || S.O.S.esUnEstilo(atrValor)) {
+                  subesquema[atrNombre] = atrValor;
                   continue;
               }
               // Si el nombre del "subesquema" no está definido actualmente o ya
               // existe pero no es actualmente un "subesquema", se inicializa
-              else if (!atrVector.hasOwnProperty(atrNombre) || typeof atrVector[atrNombre] !== 'object' || Array.isArray(atrVector[atrNombre])) {
-                atrVector[atrNombre] = atrValor;    // Esto es intencional, para mantener el puntero al objeto
-                atrVector[atrNombre][CONFIG.ATR_SINCRONIZADO] = true;
+              else if (!subesquema.hasOwnProperty(atrNombre) || typeof subesquema[atrNombre] !== 'object' || Array.isArray(subesquema[atrNombre])) {
+                subesquema[atrNombre] = atrValor;    // Esto es intencional, para mantener el puntero al objeto
+                subesquema[atrNombre][CONFIG.ATR_SINCRONIZADO] = true;
               }
               // Invocación recursiva para definir los valores del "subesquema"
-              _defRecursiva(atrVector[atrNombre], atrValor);
+              _defRecursiva(subesquema[atrNombre], atrValor);
             }
             // ------------------------------------------
             // DEFINICIÓN DE VALORES SIMPLES
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             else {
-              atrVector[atrNombre] = atrValor;
+              subesquema[atrNombre] = atrValor;
             }
           }
           // Se marca como "desincronizado" aún cuando no se haya definido ningún valor real.
-          atrVector[CONFIG.ATR_SINCRONIZADO] = false;
+          subesquema[CONFIG.ATR_SINCRONIZADO] = false;
         };
         _defRecursiva(_VAL, atributos);
       }
@@ -215,7 +215,11 @@ function Esquema(S, nombreEsquema) {
               return _obtenerValor(_valoresDeAtributos, atributos[i]);
             }
             else {
-              _valoresDeAtributos = _valoresDeAtributos[atributos[i]];
+              let _subesquema = _valoresDeAtributos[atributos[i]];
+              if (S.O.S.esUnEstilo(_subesquema))
+                return _subesquema.val(atributos.slice(i+1));
+              else
+                _valoresDeAtributos = _subesquema;
             }
           }
           else {
@@ -225,27 +229,29 @@ function Esquema(S, nombreEsquema) {
       }
     };
   
-  
     /**
      * _obtenerValor
      * Función privada para extraer el valor del atributo existente en el esquema.
      * Esta función tiene en cuenta lo siguiente:
-     * - Si el valor buscado está representado como una "Variable", entonces realiza el cálculo dinámico.
-     * - Si el valor obtenido es un color, verifica si existe el atributo asociado que define su opacidad
-     *   y la aplica al color obtenido antes de devolverlo
-     * - Si no se trata de una "Variable" ni de un color, retorna el valor sin ningún tipo de procesamiento.
+     * - Si el valor buscado está representado como una "Variable", entonces realiza el 
+     *   cálculo dinámico o "evaluación" y retorna su valor.
+     * - Si el valor obtenido es un "color" (de p5js), entonces verifica si existe el 
+     *   atributo asociado que defina su opacidad. De ser así, lo calcula y lo aplica.
+     * - Si no se trata de una "Variable" ni de un color, retorna el valor sin ningún 
+     *   tipo de procesamiento. Los "Vectores" caen en esta categoría.
      */
     function _obtenerValor(_valores, atrNombre) {
       let _valor = _valores[atrNombre];
-      if (_valor && _ESQ.esUnaVariable(_valor)) { 
-        _valor = _valor.val(S);
-      }
-      if (_valor && _ESQ.esUnColor(_valor)) {
-        let _atrNombreExtra = atrNombre + CONFIG.ATR_VARIABLE_ALFA;
-        if (_valores.hasOwnProperty(_atrNombreExtra)) {
-          let _alfa = _obtenerValor(_valores, _atrNombreExtra);
-          if (_alfa) {
-            _valor.setAlpha(_alfa * 255);
+      if (_valor) {
+        if (S.O.S.esUnaVariable(_valor))
+          _valor = _valor.val(S);
+        if (S.O.S.esUnColor(_valor)) {
+          let _atrNombreExtra = atrNombre + CONFIG.ATR_VARIABLE_ALFA;
+          if (_valores.hasOwnProperty(_atrNombreExtra)) {
+            let _alfa = _obtenerValor(_valores, _atrNombreExtra);
+            if (_alfa) {
+              _valor.setAlpha(_alfa * 255);
+            }
           }
         }
       }
@@ -343,7 +349,6 @@ function Esquema(S, nombreEsquema) {
       return _nombre;
     };
   
-  
     /**
      * sincronizar
      * Marca internamente al esquema para indicar que sus contenidos ya fueron
@@ -408,33 +413,6 @@ function Esquema(S, nombreEsquema) {
     };
 
     /**
-     * esUnColor
-     * Retorna "true" o "false" indicando si el argumento recibido es un
-     * tipo de dato de p5js utilizado para almacenar un color.
-     */        
-    _ESQ.esUnColor = (valor) => {
-        return valor.hasOwnProperty("mode");
-    };
-  
-    /**
-     * esUnaVariable
-     * Función para indicar si el objeto recibido como argumento es una "Variable".
-     */
-    _ESQ.esUnaVariable = (objeto) => {
-      let _aux = objeto ? objeto.nombre?.() : undefined;
-      return _aux !== undefined && _aux === CONFIG.NOMBRE_VARIABLE;
-    };
-
-    /**
-     * esUnVector
-     * Función para indicar si el objeto recibido como argumento es un "Vector".
-     */
-    _ESQ.esUnVector = (objeto) => {
-      let _aux = objeto ? objeto.nombre?.() : undefined;
-      return _aux !== undefined && _aux === CONFIG.NOMBRE_VECTOR;
-    };
-
-    /**
      * exportar
      * Devuelve una cadena de caracteres con el contenido del esquema
      * convertido a texto (en formato JSON).
@@ -478,32 +456,63 @@ function Esquema(S, nombreEsquema) {
     /**
      * _obtenerFuncionSocorrista
      * Verifica si el objeto recibido como argumento corresponde a alguna de las definiciones
-     * de objetos del módulo del "socorro" (por ejemplo, una "Variable" o un "Vector"). En ese 
-     * caso, retorna la función del socorrista que corresponda para crear el objeto. En caso
-     * contrario, devuelve "undefined".
+     * de entidades del módulo del "socorro" (ej.: una "Variable", un "Vector", un "Estilo"). 
+     * En ese caso, retorna la función del socorrista que corresponda para crear el objeto. 
+     * En caso contrario, devuelve "undefined".
      */
     function _obtenerFuncionSocorrista(objeto) {
+      // --------------------------------------
       // Se verifica si es una "VARIABLE"
       // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
       if (objeto.hasOwnProperty('metodo') &&
-         (objeto.hasOwnProperty('valor') || objeto.hasOwnProperty('valorDesde') || objeto.hasOwnProperty('valorDesde')))
+         (objeto.hasOwnProperty('valor') || objeto.hasOwnProperty('valorDesde') || objeto.hasOwnProperty('valorDesde'))) {
         return S.O.S.Variable;
-
+      }
+      // --------------------------------------
       // Se verifica si es un "VECTOR"
       // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+      else if (_cumplimenta(objeto, 'x', 'y', 'z')) {
+        return S.O.S.Vector;
+      }
+      // --------------------------------------
+      // Se verifica si es un "ESTILO"
+      // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+      else if (_cumplimenta(objeto, CONFIG.EST_COLOR, CONFIG.EST_GRANDOR, 
+                                 CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO, CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO,
+                                 CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_ALFA, CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO + CONFIG.ATR_VARIABLE_ALFA)) {
+          return S.O.S.Estilo;
+      }
+
+      // Si no corresponde a ningún objeto, se retorna "undefined"
+      return undefined;
+    }
+  
+    /**
+     * _cumplimenta
+     * Retorna "true" o "false" indicando si el objeto recibido como primer
+     * argumento cumplimenta con los atributos indicados por la lista del
+     * segundo argumento. Es decir, cualquier atributo del objeto debe estar
+     * definido en la lista de atributos indicada. No debe necesariamente
+     * incluirlos todos, pero no puede tampoco tener atributos que no estén
+     * indicados en dicha lista.
+     */
+    function _cumplimenta(objeto, ...atributos) {
       const _claves = Object.keys(objeto);
-      let _esVector = true;
+      let _verifica = true;
       for (let i = 0; i < _claves.length; i++) {
-        if (_claves[i] !== 'x' && _claves[i] !== 'y' && _claves[i] !== 'z') {
-          _esVector = false;
+        let _claveEncontrada = false;
+        for (let j = 0; j < atributos.length; j++) {
+          if (_claves[i] == atributos[j]) {
+            _claveEncontrada = true;
+            break;
+          }
+        }
+        if (!_claveEncontrada) {
+          _verifica = false;
           break;
         }
       }
-      if (_claves.length >= 1 && _claves.length <= 3 && _esVector)
-        return S.O.S.Vector;
-      
-      // Si no corresponde a ningún objeto, se retorna "undefined"
-      return undefined;
+      return _verifica && _claves.length >= 1 && _claves.length <= atributos.length;
     }
   
     return _ESQ;

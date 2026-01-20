@@ -22,7 +22,7 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
     // Inicialización de la geometría del contenedor
     const geometria = {};
     _inicializar();
-    
+
     
     /**
      * lienzo
@@ -75,16 +75,25 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
         // Modificar las dimensiones del contenedor
         if (_redimensionar) {
             geometria.ancho = (ancho ? (ancho <= _g.ancho ? ancho : _g.ancho) : _g.ancho);
-            geometria.alto  = (alto  ? (alto  <= _g.alto  ? alto  : _g.alto)  : _g.alto); 
-            if (guardarProporciones) {
-                if (geometria.ancho / geometria.alto > ancho / alto) {
-                  geometria.ancho = geometria.alto  * ancho / alto;
-                }
-                else {
-                  geometria.alto = geometria.ancho * alto / ancho;
-                }
+            geometria.alto  = (alto  ? (alto  <= _g.alto  ? alto  : _g.alto)  : _g.alto);
+        
+            // Si no se especificó ancho/alto en la creación de la escena, se toma en 
+            // este momento el ancho/alto actuales para usar como referencia
+            if (!ancho || !alto) {
+                ancho = geometria.ancho;
+                alto  = geometria.alto;
             }
-            geometria.factorEscala = geometria.ancho / ancho;
+            
+            // Se verifica si se mantienen las proporciones (si aplica)
+            if (guardarProporciones) {
+                if (geometria.ancho / geometria.alto > ancho / alto)
+                  geometria.ancho = geometria.alto  * ancho / alto;
+                else
+                  geometria.alto = geometria.ancho * alto / ancho;
+            }
+            
+            // Finalmente, se recalcula el factor de escala
+            geometria.factorEscala = geometria.ancho / ancho > geometria.alto / alto ? geometria.ancho / ancho : geometria.alto / alto;
         }
         
         return _redimensionar || _reposicionar;
