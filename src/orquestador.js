@@ -349,7 +349,10 @@ function Orquestador(sos, contenedor) {
         if (_valorUniformMouse === undefined) {
             _valorUniformMouse = _escena.uniformMouse(CONFIG.UNIFORM_MOUSE);
         }
-        
+    
+        // Actualizar las variables "uniform" de la resolución
+        _actualizarUniformResolucion();
+
         // Definición de la función para seguimiento del movimiento del mouse
         const _movimientoMouse = (evt) => {
             _valorUniformMouse[CONFIG.UNIFORM_VALOR].x = evt.offsetX / _valorUniformResolucion[CONFIG.UNIFORM_VALOR].x;
@@ -370,29 +373,16 @@ function Orquestador(sos, contenedor) {
         if (_contenedor && _escena) {            
             // Se verifica si cambiaron las dimensiones del contenedor
             if (_contenedor.actualizar()) {
-                // Se actualizan las dimensiones de la escena
+                // Actualización de las dimensiones de la "Escena" y las variables "uniform" de resolución
                 _escena.dimensionar(_contenedor.geometria.ancho, _contenedor.geometria.alto);
-
-                // Actualización del "uniform" para la resolución
-                if (_valorUniformResolucion) {
-                    _valorUniformResolucion[CONFIG.UNIFORM_VALOR].x = _contenedor.geometria.ancho;
-                    _valorUniformResolucion[CONFIG.UNIFORM_VALOR].y = _contenedor.geometria.alto;
-                    if (_utilizaP5) {
-                        _escena.uniformResolucionP5(_valorUniformResolucion[CONFIG.UNIFORM_VALOR]);
-                    }
-                }
+                _actualizarUniformResolucion();
             }
+
+            // Se actualiza el "uniform" para el tiempo
+            _actualizarUniformTiempo();
             
             // Inicializar los shaders (ya sea de p5js o de Three.js)
             _escena.iniciarShader();
-
-            // Se actualiza el "uniform" para el tiempo
-            if (_valorUniformTiempo) {
-                _valorUniformTiempo[CONFIG.UNIFORM_VALOR] += _reloj.getDelta();
-                if (_utilizaP5) {
-                    _escena.uniformTiempoP5(_valorUniformTiempo[CONFIG.UNIFORM_VALOR]);
-                }
-            }
         }
     }
    
@@ -434,6 +424,34 @@ function Orquestador(sos, contenedor) {
             _diferido = diferir;
         }
         return _diferido;
+    }
+    
+    /**
+     * _actualizarUniformResolucion
+     * Función interna que se ocupa de actualizar los valores de las variables
+     * "uniform" que almacenan la resolución del lienzo.
+     */
+    function _actualizarUniformResolucion() {
+        if (_valorUniformResolucion) {
+            _valorUniformResolucion[CONFIG.UNIFORM_VALOR].x = _contenedor.geometria.ancho;
+            _valorUniformResolucion[CONFIG.UNIFORM_VALOR].y = _contenedor.geometria.alto;
+            if (_utilizaP5) {
+                _escena.uniformResolucionP5(_valorUniformResolucion[CONFIG.UNIFORM_VALOR]);
+            }
+        }
+    }
+
+    /**
+     * _actualizarUniformTiempo
+     * Función interna que se ocupa de actualizar el valor del "uniform" del tiempo
+     */
+    function _actualizarUniformTiempo() {
+        if (_valorUniformTiempo) {
+            _valorUniformTiempo[CONFIG.UNIFORM_VALOR] += _reloj.getDelta();
+            if (_utilizaP5) {
+                _escena.uniformTiempoP5(_valorUniformTiempo[CONFIG.UNIFORM_VALOR]);
+            }
+        }
     }
     
     

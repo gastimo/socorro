@@ -8,60 +8,32 @@
 
 const Config = (() => {
     
+    // -----------------------------------------------------------
+    // 
     // DEFINICIÓN DE PARÁMETROS
     // Configuración general de las opciones de la aplicación
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    // 
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    
     const _PARAM = {
         
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-        // > ENTIDADES DEL SOCORRO
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+    // > NOMBRES DE LAS ENTIDADES DEL SOCORRO
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-        // Nombres de las entidades principales del socorro
         NOMBRE_SOS              : 'SOS',        // Singleton del Obsequioso Socorro (S.O.S)
-        NOMBRE_ESCENA           : 'ESCENA',     // Entidad principal para representación de la obra
-        NOMBRE_ESQUEMA          : 'ESQUEMA',    // Estructura de definición atributos y valores de una entidad
+        NOMBRE_ESCENA           : 'ESCENA',     // Entidad principal para representación de la "Obra"
+        NOMBRE_ESQUEMA          : 'ESQUEMA',    // Estructura de definición atributos/valores de entidades el socorro
         NOMBRE_VARIABLE         : 'VARIABLE',   // Variables para cálculo dinámico de valores de atributos
-        NOMBRE_VECTOR           : 'VECTOR',     // Objeto genérico para operar con vectores
+        NOMBRE_VECTOR           : 'VECTOR',     // Objeto genérico para realizar operaciones con vectores
         NOMBRE_ESTILO           : 'ESTILO',     // Definición de las variables para la represención visual de un objeto
-        NOMBRE_ACTUADOR         : 'ACTUADOR',   // Objetos intérpretes de la "Escena"
+        NOMBRE_ACTOR            : 'ACTOR',      // Objetos intérpretes principales de la "Escena"
         
         
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-        // > ESQUEMAS
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-        // Nombres de las entidades principales del socorro
-        ATR_SINCRONIZADO        : 'sincronizado',
-        ATR_VISIBLE             : 'visible',
-
-        // Sufijo para cálculo de valores dinámicos de atributos
-        ATR_VARIABLE_ALFA       : "$alfa",
-        ATR_VARIABLE_TRAZO      : "$trazo",
-
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+    // > ESCENAS
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-        // > ESTILOS
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-        // Nombres de los atributos básicos del "Estilo"
-        EST_COLOR        : 'color',
-        EST_GRANDOR      : 'grandor',
-
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-        // > ACTUADORES
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-        // Nombres de los atributos básicos del "Actuador"
-        ACT_ORIGEN          : 'origen',
-        ACT_VELOCIDAD       : 'velocidad',
-        ACT_ESTILO          : 'estilo',
-        
-        
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-        // > ESCENAS
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
         // Actos de la orquestación (funciones de la "Escena")
         ACTO_PREPARACION        : 'cargar',        // "preload" de Processing
         ACTO_INICIACION         : 'comenzar',      // "setup" de Processing
@@ -72,39 +44,44 @@ const Config = (() => {
         UNIFORM_TIEMPO          : "u_time",
         UNIFORM_RESOLUCION      : "u_resolution",
         UNIFORM_MOUSE           : "u_mouse",
-
         
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-        // > VARIABLES
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+    // > NOMBRES DE ATRIBUTOS DE ESQUEMAS
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+        // Atributos generales del "Esquema"
+        ATR_SINCRONIZADO        : 'sincronizado',
+        ATR_VISIBLE             : 'visible',
+
+        // Sufijos para atributos de "Variables" dinámicas
+        ATR_VARIABLE_ALFA       : "$alfa",
+        ATR_VARIABLE_TRAZO      : "$trazo",
+
+        // Nombres de los atributos básicos del "Estilo"
+        EST_COLOR               : 'color',
+        EST_GRANDOR             : 'grandor',
+
+        // Nombres de los atributos básicos del "Actor"
+        ACT_ORIGEN              : 'origen',
+        ACT_VELOCIDAD           : 'velocidad',
+        ACT_ESTILO              : 'estilo',
+        
+        
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+    // > VARIABLES DINÁMICAS
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
         // Métodos de evalaución dinámica de las "Variables"
         EVAL_FIJO        : 'fijo',
-        EVAL_CICLO       : 'ciclo',
-        EVAL_CONTRACICLO : 'contraciclo',
-        EVAL_LAPSO       : 'lapso',
-        EVAL_AZAR        : 'azar',
-        EVAL_RUIDO       : 'perlin',
-        EVAL_ORDEN       : 'orden',
-        EVAL_CANT        : 'cant',
-        EVAL_DIST        : 'dist',
-        EVAL_DIST_X      : 'distX',
-        EVAL_DIST_Y      : 'distY',
-        EVAL_DIST_Z      : 'distZ',
-        
-        // Métodos de evalaución dinámica de las "Variables"
-        METODO_EVAL_FIJO            : 'fijo',
-        METODO_EVAL_X_CICLO         : 'ciclo',
-        METODO_EVAL_X_CONTRACICLO   : 'contraciclo',
-        METODO_EVAL_X_LAPSO         : 'lapso',
-        METODO_EVAL_X_AZAR          : 'azar',
-        METODO_EVAL_X_RUIDO         : 'perlin',
-        METODO_EVAL_X_ORDEN         : 'orden',
-        METODO_EVAL_X_CANTIDAD      : 'cantidad',
-        METODO_EVAL_X_DISTANCIA     : 'distancia',
-        METODO_EVAL_X_DISTANCIA_X   : 'distanciaX',
-        METODO_EVAL_X_DISTANCIA_Y   : 'distanciaY',
-        METODO_EVAL_X_DISTANCIA_Z   : 'distanciaZ',
+        EVAL_CICLO       : 'ciclo',          // TIEMPO
+        EVAL_CONTRACICLO : 'contraciclo',    // TIEMPO
+        EVAL_LAPSO       : 'lapso',          // TIEMPO
+        EVAL_AZAR        : 'azar',           // AZAR
+        EVAL_RUIDO       : 'perlin',         // AZAR
+        EVAL_ORDEN       : 'orden',          // ACTOR
+        EVAL_DISTANCIA   : 'dist',           // ACTOR
+        EVAL_RECORRIDO   : 'recorrido',      // ACTOR
     };
     
     return _PARAM;
@@ -112,9 +89,12 @@ const Config = (() => {
 })();
 
 
+// --------------------------------------------------------------------
+// 
 // CÓDIGO POR DEFECTO PARA "VERTEX" SHADERS
 // Código GLSL utilizado por defecto para definir un "vertex" shader
 // básico, tanto para la librería de Three.js como para p5js.
+// 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 Config.VERTEX_SHADER_THREE = 'void main() { gl_Position = vec4( position, 1.0 ); }';
 Config.VERTEX_SHADER_P5    = `

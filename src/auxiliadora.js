@@ -10,7 +10,7 @@ import VariableInterna from './variable';
 import VariadorInterno from './variador';
 import VectorInterno from './vector';
 import EstiloInterno from './estilo';
-import ActuadorInterno from './actuador';
+import ActorInterno from './actor';
 
 
 /**
@@ -180,12 +180,12 @@ const Auxiliadora = (S, utilizaP5) => {
         },
         
         /**
-         * esUnActuador
-         * Función para indicar si el objeto recibido como argumento es un "Actuador".
+         * esUnActor
+         * Función para indicar si el objeto recibido como argumento es un "Actor".
          */
-        esUnActuador: (objeto) => {
+        esUnActor: (objeto) => {
           let _aux = objeto ? objeto.nombre?.() : undefined;
-          return _aux !== undefined && _aux === CONFIG.NOMBRE_ACTUADOR;
+          return _aux !== undefined && _aux === CONFIG.NOMBRE_ACTOR;
         },
         
         
@@ -213,8 +213,8 @@ const Auxiliadora = (S, utilizaP5) => {
             return EstiloInterno(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo);
         },
         
-        Actuador() {
-          return ActuadorInterno(S);  
+        Actor() {
+          return ActorInterno(S);  
         },
     };
     

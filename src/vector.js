@@ -19,11 +19,11 @@ import Esquema from './esquema';
  * (ej. "sumar", "mult", "mag", "dist", etc).
  */
 function Vector(S, a, b, c) {
-    const _VEC = {
-        x: a,
-        y: b,
-        z: c
-    };
+    const _VEC = {};
+    let _vectorial = S.O.S.esUnVector(a);
+    _VEC.x = _vectorial ? a.x : a;
+    _VEC.y = _vectorial ? a.y : b;
+    _VEC.z = _vectorial ? a.z : c;
 
     
     // -------------------------------------------------------------
@@ -62,8 +62,8 @@ function Vector(S, a, b, c) {
     /**
      * sumar
      * Suma el vector recibido como argumento al vector actual.
-     * Si el argumetno es un valor escalar, entonces, suma dicho
-     * valor escalar a cada una de las coordandas del vector.
+     * Si el argumento es un valor escalar, entonces, suma dicho
+     * valor escalar a cada una de los componentes del vector.
      */
     _VEC.sumar = (sumando) => {
         let _vectorial = S.O.S.esUnVector(sumando);
@@ -77,6 +77,23 @@ function Vector(S, a, b, c) {
     };
 
     /**
+     * restar
+     * Resta el vector recibido como argumento del vector actual.
+     * Si el argumento es un valor escalar, entonces, resta dicho
+     * valor escalar de cada uno de los componentes del vector.
+     */
+    _VEC.restar = (sustraendo) => {
+        let _vectorial = S.O.S.esUnVector(sustraendo);
+        if (_VEC.x !== null && _VEC.x !== undefined)
+            _VEC.x -= _vectorial ? sustraendo.x?? 0 : sustraendo;
+        if (_VEC.y !== null && _VEC.y !== undefined)
+            _VEC.y -= _vectorial ? sustraendo.y?? 0 : sustraendo;
+        if (_VEC.z !== null && _VEC.z !== undefined)
+            _VEC.z -= _vectorial ? sustraendo.z?? 0 : sustraendo;
+        return _VEC;
+    };
+    
+    /**
      * multiplicar
      * Multiplica el valor escalar recibido como argumento por cada
      * uno de los componentes del vector.
@@ -89,6 +106,14 @@ function Vector(S, a, b, c) {
         if (_VEC.z !== null && _VEC.z !== undefined)
             _VEC.z *= multiplicando;
         return _VEC;        
+    };
+    
+    /**
+     * mag
+     * Devuelve la magnitud del vector, o sea, su longitud.
+     */
+    _VEC.mag = () => {
+        return Math.sqrt(Math.pow(_VEC.x ?? 0, 2) + Math.pow(_VEC.y ?? 0, 2) + Math.pow(_VEC.z ?? 0, 2));
     };
     
     /**

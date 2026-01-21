@@ -11,7 +11,7 @@ import Esquema from './esquema';
 
 /**
  * Escena
- * Entidad principal de la "Obra" que articula la reproducción de los
+ * Entidad principal de la "Obra" que articula la representación de los
  * contenidos visuales en el lienzo del navegador (el "canvas").
  * La "Obra" puede estar compuesta por una o múltiples escenas.
  * 
@@ -20,7 +20,7 @@ import Esquema from './esquema';
  * 
  * - ACTO 1 ("Preparación"): Cargar archivos que van a utilizarse (preload).
  * - ACTO 2 ("Iniciación") : Configuración y armado inicial de la escena (setup).
- * - ACTO 3 ("Ejecución")  : Reproducción (cuadro a cuadro) de la escena (draw).
+ * - ACTO 3 ("Ejecución")  : Representación (cuadro a cuadro) de la escena (draw).
  * 
  * NOTA 1: La escena es la entidad que permite encapsular el uso de las 
  *         librerías para la generación de gráficos (p5js o Three.js).
@@ -41,7 +41,7 @@ function Escena(S) {
     let _nombreUniformResolucion = CONFIG.UNIFORM_RESOLUCION;
     let _nombreUniformMouse      = CONFIG.UNIFORM_MOUSE;
 
-    // Variables Three.js
+    // Variables para la librería Three.js
     let camera, scene;
     let rendererTHREE;
     let rendererP5;
@@ -49,7 +49,7 @@ function Escena(S) {
     
 // =====================================================================
 // 
-//  DEFINICIÓN DE LA "FUNCION ACTUARIA" (LOS TRES ACTOS)
+//  DEFINICIÓN DE LA "FUNCION ACTUARIA" (LOS TRES ACTOS DE LA ESCENA)
 //  
 // =====================================================================
     
@@ -82,7 +82,7 @@ function Escena(S) {
         /**
          * ACTO DE EJECUCIÓN (método "draw" de p5js)
          * Función estándar que se ejecuta indefinidamente "en bucle"
-         * y se encarga de reproducir la escena (cuadro a cuadro).
+         * y se encarga de representar la escena (cuadro a cuadro).
          */
         _FUNCION[CONFIG.ACTO_EJECUCION] = () => {
             if (rendererTHREE) {
@@ -313,6 +313,7 @@ function Escena(S) {
         // Una vez emplazado el "canvas" en la página, se actualizan las dimensiones de la "Escena"
         // para reflejar las dimensiones actuales del lienzo. El "canvas" de la escena siempre asume
         // las medidas del contenedor de la página HTML y no al revés.
+        _contenedor.actualizar();
         dimensionar(_contenedor.geometria.ancho, _contenedor.geometria.alto);
     }
             
@@ -324,6 +325,7 @@ function Escena(S) {
      */
     function iniciarShader() {
         if (!S.O.S.P5) {
+            // LIBRERIA "THREE.js"
             // Se especifican los "shaders" a emplear para la escena, se definen sus
             // variables "uniform" y se invocan las funciones de la librería Three.js.
             let _vshader = _vertexShader && _vertexShader.contenido() ? _vertexShader.contenido() : CONFIG.VERTEX_SHADER_THREE;
@@ -336,6 +338,7 @@ function Escena(S) {
             scene.add(mesh);
         }
         else {
+            // LIBRERÍA "P5.js"
             // Se verifica si se indicó algún "shader" para la escena, se definen sus
             // variables "uniform" y se invocan a las funciones de la libreria p5js.
             if ((_vertexShader && _vertexShader.contenido()) ||

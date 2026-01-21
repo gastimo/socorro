@@ -264,7 +264,7 @@ function Variable(S) {
         // 2. PREPARACIÓN DEL CONTEXTO DE EJECUCIÓN Y CÁLCULO DINÁMICO DE LA VARIABLE
         // Se pone a disposición el contexto de ejecución y se realiza el cálculo del valor dinámico.
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        _contextoEjecucion = _calculadora.contexto(S, _ESQ.clave(), _ESQ.val('modulador') ?? EVAL[_metodo].mod, _ESQ.val('ruidoVelocidad'));
+        _contextoEjecucion = _calculadora.contexto(S, _ESQ.clave(), _ESQ.val('modulador') ?? EVAL[_metodo]?.mod, _ESQ.val('ruidoVelocidad'));
         let _v = _calculadora.calc(S, _contextoEjecucion);
         
         // 3. ADICIÓN DEL RUIDO
@@ -399,16 +399,16 @@ function _Calculadora(S) {
         
         if (_VAL.funcionDinamica) {        
             if (!_VAL.esVector) {
-                S.O.S.PARAM = ctx.PUBX;
+                S.O.S.VAR = ctx.PUBX;
                 return _mapear(S, EVAL[_VAL.funcionDinamica].met(S));
             }
             else {
                 let _vecFinal = S.O.S.Vector();
-                S.O.S.PARAM = ctx.PUBX;
+                S.O.S.VAR = ctx.PUBX;
                 _vecFinal.x = _mapear(S, EVAL[_VAL.funcionDinamica].met(S), 'x');
-                S.O.S.PARAM = ctx.PUBY;
+                S.O.S.VAR = ctx.PUBY;
                 _vecFinal.y = _mapear(S, EVAL[_VAL.funcionDinamica].met(S), 'y');
-                S.O.S.PARAM = ctx.PUBZ;
+                S.O.S.VAR = ctx.PUBZ;
                 _vecFinal.z = _mapear(S, EVAL[_VAL.funcionDinamica].met(S), 'z');
                 return _vecFinal;
             }
@@ -490,8 +490,8 @@ function _Calculadora(S) {
         // El valor normalizado obtenido en el primer paso, se utiliza para interpolar el valor
         // en el rango de valores de "destino" (teniendo en cuenta la ponderación "pos").
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        let ini = {pos: 0.0, val: null};
-        let fin = {pos: 1.0, val: null};
+        let ini = {pos: 0.0, val: undefined};
+        let fin = {pos: 1.0, val: undefined};
         let funcionInterpolacion = _interporlarColor;
         for (let i = _VAL.valoresEnRangos.length - 1; i >= 0; i--) {
             let _valorActual = _VAL.valoresEnRangos[i];
@@ -521,8 +521,9 @@ function _Calculadora(S) {
         if (!coord)
             return funcionInterpolacion(S, pos, ini.pos, fin.pos, ini.val, fin.val); 
         else {
-            if (ini.val.hasOwnProperty(coord) || fin.val.hasOwnProperty(coord)) 
+            if (ini.val.hasOwnProperty(coord) || fin.val.hasOwnProperty(coord)) {
                 return funcionInterpolacion(S, pos, ini.pos, fin.pos, ini.val?.[coord], fin.val?.[coord]);
+            }
             else
                 return undefined;
         }
@@ -534,15 +535,24 @@ function _Calculadora(S) {
      * la posición "ponderada" de cada uno de ellos en el rango ("pos").
      */
     function _interpolarNumero(S, pos, ini1, fin1, ini2, fin2) {
+        if (ini1 === undefined && fin1 === undefined)
+            return undefined;
+        else if (ini2 === undefined && fin2 === undefined)
+            return undefined;
+        else if (ini1 == fin1)
+            return ini1 == 1 ? ini1 : fin1;
         return S.O.S.mapear(pos, ini1, fin1, ini2, fin2); 
     }
 
     /**
      * _interporlarColor
      * Función privada que interpola dos colores de un gradiente, teniendo en cuenta las
-     * "paradas" o posiciones "ponderadas" de cada color dentro del gradiente ()"pos").
+     * "paradas" o posiciones "ponderadas" de cada color dentro del gradiente ("pos").
      */
     function _interporlarColor(S, pos, paradaColorIni, paradaColorFin, colorIni, colorFin) {
+        if (paradaColorIni == paradaColorFin) {
+            return paradaColorIni == 1 ? colorIni : colorFin;
+        }
         let posInterpolada = (pos - paradaColorIni) / (paradaColorFin - paradaColorIni);
         let colorIniR = S.O.S.P5.red  (colorIni);
         let colorIniG = S.O.S.P5.green(colorIni);
@@ -551,26 +561,10 @@ function _Calculadora(S) {
         let colorFinG = S.O.S.P5.green(colorFin);
         let colorFinB = S.O.S.P5.blue (colorFin);
         return S.O.S.P5.color(colorIniR * (1.0 - posInterpolada) + colorFinR * posInterpolada,
-                             colorIniG * (1.0 - posInterpolada) + colorFinG * posInterpolada,
-                             colorIniB * (1.0 - posInterpolada) + colorFinB * posInterpolada);        
+                              colorIniG * (1.0 - posInterpolada) + colorFinG * posInterpolada,
+                              colorIniB * (1.0 - posInterpolada) + colorFinB * posInterpolada);        
     }
-    
-    /**
-     * _interpolarVector
-     * Función privada que interpola dos objetos de tipo "Vector" teniendo en 
-     * cuenta la posición "ponderada" de cada uno de ellos en el rango ("pos").
-     */
-    function _interpolarVector(S, pos, ini1, fin1, ini2, fin2) {
-        let _vecFinal = S.O.S.Vector();
-        if (ini2.x !== undefined && fin2.x !== null)
-            _vecFinal.x = S.O.S.mapear(pos, ini1, fin1, ini2.x, fin2.x); 
-        if (ini2.y !== undefined && fin2.y !== null)
-            _vecFinal.y = S.O.S.mapear(pos, ini1, fin1, ini2.y, fin2.y); 
-        if (ini2.z !== undefined && fin2.z !== null)
-            _vecFinal.z = S.O.S.mapear(pos, ini1, fin1, ini2.z, fin2.z); 
-        return _vecFinal; 
-    }
-        
+            
     return _VAL;
 }
 
@@ -594,21 +588,10 @@ const EVAL = {};
     EVAL[CONFIG.EVAL_LAPSO]       = {};
     EVAL[CONFIG.EVAL_AZAR]        = {};
     EVAL[CONFIG.EVAL_RUIDO]       = {};
-
     EVAL[CONFIG.EVAL_ORDEN]       = {};
-    EVAL[CONFIG.EVAL_CANT]        = {};
-    EVAL[CONFIG.EVAL_DIST]        = {};
-    EVAL[CONFIG.EVAL_DIST_X]      = {};
-    EVAL[CONFIG.EVAL_DIST_Y]      = {};
-    EVAL[CONFIG.EVAL_DIST_Z]      = {};
+    EVAL[CONFIG.EVAL_DISTANCIA]   = {};
+    EVAL[CONFIG.EVAL_RECORRIDO]   = {};
 
-
-
-// -----------------------------------------------
-//  MÉTODO DE EVALUACIÓN: "FIJO"
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-EVAL[CONFIG.EVAL_FIJO].mod = 1.0;
-EVAL[CONFIG.EVAL_FIJO].met = (S) => {return null;}; 
 
 
 // -----------------------------------------------
@@ -618,15 +601,15 @@ EVAL[CONFIG.EVAL_FIJO].met = (S) => {return null;};
 // (la cantidad de milisegundos transcurridos) para devolver valores cíclicos entre "0" y "1".
 // El modulador es un coeficiente que permite acelerar o enlentecer los valores calculados. 
 EVAL[CONFIG.EVAL_CICLO].mod = 1800; 
-EVAL[CONFIG.EVAL_CICLO].met = (S) => { if (!S.O.S.PARAM.hasOwnProperty('aux'))
-                                         S.O.S.PARAM.aux = S.O.S.aleatorio(16000, 200000);
-                                     return Math.sin((S.O.S.tiempo() + S.O.S.PARAM.aux) / S.O.S.PARAM.mod) / 2 + 0.5;
-                                    };
+EVAL[CONFIG.EVAL_CICLO].met = (S) => { if (!S.O.S.VAR.hasOwnProperty('aux'))
+                                         S.O.S.VAR.aux = S.O.S.aleatorio(16000, 200000);
+                                       return Math.sin((S.O.S.tiempo() + S.O.S.VAR.aux) / S.O.S.VAR.mod) / 2 + 0.5;
+                                     };
 EVAL[CONFIG.EVAL_CONTRACICLO].mod = 1800; 
-EVAL[CONFIG.EVAL_CONTRACICLO].met = (S) => { if (!S.O.S.PARAM.hasOwnProperty('aux'))
-                                               S.O.S.PARAM.aux = S.O.S.aleatorio(16000, 200000);
-                                           return Math.cos((S.O.S.tiempo() + S.O.S.PARAM.aux) / S.O.S.PARAM.mod) / 2 + 0.5;
-                                         };
+EVAL[CONFIG.EVAL_CONTRACICLO].met = (S) => { if (!S.O.S.VAR.hasOwnProperty('aux'))
+                                               S.O.S.VAR.aux = S.O.S.aleatorio(16000, 200000);
+                                             return Math.cos((S.O.S.tiempo() + S.O.S.VAR.aux) / S.O.S.VAR.mod) / 2 + 0.5;
+                                           };
 
 // -----------------------------------------------
 //  MÉTODOS DE EVALUACIÓN: "LAPSO"
@@ -635,10 +618,10 @@ EVAL[CONFIG.EVAL_CONTRACICLO].met = (S) => { if (!S.O.S.PARAM.hasOwnProperty('au
 // producir ciclos repetitivos de valores entre "0" y "1" (que vuelven a iniciarse en "0" cada vez).
 // El modulador es un coeficiente que permite acelerar o enlentecer los valores calculados (el "módulo"). 
 EVAL[CONFIG.EVAL_LAPSO].mod = 777; 
-EVAL[CONFIG.EVAL_LAPSO].met = (S) => { if (!S.O.S.PARAM.hasOwnProperty('aux'))
-                                         S.O.S.PARAM.aux = S.O.S.aleatorio(16000, 200000);
-                                      return ((S.O.S.tiempo() + S.O.S.PARAM.aux) % S.O.S.PARAM.mod) / S.O.S.PARAM.mod;
-                                   };
+EVAL[CONFIG.EVAL_LAPSO].met = (S) => { if (!S.O.S.VAR.hasOwnProperty('aux'))
+                                         S.O.S.VAR.aux = S.O.S.aleatorio(16000, 200000);
+                                       return ((S.O.S.tiempo() + S.O.S.VAR.aux) % S.O.S.VAR.mod) / S.O.S.VAR.mod;
+                                     };
 
 
 // -----------------------------------------------
@@ -647,12 +630,12 @@ EVAL[CONFIG.EVAL_LAPSO].met = (S) => { if (!S.O.S.PARAM.hasOwnProperty('aux'))
 // Utiliza la función "random" para generar valores entre "0" y "1". El "modulador" indica  
 // cada cuantos milisengundos se vuelve a generar un nuevo valor aleatorio.
 EVAL[CONFIG.EVAL_AZAR].mod = 1200; 
-EVAL[CONFIG.EVAL_AZAR].met = (S) => {if (!S.O.S.PARAM.hasOwnProperty('aux') || S.O.S.PARAM.aux + S.O.S.PARAM.mod < S.O.S.tiempo()) {
-                                        S.O.S.PARAM.aux = S.O.S.tiempo();
-                                        S.O.S.PARAM.azar = S.O.S.aleatorio();
-                                   }
-                                   return S.O.S.PARAM.azar;
-                                  };
+EVAL[CONFIG.EVAL_AZAR].met = (S) => {if (!S.O.S.VAR.hasOwnProperty('aux') || S.O.S.VAR.aux + S.O.S.VAR.mod < S.O.S.tiempo()) {
+                                        S.O.S.VAR.aux = S.O.S.tiempo();
+                                        S.O.S.VAR.azar = S.O.S.aleatorio();
+                                     }
+                                     return S.O.S.VAR.azar;
+                                    };
 
 
 // -----------------------------------------------
@@ -662,7 +645,7 @@ EVAL[CONFIG.EVAL_AZAR].met = (S) => {if (!S.O.S.PARAM.hasOwnProperty('aux') || S
 // El "modulador" indica el desplazamiento para la generación del ruido perlin, es decir, es un 
 // coeficiente para incrementar la intensidad o velocidad del desplazamiento en la generación.
 EVAL[CONFIG.EVAL_RUIDO].mod = 0.016; 
-EVAL[CONFIG.EVAL_RUIDO].met = (S) => {return S.O.S.PARAM.perlin();};
+EVAL[CONFIG.EVAL_RUIDO].met = (S) => {return S.O.S.VAR.perlin();};
 
 
 // -----------------------------------------------
@@ -671,20 +654,11 @@ EVAL[CONFIG.EVAL_RUIDO].met = (S) => {return S.O.S.PARAM.perlin();};
 EVAL[CONFIG.EVAL_ORDEN].mod = 1;
 EVAL[CONFIG.EVAL_ORDEN].met = (S) => {return null;};
 
-EVAL[CONFIG.EVAL_CANT].mod = 1;
-EVAL[CONFIG.EVAL_CANT].met = (S) => {return null;};
+EVAL[CONFIG.EVAL_DISTANCIA].mod = 1;
+EVAL[CONFIG.EVAL_DISTANCIA].met = (S) => {return S.O.S.ACTOR.distancia * S.O.S.VAR.mod;};
 
-EVAL[CONFIG.EVAL_DIST].mod = 1;
-EVAL[CONFIG.EVAL_DIST].met = (S) => {return null;};
-
-EVAL[CONFIG.EVAL_DIST_X].mod = 1;
-EVAL[CONFIG.EVAL_DIST_X].met = (S) => {return null;};
-
-EVAL[CONFIG.EVAL_DIST_Y].mod = 1;
-EVAL[CONFIG.EVAL_DIST_Y].met = (S) => {return null;};
-
-EVAL[CONFIG.EVAL_DIST_Z].mod = 1;
-EVAL[CONFIG.EVAL_DIST_Z].met = (S) => {return null;};
+EVAL[CONFIG.EVAL_RECORRIDO].mod = 1;
+EVAL[CONFIG.EVAL_RECORRIDO].met = (S) => {return S.O.S.ACTOR.recorrido * S.O.S.VAR.mod;};
 
 
 // LEGACY METHODS

@@ -78,13 +78,19 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
             geometria.alto  = (alto  ? (alto  <= _g.alto  ? alto  : _g.alto)  : _g.alto);
         
             // Si no se especificó ancho/alto en la creación de la escena, se toma en 
-            // este momento el ancho/alto actuales para usar como referencia
+            // este momento el ancho/alto actuales como valores de referencia
             if (!ancho || !alto) {
-                ancho = geometria.ancho;
-                alto  = geometria.alto;
+                ancho = geometria.ancho * 1.12;  // HACK: en algunos browsers, el tamaño del contenedor es ajustado
+                alto  = geometria.alto  * 1.12;  // (achicado) inmediatamente después de dibujado (¿scrollbars?)
+                if (ancho / alto > geometria.ancho / geometria.alto)
+                  ancho = alto * geometria.ancho / geometria.alto;
+                else
+                  alto = ancho * geometria.alto / geometria.ancho;
             }
             
-            // Se verifica si se mantienen las proporciones (si aplica)
+            // Se verifica si se deben mantener las proporciones, tomando como referencia
+            // el ancho/alto especificados en la creación o, en su defecto, el ancho/alto
+            // de referencia (el del contenedor o la dimensión estándar predefinida).
             if (guardarProporciones) {
                 if (geometria.ancho / geometria.alto > ancho / alto)
                   geometria.ancho = geometria.alto  * ancho / alto;
@@ -93,12 +99,14 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
             }
             
             // Finalmente, se recalcula el factor de escala
-            geometria.factorEscala = geometria.ancho / ancho > geometria.alto / alto ? geometria.ancho / ancho : geometria.alto / alto;
+            geometria.factorEscala = geometria.ancho / ancho > geometria.alto / alto ? 
+                                     geometria.ancho / ancho : geometria.alto / alto;
         }
         
         return _redimensionar || _reposicionar;
     }
 
+    
     /**
      * _obtenerGeometria
      * Función privada que retorna un objeto con la información
@@ -138,6 +146,7 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
         geometria.y = 0;
         geometria.factorEscala = geometria.ancho / ancho;
     }
+    
     
     /**
      * _actualizarLienzo

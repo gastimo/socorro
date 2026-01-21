@@ -51,7 +51,7 @@ const Obra = (() => {
      * en cada iteración del ciclo de la obra para ejecutar
      * los diferentes actos que la componen. Cada escena tiene su 
      * propio orquestador (asignado durante la creación) que 
-     * determina cuándo/cómo cargarla, comenzarla y reproducirla.
+     * determina cuándo/cómo cargarla, comenzarla y representarla.
      */
     function orquestar(orquestador) {
         // Simplemente se encola el orquestador para
@@ -65,7 +65,7 @@ const Obra = (() => {
      * Procedimiento para reclutar un nuevo seguidor 
      * para la obra. Todo seguidor debe ser un siervo
      * convertido en socorrista para asistir en las
-     * tareas de creación y reproducción de escenas.
+     * tareas de creación y representación de escenas.
      */
     function seguidor(siervo) {
         let _nuevoSeguidor = siervo;
@@ -198,9 +198,9 @@ const Siervo = () => {
         // ESCENIFICADOR
         // Intermediario retornado luego de la creación de la escena
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        let _escenificadorCarga        = null;
-        let _escenificadorComienzo     = null;
-        let _escenificadorReproduccion = null;
+        let _escenificadorCarga          = null;
+        let _escenificadorComienzo       = null;
+        let _escenificadorRepresentacion = null;
         let _escenificador = (() => {
             function alCargar(funcionCarga) {
                 _escenificadorCarga = funcionCarga;
@@ -208,16 +208,16 @@ const Siervo = () => {
             function alComenzar(funcionComienzo) {
                 _escenificadorComienzo = funcionComienzo;
             }
-            function alReproducir(funcionReproduccion) {
-                _escenificadorReproduccion = funcionReproduccion;
+            function alRepresentar(funcionRepresentacion) {
+                _escenificadorRepresentacion = funcionRepresentacion;
             }
-            return {alCargar, alComenzar, alReproducir};
+            return {alCargar, alComenzar, alRepresentar};
         })();
         
         
         // ORQUESTACION Y EJECUCIÓN DE LA OBRA
         // La orquestación define los pasos (o "actos") y las funciones que son
-        // requeridas para cargar la escena, iniciarla y reproducirla en bucle
+        // requeridas para cargar la escena, iniciarla y representarla en bucle
         // (el "Ciclo Eterno de la Representación").
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         const _orquestador = Orquestador(S.O.S, _contenedor);
@@ -245,7 +245,7 @@ const Siervo = () => {
                 if (_orquestador.acto2ListoParaIniciar()) { 
                     _escenas[_indice].emplazar(_contenedor);
                     const _ACTO2 = _escenificadorComienzo ? _escenificadorComienzo(_orquestador.socorrista()) : 
-                                                          _escenas[_indice][CONFIG.ACTO_INICIACION]();
+                                                            _escenas[_indice][CONFIG.ACTO_INICIACION]();
                     _orquestador.verificacionPosActo2();
                     _orquestador.diferido(false);
                 }
@@ -267,8 +267,8 @@ const Siervo = () => {
             FUNCION[CONFIG.ACTO_EJECUCION] = () => {
                 if (_orquestador.acto3ListoParaIniciar()) {                    
                     _orquestador.verificacionPreActo3();
-                    const _ACTO3 = _escenificadorReproduccion ? _escenificadorReproduccion(_orquestador.socorrista()) : 
-                                                                _escenas[_indice][CONFIG.ACTO_EJECUCION]();
+                    const _ACTO3 = _escenificadorRepresentacion ? _escenificadorRepresentacion(_orquestador.socorrista()) : 
+                                                                  _escenas[_indice][CONFIG.ACTO_EJECUCION]();
                 }
             };
             // Redefinición de funciones para el DRAW de p5js
