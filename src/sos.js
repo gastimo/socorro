@@ -232,9 +232,10 @@ const Siervo = () => {
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             FUNCION[CONFIG.ACTO_PREPARACION] = () => {
                 _escenas[_indice] = Escena(_orquestador.socorrista());
+                _escenas[_indice].reproducirGLSL(!usarP5);
                 _orquestador.vincular(_escenas[_indice]);
                 const _ACTO1 = _escenificadorCarga ? _escenificadorCarga(_orquestador.socorrista()): 
-                                                   _escenas[_indice][CONFIG.ACTO_PREPARACION]();
+                                                     _escenas[_indice][CONFIG.ACTO_PREPARACION]();
             };
             
             // 2. ACTO DE INICIACIÓN (o método "setup" de p5js)

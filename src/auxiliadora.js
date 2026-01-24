@@ -36,7 +36,7 @@ const Auxiliadora = (S, utilizaP5) => {
          * internos o subordinados del esquema recibido como argumento.
          */
         obtenerOrden: (esquema) => {
-            return S.O.S.obtenerClave(esquema.nombre() + "-" + esquema.clave());
+            return S.O.S.obtenerClave(esquema.identificador);
         },
 
        /**
@@ -84,7 +84,7 @@ const Auxiliadora = (S, utilizaP5) => {
                 numero = Math.random() * (maximo - minimo) + minimo;
             }
             if (signoAleatorio) {
-                numero *= Math.sign(aleatorio(-1, 1, false)) ?? 1;
+                numero *= Math.sign(_AUX.aleatorio(-1, 1, false)) ?? 1;
             }
             return numero;
         },
@@ -157,7 +157,7 @@ const Auxiliadora = (S, utilizaP5) => {
          * Función para indicar si el objeto recibido como argumento es una "Variable".
          */
         esUnaVariable: (objeto) => {
-          let _aux = objeto ? objeto.nombre?.() : undefined;
+          let _aux = objeto ? objeto?.nombre : undefined;
           return _aux !== undefined && _aux === CONFIG.NOMBRE_VARIABLE;
         },
 
@@ -166,7 +166,7 @@ const Auxiliadora = (S, utilizaP5) => {
          * Función para indicar si el objeto recibido como argumento es un "Vector".
          */
         esUnVector: (objeto) => {
-          let _aux = objeto ? objeto.nombre?.() : undefined;
+          let _aux = objeto ? objeto?.nombre : undefined;
           return _aux !== undefined && _aux === CONFIG.NOMBRE_VECTOR;
         },
 
@@ -175,7 +175,7 @@ const Auxiliadora = (S, utilizaP5) => {
          * Función para indicar si el objeto recibido como argumento es un "Estilo".
          */
         esUnEstilo: (objeto) => {
-          let _aux = objeto ? objeto.nombre?.() : undefined;
+          let _aux = objeto ? objeto?.nombre : undefined;
           return _aux !== undefined && _aux === CONFIG.NOMBRE_ESTILO;
         },
         
@@ -184,7 +184,7 @@ const Auxiliadora = (S, utilizaP5) => {
          * Función para indicar si el objeto recibido como argumento es un "Actor".
          */
         esUnActor: (objeto) => {
-          let _aux = objeto ? objeto.nombre?.() : undefined;
+          let _aux = objeto ? objeto?.nombre : undefined;
           return _aux !== undefined && _aux === CONFIG.NOMBRE_ACTOR;
         },
         
@@ -197,8 +197,8 @@ const Auxiliadora = (S, utilizaP5) => {
     // 
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         
-        Variable: () => {
-            return VariableInterna(S);
+        Variable: (...parametros) => {
+            return VariableInterna(S, ...parametros);
         },
         
         Variador: (valorIni, valorFin, cuadrosDuracion, cuadrosRetardo) => {
@@ -213,8 +213,8 @@ const Auxiliadora = (S, utilizaP5) => {
             return EstiloInterno(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo);
         },
         
-        Actor() {
-          return ActorInterno(S);  
+        Actor(origen, velocidad, estilo) {
+          return ActorInterno(S, origen, velocidad, estilo);  
         },
     };
     

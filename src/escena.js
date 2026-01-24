@@ -28,8 +28,11 @@ import Esquema from './esquema';
  * 
  */
 function Escena(S) {
+    const _ESQ = Esquema(S, CONFIG.NOMBRE_ESCENA);
+    const _estilo = {color: undefined, grandor: undefined, trazo: undefined, grosor: undefined};
     let _contenedor;
     let _esEscalable = false;
+    let _reproducirCodigoGLSL = false;
 
     // Shaders
     let _vertexShader, _fragmentShader;
@@ -46,7 +49,59 @@ function Escena(S) {
     let rendererTHREE;
     let rendererP5;
     
+
+// =====================================================================
+// 
+//  DEFINICIÓN DE LOS ATRIBUTOS DE "ESTILO" DE LA ESCENA
+//  
+// =====================================================================
     
+    /**
+     * defEstilo
+     * Define los atributos básicos para la representación visual de la "Escena".
+     * El argumento recibido puede ser un objeto de tipo "Estilo" u otro objeto Javascript
+     * que contenga su definición.
+     */
+    function defEstilo(estilo) {
+        const _definicion = {};
+        if (estilo !== undefined && estilo !== null)
+            _definicion[CONFIG.ACT_ESTILO] = estilo;
+        _ESQ.def(_definicion);
+    }
+    
+    /**
+     * estilar
+     * Aplica los estilos básicos de la "Escena". Esto es:
+     *  - color   : color de fondo de la escena
+     *  - grandor : na
+     *  - trazo   : color del trazo alrededor de la escena
+     *  - grosor  : grosor del trazo alrededor de la escena
+     */
+    function estilar() {
+        let _e = _ESQ.val(CONFIG.ACT_ESTILO);
+        if (_e) {
+            _e.actualizar();
+            _estilo.color   = _e.color();
+            _estilo.trazo   = _e.color(true);
+            _estilo.grandor = _e.grandor();
+            _estilo.grosor  = _e.grandor(true);
+
+            if (_estilo.color !== undefined && _estilo.color !== null) {
+                S.O.S.P5.background(_estilo.color);
+            }
+            if (_estilo.trazo !== undefined && _estilo.trazo !== null &&
+                _estilo.grosor !== undefined && _estilo.grosor !== null) {
+                S.O.S.P5.push();
+                S.O.S.P5.noFill();
+                S.O.S.P5.stroke(_estilo.trazo);
+                S.O.S.P5.strokeWeight(_estilo.grosor);
+                S.O.S.P5.rect(-ancho() / 2, -alto() / 2, ancho(), alto());
+                S.O.S.P5.pop();
+            }
+        }
+    }
+    
+
 // =====================================================================
 // 
 //  DEFINICIÓN DE LA "FUNCION ACTUARIA" (LOS TRES ACTOS DE LA ESCENA)
@@ -84,21 +139,29 @@ function Escena(S) {
          * Función estándar que se ejecuta indefinidamente "en bucle"
          * y se encarga de representar la escena (cuadro a cuadro).
          */
-        _FUNCION[CONFIG.ACTO_EJECUCION] = () => {
-            if (rendererTHREE) {
-                rendererTHREE.render(scene, camera);
+        _FUNCION[CONFIG.ACTO_EJECUCION] = (mostrarActores = true) => {
+            if (_reproducirCodigoGLSL) {
+                if (rendererTHREE) {
+                    rendererTHREE.render(scene, camera);
+                }
+                if (rendererP5) {
+                    if (_p5Shader) {
+                        S.O.S.P5.push();
+                        S.O.S.P5.noStroke();
+                        S.O.S.P5.shader(_p5Shader);
+                        S.O.S.P5.plane(_contenedor.geometria.ancho, _contenedor.geometria.alto);
+                        S.O.S.P5.pop();  
+                    }
+                }
             }
-            if (rendererP5) {
-                S.O.S.P5.push();
-                S.O.S.P5.noStroke();
-                S.O.S.P5.shader(_p5Shader);
-                S.O.S.P5.plane(_contenedor.geometria.ancho, _contenedor.geometria.alto);
-                S.O.S.P5.pop();           
+            if (mostrarActores) {
+                S.O.S.representarReparto();
             }
         };
         
         return _FUNCION;
     }
+
     
     
 // =====================================================================
@@ -285,6 +348,20 @@ function Escena(S) {
     }
     
     /**
+     * reproducirGLSL
+     * Indica si al representar la "Escena" se debe incluir también la reproducción
+     * de los programas GLSL que hayan sido definidos ("shaders"). El argumento de 
+     * la función permite definir si la ejecuión del código GLSL debe ser incluida
+     * en adelante en cada representación de la "Escena".
+     */
+    function reproducirGLSL(mostrarShader) {
+        if (mostrarShader !== undefined) {
+            _reproducirCodigoGLSL = mostrarShader;
+        }
+        return _reproducirCodigoGLSL;
+    }
+    
+    /**
      * emplazar
      * Función principal que encapsula los llamados a las librerías necesarias
      * para construir el "canvas" de la escena en la página HTML. El emplazamiento
@@ -299,7 +376,7 @@ function Escena(S) {
             _contenedor.lienzo(rendererTHREE.domElement);
 
             // Se incializan los objetos de Three.js para la escena. El armado concluye, 
-            // luego, en la función "iniciarShader", al añadir la malla y los shaders.
+            // luego, en la función "iniciarGLSL", al añadir la malla y los shaders.
             scene = new S.O.S.THREE.Scene();
             camera = new S.O.S.THREE.Camera();
             camera.position.z = 1;
@@ -318,12 +395,12 @@ function Escena(S) {
     }
             
     /**
-     * iniciarShader
+     * iniciarGLSL
      * Inicializa los objtos necesarios de las librerías p5js y Three.js para
      * poder utilizar "shaders". Esta función se invoca una vez que los dos 
      * primeros actos finalizaron y justo antes del tercer acto.
      */
-    function iniciarShader() {
+    function iniciarGLSL() {
         if (!S.O.S.P5) {
             // LIBRERIA "THREE.js"
             // Se especifican los "shaders" a emplear para la escena, se definen sus
@@ -359,7 +436,19 @@ function Escena(S) {
     // ===> Se exponen únicamente las funciones públicas de la escena
     // ==> ("Revealing Module Pattern") y se implementa la herencia.
     // ===============================================================
-    return S.O.S.revelar({vertexShader,
+    return S.O.S.revelar({
+                         ancho,
+                         alto,
+                         dimensionar,
+                         escalar,
+                         escalable,
+                         emplazar,
+                         lienzo,
+                         defEstilo,
+                         estilar,
+                         reproducirGLSL,
+                         iniciarGLSL,
+                         vertexShader,
                          fragmentShader,
                          uniformTiempo,
                          uniformResolucion,
@@ -369,17 +458,9 @@ function Escena(S) {
                          uniformTiempoP5,
                          uniformResolucionP5,
                          uniformMouseP5,
-                         ancho,
-                         alto,
-                         escalar,
-                         escalable,
-                         dimensionar,
-                         lienzo,
-                         emplazar,
-                         iniciarShader,
                          }, 
-                         functionActuaria(),                // Se adicionan los métodos de la "Función Actuaria"
-                         Esquema(S, CONFIG.NOMBRE_ESCENA)); // Se heredan las funciones públicas del "Esquema"
+                         functionActuaria(),   // Se adicionan los métodos de la "Función Actuaria"
+                         _ESQ);                // Se heredan las funciones públicas del "Esquema"
 }
 
 

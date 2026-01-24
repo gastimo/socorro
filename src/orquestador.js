@@ -28,12 +28,12 @@ import Auxiliadora from './auxiliadora';
  */
 function Orquestador(sos, contenedor) {
     const S = sos.socorrista();
-    let   _utilizaP5 = false;
-    let   _reloj;
-    let   _cuadros = 0;
-    let   _funcionActuaria;
     let   _contenedor = contenedor;
+    let   _funcionActuaria;
+    let   _utilizaP5 = false;
     let   _escena;
+    let   _cuadros = 0;
+    let   _reloj;
     let   _diferido = false;
     
     // Variables para los actos (funciones) a ser orquestados
@@ -49,7 +49,7 @@ function Orquestador(sos, contenedor) {
     let _valorUniformTiempo;
     let _valorUniformResolucion;
     let _valorUniformMouse;
-    
+        
     
     // ==========================================================
     // 
@@ -168,6 +168,51 @@ function Orquestador(sos, contenedor) {
     }
     
     
+    // ==========================================================
+    // 
+    //  DEFINICIÓN DEL REPARTO GENERAL DE LA ESCENA
+    //  
+    // ==========================================================
+
+    /**
+     * Reparto
+     * Registro de los actores participanes de la "Escena".
+     */
+    function Reparto() {
+        const _REP = {};
+        
+        function _ficha(identificador) {
+            return {cabezaReparto: identificador,
+                    actores      : []};
+        }
+        
+        function ficharReparto(identificador, actor) {
+            if (!_REP.hasOwnProperty(identificador)) {
+                _REP[identificador] = _ficha(identificador);
+            }
+            _REP[identificador].actores.push(actor);
+            return _REP[identificador];
+        }
+
+        function actualizarReparto() {
+            for (const [identificador, ficha] of Object.entries(_REP)) {
+                for (let i = 0; i < ficha.actores.length; i++) {
+                    ficha.actores[i].actualizar();
+                }
+            }
+        }
+        
+        function representarReparto() {
+            for (const [identificador, ficha] of Object.entries(_REP)) {
+                for (let i = 0; i < ficha.actores.length; i++) {
+                    ficha.actores[i].representar();
+                }
+            }            
+        }
+
+        return {ficharReparto, actualizarReparto, representarReparto};
+    }
+
     
 // ==============================================================
 // 
@@ -177,15 +222,15 @@ function Orquestador(sos, contenedor) {
   
     /**
      * vincular
-     * Se estalece el vínculo entre el orquestador, la escena y
-     * el cargador a usar durante el acto de "Preparación".
-     * Esto se lleva a cabo concediéndole al siervo convocado
-     * al momento de la creación del orquestador, la información
-     * necesaria para convertirlo en el socorrista designado.
+     * Se estalece el vínculo entre el orquestador, la escena y el cargador a usar 
+     * durante el acto de "Preparación". Esto se lleva a cabo concediéndole al siervo 
+     * convocado al momento de la creación del orquestador, la información necesaria 
+     * para convertirlo en el socorrista designado.
+     * Adicionalmente, se incializa el reparto general para la "Escena".
      */
     function vincular(escena) {
         _escena = escena;
-        S.O.S.revelar(S.O.S, Auxiliadora(S, _utilizaP5), Cargador(), escena);
+        S.O.S.revelar(S.O.S, Auxiliadora(S, _utilizaP5), Cargador(), Reparto(escena), escena);
     }  
     
     /**
@@ -362,6 +407,9 @@ function Orquestador(sos, contenedor) {
             }
         };
         _contenedor.seguimientoMouse(_movimientoMouse);
+        
+        // Inicializar los shaders (ya sea de p5js o de Three.js)
+        _escena.iniciarGLSL();
     }
 
     /**
@@ -380,9 +428,12 @@ function Orquestador(sos, contenedor) {
 
             // Se actualiza el "uniform" para el tiempo
             _actualizarUniformTiempo();
+         
+            // Definir los atributos del estilo de la "Escena"
+            _escena.estilar();
             
-            // Inicializar los shaders (ya sea de p5js o de Three.js)
-            _escena.iniciarShader();
+            // Se actualizan los "Actores" del reparto
+            S.O.S.actualizarReparto();
         }
     }
    

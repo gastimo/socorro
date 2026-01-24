@@ -50,9 +50,12 @@ const Config = (() => {
     // > NOMBRES DE ATRIBUTOS DE ESQUEMAS
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
+        // Separador
+        ATR_SEPARADOR           : "$",
+        
         // Atributos generales del "Esquema"
         ATR_SINCRONIZADO        : 'sincronizado',
-        ATR_VISIBLE             : 'visible',
+        ATR_ELEMENTO            : '$elemento$',
 
         // Sufijos para atributos de "Variables" dinámicas
         ATR_VARIABLE_ALFA       : "$alfa",
@@ -82,6 +85,15 @@ const Config = (() => {
         EVAL_ORDEN       : 'orden',          // ACTOR
         EVAL_DISTANCIA   : 'dist',           // ACTOR
         EVAL_RECORRIDO   : 'recorrido',      // ACTOR
+
+        
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+    // > ACTORES
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        
+        ACTOR_TIEMPO_DE_VIDA   : 1000 * 60 * 15,  // En milisegundos
+        ACTOR_RECORRIDO_MAXIMO : 15000,           // En píxeles
+    
     };
     
     return _PARAM;

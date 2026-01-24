@@ -24,7 +24,10 @@ function Vector(S, a, b, c) {
     _VEC.x = _vectorial ? a.x : a;
     _VEC.y = _vectorial ? a.y : b;
     _VEC.z = _vectorial ? a.z : c;
+    _VEC.nombre = CONFIG.NOMBRE_VECTOR;
 
+        
+    
     
     // -------------------------------------------------------------
     // 
@@ -32,14 +35,6 @@ function Vector(S, a, b, c) {
     // 
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     
-    /**
-     * nombre
-     * Devuelve el nombre que identifica al tipo de objeto "Vector".
-     */
-    _VEC.nombre = () => {
-        return CONFIG.NOMBRE_VECTOR;
-    };
-   
     /**
      * def
      * Permite la definición de los componentes del "Vector", es decir,

@@ -29,7 +29,11 @@ function Actor(S, origen, velocidad, estilo) {
     const _aceleracion = S.O.S.Vector(0, 0, 0);
     const _estilo = {color: undefined, grandor: undefined, trazo: undefined, grosor: undefined};
     const _nacimiento = S.O.S.tiempo();
+    const _duracionMaxima  = CONFIG.ACTOR_TIEMPO_DE_VIDA;     // Tiempo de vida máximo 
+    const _recorridoMaximo = CONFIG.ACTOR_RECORRIDO_MAXIMO;   // Distancia máxima a recorrer
+    let _fichaReparto;
     let _finalizado = false;
+    _inicializar(origen, velocidad, estilo);
 
     
     /**
@@ -53,13 +57,14 @@ function Actor(S, origen, velocidad, estilo) {
         
         _ESQ.def(_definicion);
     }
-
+    
     
     // -------------------------------------------------------------
     //
     // EXPOSICIÓN DE PROPIEDADES ESTÁTICAS Y DINÁMICAS DEL ACTOR
     //
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    _ACT.id        = _ACT.clave;
     _ACT.orden     = _orden;
     _ACT.origen    = _origen;
     _ACT.posicion  = _posicion;
@@ -109,7 +114,7 @@ function Actor(S, origen, velocidad, estilo) {
     /**
      * defEstilo
      * Define los atributos para la representación visual del "Actor" (su "Estilo").
-     * El argumetno recibido puede ser un objeto de tipo "Estilo" u otro objeto Javascript
+     * El argumento recibido puede ser un objeto de tipo "Estilo" u otro objeto Javascript
      * que contenga su definición.
      */
     _ACT.defEstilo = (estilo) => {
@@ -124,45 +129,58 @@ function Actor(S, origen, velocidad, estilo) {
      * hacer uso de los valores del "Actor".
      */
     _ACT.actualizar = () => {
-        // 1. CONTEXTO DE EJECUCIÓN DEL ACTOR
-        // Se pone a disposición el "Actor" actual en el contexto de
-        // ejecución del socorrista para poder ser usado dinámicamente 
-        // para el cálculo dinámico de los valores de sus variables.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        S.O.S.ACTOR = _ACT;
         
-        // 2. ACTUALIZACIÓN DEL DESPLAZAMIENTO
-        // Actualización de la posición y velocidad del "Actor" en la "Escena".
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        if (_origen.vacio()) {
-            _origen.copiar(_ESQ.val(CONFIG.ACT_ORIGEN));
-            _posicion.copiar(_origen);
-        }
-        if (_velocidad.vacio()) {
-            _velocidad.copiar(_ESQ.val(CONFIG.ACT_VELOCIDAD));
-        }
-        _ACT.recorrido += _velocidad.mag() ?? 0;
-        _posicion.sumar(_velocidad);
-        _velocidad.sumar(_aceleracion);
-        _ACT.distancia = S.O.S.Vector(_origen).restar(_posicion).mag() ?? 0;
-        
-        // 3. ACTUALIZACIÓN DE LOS ATRIBUTOS VISUALES
-        // Actualización del "Estilo" del "Actor".
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        let _e = _ESQ.val(CONFIG.ACT_ESTILO);
-        if (_e) {
-            _e.actualizar();
-            _estilo.color   = _e.color();
-            _estilo.trazo   = _e.color(true);
-            _estilo.grandor = _e.grandor();
-            _estilo.grosor  = _e.grandor(true);
-        }
-        
-        // 4. REESTABLECIMIENTO DEL CONTEXTO
-        // Se remueve el "Actor" actual del contexto de ejecución.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        delete S.O.S.ACTOR;
+        if (!_finalizado) {
+            // 1. CONTEXTO DE EJECUCIÓN DEL ACTOR
+            // Se pone a disposición el "Actor" actual en el contexto de
+            // ejecución del socorrista para poder ser usado dinámicamente 
+            // para el cálculo dinámico de los valores de sus variables.
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            S.O.S.ACTOR = _ACT;
 
+            // 2. ACTUALIZACIÓN DEL DESPLAZAMIENTO
+            // Actualización de la posición y velocidad del "Actor" en la "Escena".
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            if (_origen.vacio()) {
+                _origen.copiar(_ESQ.val(CONFIG.ACT_ORIGEN));
+                _posicion.copiar(_origen);
+            }
+            if (_velocidad.vacio()) {
+                _velocidad.copiar(_ESQ.val(CONFIG.ACT_VELOCIDAD));
+            }
+            _ACT.recorrido += _velocidad.mag() ?? 0;
+            _posicion.sumar(_velocidad);
+            _velocidad.sumar(_aceleracion);
+            _ACT.distancia = S.O.S.Vector(_origen).restar(_posicion).mag() ?? 0;
+
+            // 3. VERIFICACIÓN DE LA VIGENCIA DEL ACTOR
+            // Se verifica, en este punto, si el "Actor" debería ser finalizado, ya
+            // sea porque sobrepasó la duración máxima permitida (tiempo de vida) o 
+            // porque su recorrido superó la distancia máxima establecida.
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            if (_ACT.recorrido > _recorridoMaximo || S.O.S.tiempo() - _nacimiento > _duracionMaxima) {
+                _ACT.finalizar();
+            }
+            else {
+                // 4. ACTUALIZACIÓN DE LOS ATRIBUTOS VISUALES
+                // Actualización del "Estilo" del "Actor".
+                // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                let _e = _ESQ.val(CONFIG.ACT_ESTILO);
+                if (_e) {
+                    _e.actualizar();
+                    _estilo.color   = _e.color();
+                    _estilo.trazo   = _e.color(true);
+                    _estilo.grandor = _e.grandor();
+                    _estilo.grosor  = _e.grandor(true);
+                }
+            }
+
+            // 5. REESTABLECIMIENTO DEL CONTEXTO
+            // Se remueve el "Actor" actual del contexto de ejecución.
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            delete S.O.S.ACTOR;
+        }
+        
         return _ACT;
     };
     
@@ -173,7 +191,7 @@ function Actor(S, origen, velocidad, estilo) {
      */
     _ACT.representar = () => {
         S.O.S.P5.push();
-        if (_estilo.grandor !== undefined && _estilo.grandor !== null) {
+        if (!_finalizado && _estilo.grandor !== undefined && _estilo.grandor !== null) {
             if (_estilo.color !== undefined && _estilo.color !== null)
                 S.O.S.P5.fill(_estilo.color);
             else
@@ -192,6 +210,26 @@ function Actor(S, origen, velocidad, estilo) {
                             S.O.S.escalar(_estilo.grandor));
         }
         S.O.S.P5.pop();
+    };
+
+    /**
+     * ficha
+     * Establece y/o devuelve la ficha del "Actor" con la información
+     * del "Reparto" al que pertenece.
+     */
+    _ACT.ficha = (fichaReparto) => {
+        if (fichaReparto !== undefined) {
+            _fichaReparto = fichaReparto;
+        }
+        return _fichaReparto;
+    };
+    
+    /**
+     * finalizar
+     * Marca al "Actor" corriente como finalizado
+     */
+    _ACT.finalizar = () => {
+      _finalizado = true; 
     };
 
     return _ACT;

@@ -39,11 +39,12 @@ import Esquema from './esquema';
  *  - ruido() - Define el ruido aleatorio a incorporar al resultado final de la evaluación.
  *  - val()   - Obtención del valor. Redefine la función heredada de "Esquema" para hacer el mapeo.
  */
-function Variable(S) {
+function Variable(S, ...parametros) {
     const _ESQ = Esquema(S, CONFIG.NOMBRE_VARIABLE);
     const _VAR = S.O.S.revelar({}, _ESQ);
     let _calculadora = null;
     _inicializar();
+
     
     /**
      * _inicializar
@@ -195,7 +196,11 @@ function Variable(S) {
             }
         }
         return _VAR;
-    }; 
+    };
+    if (parametros) {
+        _VAR.map(...parametros);
+    }
+
     
     /**
      * mod
@@ -237,7 +242,7 @@ function Variable(S) {
      * Función que se ocupa de calcular, en tiempo de ejecución, el valor de la 
      * "Variable" dinámica según el "Método de Evaluación" definido.
      */
-    _VAR.val = (S) => {
+    _VAR.val = () => {
         let _contextoEjecucion;
         let _metodo = _ESQ.val('metodo');
 
@@ -264,8 +269,8 @@ function Variable(S) {
         // 2. PREPARACIÓN DEL CONTEXTO DE EJECUCIÓN Y CÁLCULO DINÁMICO DE LA VARIABLE
         // Se pone a disposición el contexto de ejecución y se realiza el cálculo del valor dinámico.
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        _contextoEjecucion = _calculadora.contexto(S, _ESQ.clave(), _ESQ.val('modulador') ?? EVAL[_metodo]?.mod, _ESQ.val('ruidoVelocidad'));
-        let _v = _calculadora.calc(S, _contextoEjecucion);
+        _contextoEjecucion = _calculadora.contexto(_ESQ.clave, _ESQ.val('modulador') ?? EVAL[_metodo]?.mod, _ESQ.val('ruidoVelocidad'));
+        let _v = _calculadora.calc(_contextoEjecucion);
         
         // 3. ADICIÓN DEL RUIDO
         // En caso de haber definido un ruido, se adiciona éste al valor resultante
@@ -392,7 +397,7 @@ function _Calculadora(S) {
     * la "Función de Mapeo Dinámico" (si fue indicada) y mapea su resultado contra el 
     * rango de valores de destino. 
     */
-    _VAL.calc = (S, ctx) => {
+    _VAL.calc = (ctx) => {
         if (_VAL.valorSimple !== null && _VAL.valorSimple !== undefined) {
           return _VAL.valorSimple;
         }
@@ -400,16 +405,16 @@ function _Calculadora(S) {
         if (_VAL.funcionDinamica) {        
             if (!_VAL.esVector) {
                 S.O.S.VAR = ctx.PUBX;
-                return _mapear(S, EVAL[_VAL.funcionDinamica].met(S));
+                return _mapear(EVAL[_VAL.funcionDinamica].met(S));
             }
             else {
                 let _vecFinal = S.O.S.Vector();
                 S.O.S.VAR = ctx.PUBX;
-                _vecFinal.x = _mapear(S, EVAL[_VAL.funcionDinamica].met(S), 'x');
+                _vecFinal.x = _mapear(EVAL[_VAL.funcionDinamica].met(S), 'x');
                 S.O.S.VAR = ctx.PUBY;
-                _vecFinal.y = _mapear(S, EVAL[_VAL.funcionDinamica].met(S), 'y');
+                _vecFinal.y = _mapear(EVAL[_VAL.funcionDinamica].met(S), 'y');
                 S.O.S.VAR = ctx.PUBZ;
-                _vecFinal.z = _mapear(S, EVAL[_VAL.funcionDinamica].met(S), 'z');
+                _vecFinal.z = _mapear(EVAL[_VAL.funcionDinamica].met(S), 'z');
                 return _vecFinal;
             }
         }
@@ -423,7 +428,7 @@ function _Calculadora(S) {
      * Retorna un objeto que almacena las variables dinámicas del contexto
      * de ejecución para la clave recibida como argumento.
      */
-    _VAL.contexto = (S, clave, modulador, ruidoVelocidad) => {
+    _VAL.contexto = (clave, modulador, ruidoVelocidad) => {
         if (!_contexto.hasOwnProperty(clave)) {
             let _contextoEjecucion = {};
 
@@ -477,7 +482,7 @@ function _Calculadora(S) {
      * Esta función permite interpolar tanto valores numéricos simples, como objetos
      * de tipo "color" de p5js y, también, objetos de tipo "Vector".
      */
-    function _mapear(S, pos, coord) {
+    function _mapear(pos, coord) {
         // 1. OBTENER VALOR ORIGEN NORMALIZADO
         // En primer lugar, se ejecuta la función de mapeo dinámico (el "Método de Evalución")
         // y se lo termina convirtiendo en un valor normalizado (entre "0" y "1").
@@ -519,10 +524,10 @@ function _Calculadora(S) {
         // valores a interpolar, se invoca a la función correspondiente.
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         if (!coord)
-            return funcionInterpolacion(S, pos, ini.pos, fin.pos, ini.val, fin.val); 
+            return funcionInterpolacion(pos, ini.pos, fin.pos, ini.val, fin.val); 
         else {
             if (ini.val.hasOwnProperty(coord) || fin.val.hasOwnProperty(coord)) {
-                return funcionInterpolacion(S, pos, ini.pos, fin.pos, ini.val?.[coord], fin.val?.[coord]);
+                return funcionInterpolacion(pos, ini.pos, fin.pos, ini.val?.[coord], fin.val?.[coord]);
             }
             else
                 return undefined;
@@ -534,7 +539,7 @@ function _Calculadora(S) {
      * Función privada que interpola dos valores numéricos teniendo en cuenta 
      * la posición "ponderada" de cada uno de ellos en el rango ("pos").
      */
-    function _interpolarNumero(S, pos, ini1, fin1, ini2, fin2) {
+    function _interpolarNumero(pos, ini1, fin1, ini2, fin2) {
         if (ini1 === undefined && fin1 === undefined)
             return undefined;
         else if (ini2 === undefined && fin2 === undefined)
@@ -549,7 +554,7 @@ function _Calculadora(S) {
      * Función privada que interpola dos colores de un gradiente, teniendo en cuenta las
      * "paradas" o posiciones "ponderadas" de cada color dentro del gradiente ("pos").
      */
-    function _interporlarColor(S, pos, paradaColorIni, paradaColorFin, colorIni, colorFin) {
+    function _interporlarColor(pos, paradaColorIni, paradaColorFin, colorIni, colorFin) {
         if (paradaColorIni == paradaColorFin) {
             return paradaColorIni == 1 ? colorIni : colorFin;
         }
