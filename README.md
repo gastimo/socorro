@@ -45,7 +45,7 @@ const e3 = S.O.S.crearEscena(document.getElementById("ID-contenedor-03"));
 
 # Dimensiones y Proporciones de la Escena
 
-La función para crear “Escenas” del socorrista `S.O.S` está diseñada para abstraer al programador del manejo de las dimensiones del `<canvas>`. En lugar de tener que definir programáticamente el tamaño de la “Escena”, se espera que su anchura y altura sean determinadas por la propia página web (a través de su código HTML/CSS). Los socorristas están instruidos para detectar las dimensiones de los objetos HTML contenedores y ajustar automáticamente el tamaño del `<canvas>`, incluso adaptándose de manera *responsive* ante posibles cambios de tamaño y posición. En otras palabras, es el contenedor HTML quien determina el tamaño de la “Escena” (`<canvas>`) y no al revés. No obstante, la función `crearEscena` admite, además del contenedor HTML, otros tres argumentos que son tenidos en cuenta a la hora de calcular (y recalcular) las dimensiones del `<canvas>` de la “Escena”. Estos son:
+La función para crear “Escenas” del socorrista `S.O.S` está diseñada para abstraer al programador del manejo de las dimensiones del `<canvas>`. En lugar de tener que definir programáticamente el tamaño de la “Escena”, se espera que su anchura y altura sean determinadas por la propia página web (a través de su código HTML/CSS). Los socorristas están instruidos para detectar las dimensiones de los objetos HTML contenedores y ajustar automáticamente el tamaño del `<canvas>`, incluso adaptándose de manera *responsive* ante posibles cambios de tamaño y posición. En otras palabras, es el contenedor HTML el que determina el tamaño de la “Escena” (`<canvas>`) y no al revés. No obstante, la función `crearEscena` admite, además del contenedor HTML, otros tres argumentos que son tenidos en cuenta a la hora de calcular (y recalcular) las dimensiones del `<canvas>` de la “Escena”. Estos son:
 
 ```jsx
 const e = S.O.S.crearEscena(contenedor, guardarProporciones, ancho, alto);
@@ -54,8 +54,8 @@ const e = S.O.S.crearEscena(contenedor, guardarProporciones, ancho, alto);
 - **contenedor**: como ya se explicó más arriba, se trata del elemento HTML que contendrá al `<canvas>`. Es caso de no indicarse, se asume el `<body>` de la página.
 - **guardarProporciones**: parámetro para indicar si la “Escena” debe siempre mantener las mismas proporciones (*aspect ratio*) con las que fue creada inicialmente. Este argumento es tenido en cuenta cuando, por alguna razón, el tamaño del contenedor HTML de la “Escena” varía su tamaño,  por ejemplo, al redimensionar la ventana del navegador. Su valor por defecto es `false`, es decir, la “Escena” adopta exactamente el tamaño de su contenedor HTML.
 - **ancho** y **alto**: estos dos argumentos no son utilizados necesariamente para definir el tamaño del `<canvas>` de la “Escena”. Si son especificados, sus valores se usan para lo siguiente:
-    - Definen el tamaño máximo (en píxeles) para el ancho y la altura del `<canvas>` de la “Escena”.
-    - Además, si el valor del argumento **guardarProporciones** es `true`, entonces estos dos parámetros definen la proporción que se debe respetar (*aspect ratio*) al redimensionar la “Escena” en la página.
+    - Definen el tamaño **máximo** (en píxeles) para el ancho y la altura del `<canvas>` de la “Escena”. En caso de no especificarlos, el ancho y alto **máximo** serán las dimensiones del contenedor HTML al momento de crear la "Escena".
+    - Definen la **proporción** que se debe respetar (*aspect ratio*) al redimensionar la “Escena” en la página. En caso de no especificar ninguno de estos dos argumentos pero definir el valor del parámetro **guardarProporciones** en `true`, las proporciones que se mantendrán serán las del contenedor HTML al momento de crear la "Escena".
     - Por último, sirven como valor de referencia para calcular la escala de los gráficos que se muestran en el `<canvas>`. El objeto socorrista `S.O.S` provee una función llamada `escala()` que retorna justamente el coeficiente que surge de la razón entre el tamaño actual del `<canvas>` y los valores indicados en estos parámetros. El valor devuelto por la función `escala()` es útil cuando lo que se busca es crear una escena cuyo contenido sea escalado proporcionalmente según las dimensiones de su contenedor.
 
 A continuación, se incluye un ejemplo de creación de una “Escena” utilizando estos argumentos:
@@ -68,17 +68,17 @@ const contenedor = document.getElementById("ID-contenedor");
 const e = S.O.S.crearEscena(contenedor, mantenerProporcion, ancho, alto);
 ```
 
-Como se explicó más arriba, la ejecución de este código no implica que se terminará creando una escena de 800x600 píxeles necesariamente (aunque sí se mantendrá la proporción 4:3). El socorrista siempre crea el `<canvas>` en función del tamaño de su contenedor HTML, y no al revés, es decir, no se espera que el contenedor se adapte al tamaño del `<canvas>` sino que, por el contrario, lo restrinja.
+Como se explicó más arriba, la ejecución de este código no implica que se terminará creando una escena de 800x600 píxeles necesariamente (aunque sí se mantendrá la proporción 4:3). 800 y 600 serán los tamaños máximos que podrán adoptar el ancho y el alto de la "Escena" respectivamente. El socorrista siempre crea el `<canvas>` en función del tamaño de su contenedor HTML, y no al revés, es decir, no se espera que el contenedor se adapte al tamaño del `<canvas>` sino que, por el contrario, lo restrinja.
 
 En otras palabras, si lo que se pretende es crear una escena que tenga exactamente un tamaño de 800x600 píxeles, alcanza con definir las reglas CSS en la página para que su contenedor tenga ese tamaño preciso. En ese caso, no haría falta indicar ancho o alto al invocar a la función `crearEscena`.
 
 # El Escenificador
 
-Es importante aclarar que el valor retornado por la función `crearEscena` no es un objeto “Escena” en sí, sino otro tipo de objeto llamado “Escenificador”. El “Escenificador” es un objeto intermediario desde el cual es posible configurar y manipular programáticamente la escena mediante tres métodos que definen las funciones para la puesta en escena o los “Tres Actos”:
+Es importante aclarar que el valor retornado por la función `crearEscena` no es un objeto “Escena” en sí, sino otro tipo de objeto llamado “Escenificador”. El “Escenificador” es un objeto intermediario desde el cual es posible configurar y manipular programáticamente la escena mediante tres métodos que definen las funciones para la **puesta en escena** o los “**Tres Actos**”:
 
 - **ACTO#1 - “alCargar”**: define la función que se invocará una única vez, al inicio, con el propósito de cargar cualquier archivo que se requiera utilizar luego: imágenes, shaders, fuentes, etc.
 - **ACTO#2 - “alComenzar”**: define la función que se invocará una única vez (luego de la función de carga anterior) y que configura los parámetros de la escena para su ejecución.
-- **ACTO#3 - “alDesplegar”**: define la función que se invocará en bucle por cada iteración del ciclo de ejecución de la “Escena”.
+- **ACTO#3 - “alRepresentar”**: define la función que se invocará en bucle por cada iteración del ciclo de ejecución de la “Escena”.
 
 El ejemplo a continuación ilustra la manera en la que se pueden definir estas tres funciones (o actos) de la “Escena” a través del “Escenificador”.
 
@@ -93,12 +93,12 @@ escenificador.alComenzar((S) => {
 	// Acá va el código para configurar o inicializar la escena
 });
 
-escenificador.alDesplegar((S) => {
+escenificador.alRepresentar((S) => {
 	// Acá va el código a ejecutar por cada iteración del ciclo de ejecución
 });
 ```
 
-Las funciones o actos de la escena que define el objeto “Escenificador” reciben un único argumento (llamado “S”). A través de este objeto JavaScript, se pone a disposición de la “Escena” un siervo designado por la “Obra” como su socorrista exclusivo para atenderla (el objeto `S.O.S`). Mediante este objeto de auxilio es posible acceder a las funciones del paquete para configurar y crear la gráfica y el sonido de la “Escena”.
+Las funciones o actos de la escena que define el objeto “Escenificador” reciben un único argumento (llamado “S”). A través de este objeto JavaScript, se pone a disposición de la “Escena” un siervo designado por la “Obra” como su socorrista exclusivo para atenderla (el objeto `S.O.S`). Mediante este objeto de auxilio es posible acceder a las funciones del paquete para configurar y crear la gráfica de la “Escena”.
 
 # Los Socorristas
 
@@ -109,14 +109,14 @@ import * as S from 'socorro';
 const e = S.O.S.crearEscena();  // Creación de una escena con el primer socorrista
 ```
 
-Luego, los métodos del objeto “Escenificador” para definir cada uno de los actos de la “Escena”, permiten declarar las funciones que se deben ejecutar “*alCargar*”, “*alComenzar*” y “*alDesplegar*” dicha escena. Estas funciones o actos reciben, como único argumento, otro objeto también llamado “S”, pero en este caso no se trata del mismo “Siervo Originario de la Obra”, sino de un socorrista dedicado a atender esa “Escena” en particular. Este socorrista tiene las mismas funciones que el socorrista originario pero además, por el mecanismo de herencia de “prototipos” de JavaScript, brinda acceso a los métodos de la propia “Escena” recién creada. En otras palabras, a través de este socorrista dedicado se exponen tanto los métodos del “Siervo Originario de la Obra” como los de la “Escena” recién creada. En el ejemplo incluido debajo se muestra la creación de una “Escena” y la forma en que se puede acceder a los métodos de “Escena” recién creada a través de su socorrista dedicado.
+Luego, los métodos del objeto “Escenificador” para definir cada uno de los actos de la “Escena”, permiten declarar las funciones que se deben ejecutar “*alCargar*”, “*alComenzar*” y “*alRepresentar*” dicha escena. Estas funciones o actos reciben, como único argumento, otro objeto también llamado “S”, pero en este caso no se trata del mismo “Siervo Originario de la Obra”, sino de un socorrista dedicado a atender esa “Escena” en particular. Este socorrista tiene las mismas funciones que el socorrista originario pero además, por el mecanismo de herencia de “prototipos” de JavaScript, brinda acceso a los métodos de la propia “Escena” recién creada. En otras palabras, a través de este socorrista dedicado se exponen tanto los métodos del “Siervo Originario de la Obra” como los de la “Escena” recién creada. En el ejemplo incluido debajo se muestra la creación de una “Escena” y la forma en que se puede acceder a los métodos de “Escena” recién creada a través de su socorrista dedicado.
 
 ```jsx
-const esc = S.O.S.crearEscena();  // "S.O.S" es el Siervo Originario de la Obra
+const esc = S.O.S.crearEscena();    // "S.O.S" es el Siervo Originario de la Obra
 esc.alCargar((S) => {
-	let ancho  = S.O.S.ancho();      // En estas tres líneas, el objeto "S.O.S" no es
-	let alto   = S.O.S.alto();       // el mismo que el de arriba (el originario), sino
-	let escala = S.O.S.escala();     // que se trata del socorrista dedicado a la escena
+	let ancho  = S.O.S.ancho();     // En estas tres líneas, el objeto "S.O.S" no es
+	let alto   = S.O.S.alto();      // el mismo que el de arriba (el originario), sino
+	let escala = S.O.S.escala();    // que se trata del socorrista dedicado a la escena
 });
 ```
 
@@ -133,7 +133,7 @@ escenificador.alCargar((S) => {
 }
 ```
 
-De la misma forma, si se quisiera definir los valores de los parámetros *uniform* del *shader*, se debe colocar el código dentro de la función que se define mediante el método `alComenzar` del “Escenificador” (en caso que los valores sólo se establezcan una vez al inicio) o `alDesplegar` (en caso de necesitar actualizar los valores en cada iteración del ciclo).
+De la misma forma, si se quisiera definir los valores de los parámetros *uniform* del *shader*, se debe colocar el código dentro de la función que se define mediante el método `alComenzar` del “Escenificador” (en caso que los valores sólo se establezcan una vez al inicio) o `alRepresentar` (en caso de necesitar actualizar los valores en cada iteración del ciclo).
 
 ```jsx
 escenificador.alComenzar((S) => {
@@ -141,7 +141,7 @@ escenificador.alComenzar((S) => {
    S.O.S.uniformResolucion("u_resolution"); // Define el nombre del uniform para "resolución" (no su valor)
    S.O.S.uniformMouse("u_mouse");           // Define el nombre del uniform para "mouse" (no su valor)
 }
-escenificador.alDesplegar((S) => {
+escenificador.alRepresentar((S) => {
    S.O.S.uniform("u_nombre_var1", valor1);  // Define el valor para el uniform "u_nombre_var1"
    S.O.S.uniform("u_nombre_var2", valor2);  // Define el valor para el uniform "u_nombre_var2"
 }
