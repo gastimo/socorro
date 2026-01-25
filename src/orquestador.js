@@ -29,6 +29,7 @@ import Auxiliadora from './auxiliadora';
 function Orquestador(sos, contenedor) {
     const S = sos.socorrista();
     let   _contenedor = contenedor;
+    let   _escenaImportada;
     let   _funcionActuaria;
     let   _utilizaP5 = false;
     let   _escena;
@@ -51,11 +52,12 @@ function Orquestador(sos, contenedor) {
     let _valorUniformMouse;
         
     
-    // ==========================================================
-    // 
-    //  DEFINICIÓN DEL OBJETO PARA ALMACENAR ARCHIVOS DE TEXTO
-    //  
-    // ==========================================================
+    
+// ==========================================================
+// 
+//  DEFINICIÓN DEL OBJETO PARA ALMACENAR ARCHIVOS DE TEXTO
+//  
+// ==========================================================
 
     /**
      * Archivo
@@ -75,11 +77,11 @@ function Orquestador(sos, contenedor) {
     }
 
     
-    // ==========================================================
-    // 
-    //  DEFINICIÓN DEL GESTOR PARA LA CARGA DE ARCHIVOS
-    //  
-    // ==========================================================
+// ==========================================================
+// 
+//  DEFINICIÓN DEL GESTOR PARA LA CARGA DE ARCHIVOS
+//  
+// ==========================================================
 
     /**
      * Cargador
@@ -90,12 +92,16 @@ function Orquestador(sos, contenedor) {
         const _texturas = [];
         let   _gestorTHREE, _cargadorTHREE;
         let   _texturasCargadas = false;
-
+        
         function cargarShader(archivo) {
-            let _shader = Archivo(archivo);
-            _archivos.push(_shader);
-            _leerArchivo(archivo, _shader);
-            return _shader;
+            return cargarArchivo(archivo);
+        }
+
+        function cargarArchivo(archivo) {
+            let _archivo = Archivo(archivo);
+            _archivos.push(_archivo);
+            _leerArchivo(archivo, _archivo);
+            return _archivo;
         }
 
         function cargarTextura2D(archivo) {
@@ -164,15 +170,16 @@ function Orquestador(sos, contenedor) {
             }
         }
         
-        return {cargarShader, cargarTextura2D, cargarFuente, cargaCompletada};
+        return {cargarArchivo, cargarShader, cargarTextura2D, cargarFuente, cargaCompletada};
     }
     
     
-    // ==========================================================
-    // 
-    //  DEFINICIÓN DEL REPARTO GENERAL DE LA ESCENA
-    //  
-    // ==========================================================
+    
+// ==========================================================
+// 
+//  DEFINICIÓN DEL REPARTO GENERAL DE LA ESCENA
+//  
+// ==========================================================
 
     /**
      * Reparto
@@ -214,28 +221,40 @@ function Orquestador(sos, contenedor) {
     }
 
     
+    
 // ==============================================================
 // 
-//  DEFINICIÓN DE LOS MÉTODOS DEL PROPIO ORQUESTADOR
+//  ORQUESTADOR
+//  Definición de los métodos propios del objeto "Orquestador"
 //  
 // ==============================================================
+    
+    /**
+     * processing
+     * Indica si se debe utilizar la librería "p5js" para la orquestación.
+     */
+    function processing() {
+        return _utilizaP5;
+    }
   
     /**
      * vincular
-     * Se estalece el vínculo entre el orquestador, la escena y el cargador a usar 
-     * durante el acto de "Preparación". Esto se lleva a cabo concediéndole al siervo 
-     * convocado al momento de la creación del orquestador, la información necesaria 
-     * para convertirlo en el socorrista designado.
-     * Adicionalmente, se incializa el reparto general para la "Escena".
+     * Mediante esta función, el "Orquestador" estalece el vínculo entre el socorrista
+     * designado por el propio "Orquestador", por un lado, y la "Escena", el objeto 
+     * "Cargador" de archivos, el "Reparto" de actores y la función "Auxiliadora", por
+     * otro. Esto se lleva a cabo concediéndole al siervo convocado al momento de la 
+     * creación del "Orquestador" (S.O.S), la información necesaria para convertirlo en
+     * el socorrista designado (se hace uso de la "herencia" por prototipos de JS).
      */
     function vincular(escena) {
         _escena = escena;
-        S.O.S.revelar(S.O.S, Auxiliadora(S, _utilizaP5), Cargador(), Reparto(escena), escena);
+        S.O.S.revelar(S.O.S, Auxiliadora(S, _utilizaP5), Cargador(), Reparto(), escena);
     }  
     
     /**
      * asociar
-     * Asocia componentes como parte del socorrista designado.
+     * Asocia componentes como parte del socorrista designado. Básicamente, permite asociar
+     * la instancia de la librería P5 y de Three.js que le corresponden a la "Escena".
      */
     function asociar(nombre, componente) {
         if (nombre == 'THREE') {
@@ -253,13 +272,34 @@ function Orquestador(sos, contenedor) {
     
     /**
      * socorrista
-     * Devuelve el socorrista designado para atender los 
-     * menesteres de la orquestación de la escena.
+     * Devuelve el socorrista designado para atender los menesteres 
+     * de la orquestación de la escena.
      */
     function socorrista() {
         return S;
     }
+    
+    /**
+     * _conteoDeCuadros
+     * Función privada del orquestador que devuelve el número del fotograma actual.
+     * En caso de utilizar la librería "p5js" esta tarea es realizada por "frameCount".
+     */
+    function _conteoDeCuadros() {
+        return _cuadros;
+    }
 
+
+    
+// ==============================================================
+// 
+//  FUNCIÓN ACTUARIA
+//  Define la "Función Actuaria" que contiene los "Actos" de la
+//  "Escena". En caso de utilizar "p5js", la "Función Actuaria"
+//  devuelta es justamente el parámetro requerido al crear la
+//  instancia de "p5".
+//  
+// ==============================================================
+    
     /**
      * funcionActuaria
      * Devuelve y/o define la "Función Actuaria", es decir, 
@@ -285,25 +325,33 @@ function Orquestador(sos, contenedor) {
         return _funcionActuaria;
     }
     
+
+    
+// -----------------------------------------------------------------
+//
+//  ORQUESTACIÓN DE LA ESCENA
+//  Rutina principal invocada por el socorrista (S.O.S) que se ocupa
+//  de determinar qué acto de la "Escena" debe ser iniciado.
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
     
     /**
      * orquestar
-     * Encargada de ir ejecutando, paso a paso y en orden, cada
-     * uno de los actos indicados por la "Función Actuaria".
-     * Debe asegurarse que la "Preparación" concluya (la carga 
-     * de archivos de manera asincrónica) antes de avanzar con 
-     * el siguiente acto.
-     * Una vez que los actos de "Preparación" y la "Iniciación" 
-     * hayan finalizado, sólo realizará el bucle de "Ejecución".
+     * Encargada de ir ejecutando, paso a paso y en orden, cada uno de los actos
+     * indicados por la "Función Actuaria". Debe asegurarse que la "Preparación"
+     * concluya (la carga de archivos de manera asincrónica) antes de avanzar con 
+     * el siguiente acto. Sólo una vez que el acto de "Preparación" y el acto de
+     * "Iniciación" hubieran finalizado, dará inicio al bucle de la "Ejecución".
      */
     function orquestar() {
         if (_actoEjecucionIniciado && _funcionEjecucion) {
-            _orquestarActo3();
+            _orquestarACTO$3();
             _cuadros++;
         }
         else {
             if (_funcionPreparacion && !_actoPreparacionIniciado) {
-                _orquestarActo1();
+                _orquestarACTO$1();
                 _actoPreparacionIniciado = true;
                 return;
             }
@@ -313,7 +361,7 @@ function Orquestador(sos, contenedor) {
             }
             if (_funcionIniciacion && !_actoIniciacionIniciado) {
                 if (!_funcionPreparacion || _actoPreparacionFinalizado) {
-                    _orquestarActo2();
+                    _orquestarACTO$2();
                     _actoIniciacionIniciado = true;
                     return;
                 }
@@ -322,9 +370,9 @@ function Orquestador(sos, contenedor) {
                 if ((!_funcionPreparacion && !_funcionIniciacion) || 
                     (_funcionPreparacion && _actoPreparacionFinalizado && !_funcionIniciacion) ||
                     _actoIniciacionIniciado) {
-                    _orquestarActo3();
-                    _cuadros++;
+                    _orquestarACTO$3();
                     _actoEjecucionIniciado = true;
+                    _cuadros++;  // Se incrementa el contador de cuadros/fotogramas
                     return;
                 }
             }            
@@ -332,51 +380,90 @@ function Orquestador(sos, contenedor) {
     }
     
     /**
-     * _conteoDeCuadros
-     * Función privada del orquestador que devuelve
-     * el número del fotograma actual.
-     */
-    function _conteoDeCuadros() {
-        return _cuadros;
-    }
-    
-    /**
-     * _orquestarActo1
+     * _orquestarACTO$1
      * Función orquestadora del acto #1: "Preparación"
      */
-    function _orquestarActo1() {
-        if (!_utilizaP5) {
+    function _orquestarACTO$1() {
+        if (!_utilizaP5)
             _funcionPreparacion();
-        }
     }
     
     /**
-     * _orquestarActo2
+     * _orquestarACTO$2
      * Función orquestadora del acto #2: "Iniciación"
      */
-    function _orquestarActo2() {
-        if (!_utilizaP5) {
+    function _orquestarACTO$2() {
+        if (!_utilizaP5)
             _funcionIniciacion();
-        }
     }
     
     /**
-     * _orquestarActo3
+     * _orquestarACTO$3
      * Función orquestadora del acto #3: "Ejecución"
      */
-    function _orquestarActo3() {
-        if (!_utilizaP5) {
+    function _orquestarACTO$3() {
+        if (!_utilizaP5)
             _funcionEjecucion();
-        }
     }
         
 
+    
+// -----------------------------------------------------------------
+//
+//  FUNCIONES "SEMÁFORO" Y DE "APLAZAMIENTO"
+//  Dan "luz verde" para el inicio del siguiente "Acto" una vez
+//  concluidas todas las acciones del acto anterior. Son invocadas
+//  externamente por el socorrista (S.O.S) y no por el orquestador.
+//  
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
     /**
-     * verificacionPosActo2
+     * semaforoACTO$2
+     * Indica si el acto 2 está en condiciones de ser iniciado,
+     * por ejemplo, porque ya se cargaron los archivos.
+     */
+    function semaforoACTO$2() {
+        return !_funcionPreparacion || _actoPreparacionFinalizado;
+    }
+    
+    /**
+     * semaforoACTO$3
+     * Indica si se puede dar comienzo al bucle eterno del acto 3.
+     */
+    function semaforoACTO$3() {
+        return _actoEjecucionIniciado;
+    }
+
+    /**
+     * diferido
+     * Permite gestionar el valor de un indicador de aplazamiento que informa
+     * si alguno de los actos ha sido diferido. Es utilizado por el socorrista
+     * (fuera del orquestador) para diferir el inicio del "Acto 3" hasta que el
+     * el "Acto 2" haya concluido.
+     */
+    function diferido(diferir) {
+        if (diferir !== undefined) {
+            _diferido = diferir;
+        }
+        return _diferido;
+    }
+
+
+// -----------------------------------------------------------------
+//
+//  FUNCIONES "PRE" Y "POS" ACTOS
+//  Ejecutan las tareas requeridas luega de la finalización de 
+//  un acto (POS) o previo a su ejecución (PRE). Son invocadas
+//  externamente por el socorrista (S.O.S) y no por el orquestador.
+// 
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+    /**
+     * posACTO$2
      * Función ejecutar las verificaciones y configuraciones
      * finales antes de dar inicio al bucle de reproducción.
      */
-    function verificacionPosActo2() {
+    function posACTO$2() {
         // Verificación de "uniform" para el tiempo
         _valorUniformTiempo = _escena.uniformTiempo();
         if (_valorUniformTiempo === undefined) {
@@ -413,11 +500,11 @@ function Orquestador(sos, contenedor) {
     }
 
     /**
-     * verificacionPreActo3
-     * Función actualiza el contexto de ejecución en cada iteración
-     * del bucle, justo antes de ejecutar el "Acto 3".
+     * preACTO$3
+     * Función que actualiza el contexto de ejecución en cada iteración
+     * del bucle, justo antes de cada ejecuación del "Acto 3".
      */
-    function verificacionPreActo3() {
+    function preACTO$3() {
         if (_contenedor && _escena) {            
             // Se verifica si cambiaron las dimensiones del contenedor
             if (_contenedor.actualizar()) {
@@ -436,47 +523,17 @@ function Orquestador(sos, contenedor) {
             S.O.S.actualizarReparto();
         }
     }
-   
-    
-    /**
-     * acto2ListoParaIniciar
-     * Indica si el acto 2 está en condiciones de ser iniciado,
-     * por ejempo, porque ya se cargaron los archivos.
-     */
-    function acto2ListoParaIniciar() {
-        return !_funcionPreparacion || _actoPreparacionFinalizado;
-    }
+
     
     
-    /**
-     * acto3ListoParaIniciar
-     * Indica si se puede dar comienzo al bucle eterno del acto 3.
-     */
-    function acto3ListoParaIniciar() {
-        return _actoEjecucionIniciado;
-    }
-    
-    /**
-     * processing
-     * Indica si se debe utilizar la librería de "Processing"
-     * (p5js) para la orquestación.
-     */
-    function processing() {
-        return _utilizaP5;
-    }
-    
-    /**
-     * diferido
-     * Permite gestionar el valor de un indicador que informa
-     * si algunos de los actos ha sido diferido.
-     */
-    function diferido(diferir) {
-        if (diferir !== undefined) {
-            _diferido = diferir;
-        }
-        return _diferido;
-    }
-    
+// -----------------------------------------------------------------
+//
+//  VARIABLES UNIFORM DE GLSL
+//  Métodos para la actualización de los valores de las variables 
+//  "uniform" (shaders), en cada iteración del ciclo de "Ejecución".
+//  
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        
     /**
      * _actualizarUniformResolucion
      * Función interna que se ocupa de actualizar los valores de las variables
@@ -511,17 +568,17 @@ function Orquestador(sos, contenedor) {
     // ==> ("Revealing Module Pattern")
     // ==================================================================
     return {
+            processing,
+            socorrista,
             vincular,
             asociar,
-            socorrista,
             funcionActuaria, 
             orquestar,
-            verificacionPosActo2,
-            verificacionPreActo3,
-            acto2ListoParaIniciar,
-            acto3ListoParaIniciar,
-            processing,
-            diferido
+            semaforoACTO$2,
+            semaforoACTO$3,
+            diferido,
+            posACTO$2,
+            preACTO$3
            };
 }
 

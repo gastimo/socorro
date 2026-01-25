@@ -166,13 +166,23 @@ const Siervo = () => {
 // =====================================================================
     
     /**
+     * importarEscena
+     * Importa la definición de la "Escena" desde un archivo JSON (JavaScript 
+     * Object Notation) para luego crear el objeto "Escena" y asignarle los
+     * valores de los atributos leídos desde el archivo. 
+     */
+    function importarEscena(archivoJSON, contenedor, guardarProporciones = false, ancho = 0, alto = 0) {
+        return _crearEscena(contenedor, guardarProporciones, ancho, alto, archivoJSON, true);
+    }
+    
+    /**
      * crearEscena
      * Realiza una puesta en escena desde cero para la Obra utilizando Three.js.
      * En lugar de retornar una "escena", esta función devuelve un "escenificador"
      * que es un objeto intermediario para configurar y manipular la escena.
      */
     function crearEscena(contenedor, guardarProporciones = false, ancho = 0, alto = 0) {
-        return _crearEscena(contenedor, guardarProporciones, ancho, alto, false);
+        return _crearEscena(contenedor, guardarProporciones, ancho, alto, null, false);
     }
 
     /**
@@ -182,7 +192,7 @@ const Siervo = () => {
      * que es un objeto intermediario para configurar y manipular la escena.
      */
     function crearEscenaP5(contenedor, guardarProporciones = false, ancho = 0, alto = 0) {
-        return _crearEscena(contenedor, guardarProporciones, ancho, alto, true);
+        return _crearEscena(contenedor, guardarProporciones, ancho, alto, null, true);
     }
     
     /**
@@ -191,8 +201,9 @@ const Siervo = () => {
      * el uso de la librería Three.js o de p5js. El objeto retornado por la función
      * es un "escenificador" desde el cual se puede manipular la escena creada.
      */
-    function _crearEscena(contenedor, guardarProporciones = false, ancho = 0, alto = 0, usarP5 = false) {
+    function _crearEscena(contenedor, guardarProporciones = false, ancho = 0, alto = 0, archivoJSON = null, usarP5 = false) {
         let _indice = _contador++;
+        let _archivoJSONImportado;
         const _contenedor = Contenedor(contenedor, guardarProporciones, ancho, alto);
         
         // ESCENIFICADOR
@@ -234,6 +245,8 @@ const Siervo = () => {
                 _escenas[_indice] = Escena(_orquestador.socorrista());
                 _escenas[_indice].reproducirGLSL(!usarP5);
                 _orquestador.vincular(_escenas[_indice]);
+                if (archivoJSON)
+                    _archivoJSONImportado = _orquestador.socorrista().O.S.cargarArchivo(archivoJSON);
                 const _ACTO1 = _escenificadorCarga ? _escenificadorCarga(_orquestador.socorrista()): 
                                                      _escenas[_indice][CONFIG.ACTO_PREPARACION]();
             };
@@ -243,11 +256,16 @@ const Siervo = () => {
             // El "canvas" es creado e inicializado en este momento.
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             FUNCION[CONFIG.ACTO_INICIACION] = () => {
-                if (_orquestador.acto2ListoParaIniciar()) { 
-                    _escenas[_indice].emplazar(_contenedor);
+                if (_orquestador.semaforoACTO$2()) { 
+                    if (_archivoJSONImportado) {
+                        _orquestador.socorrista().O.S.def(JSON.parse(_archivoJSONImportado.contenido()));
+                        _contenedor.ajustar(_escenas[_indice].val('guardarProporciones'), 
+                                            _escenas[_indice].val('ancho'), _escenas[_indice].val('alto'));
+                    }
+                    _escenas[_indice].emplazar(_contenedor);  // Creación del "canvas" para la escena
                     const _ACTO2 = _escenificadorComienzo ? _escenificadorComienzo(_orquestador.socorrista()) : 
                                                             _escenas[_indice][CONFIG.ACTO_INICIACION]();
-                    _orquestador.verificacionPosActo2();
+                    _orquestador.posACTO$2();
                     _orquestador.diferido(false);
                 }
                 else {
@@ -266,8 +284,8 @@ const Siervo = () => {
             // varias veces por segundo en un bucle infinito.
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             FUNCION[CONFIG.ACTO_EJECUCION] = () => {
-                if (_orquestador.acto3ListoParaIniciar()) {                    
-                    _orquestador.verificacionPreActo3();
+                if (_orquestador.semaforoACTO$3()) {                    
+                    _orquestador.preACTO$3();
                     const _ACTO3 = _escenificadorRepresentacion ? _escenificadorRepresentacion(_orquestador.socorrista()) : 
                                                                   _escenas[_indice][CONFIG.ACTO_EJECUCION]();
                 }
@@ -299,6 +317,7 @@ const Siervo = () => {
     return {socorrista,
             obtenerClave,
             revelar,
+            importarEscena,
             crearEscena,
             crearEscenaP5
            };

@@ -56,7 +56,6 @@ function Esquema(S, nombreEsquema) {
     _ESQ.clave  = S.O.S.obtenerClave(_ESQ.nombre);
     _ESQ.identificador = _ESQ.nombre + CONFIG.ATR_SEPARADOR + _ESQ.clave;
     _ESQ.visible = true;
-    _VAL[CONFIG.ATR_SINCRONIZADO] = true;
     
   
    /*
@@ -173,7 +172,6 @@ function Esquema(S, nombreEsquema) {
               // no se trata de un objeto "subesquema" o es un "array", se inicializa en blanco
               else if (!subesquema.hasOwnProperty(atrNombre) || typeof subesquema[atrNombre] !== 'object' || Array.isArray(subesquema[atrNombre])) {
                 subesquema[atrNombre] = atrValor;      // ¡INTENCIONAL! para mantener el puntero al objeto recibido
-                subesquema[atrNombre][CONFIG.ATR_SINCRONIZADO] = true;
               }
               // Invocación recursiva para definir los valores del "subesquema"
               _defRecursiva(subesquema[atrNombre], atrValor);
@@ -195,8 +193,6 @@ function Esquema(S, nombreEsquema) {
               subesquema[atrNombre] = atrValor;
             }
           }
-          // Se marca como "desincronizado" aún cuando no se haya definido ningún valor real.
-          subesquema[CONFIG.ATR_SINCRONIZADO] = false;
         };
         _defRecursiva(_VAL, atributos);
       }
@@ -356,12 +352,9 @@ function Esquema(S, nombreEsquema) {
           for (const [atrNombre, atrValor] of Object.entries(_atributo.valorPorDefecto)) {
             if (!_VAL.hasOwnProperty(atrNombre)) {
               _VAL[atrNombre] = {};
-              _VAL[atrNombre][CONFIG.ATR_SINCRONIZADO] = false;
             }
             if (!_VAL[atrNombre].hasOwnProperty(_atributo.nombre) || _VAL[atrNombre][_atributo.nombre] === undefined) {
               _VAL[atrNombre][_atributo.nombre] = atrValor;
-              _VAL[atrNombre][CONFIG.ATR_SINCRONIZADO] = false;
-              _VAL[CONFIG.ATR_SINCRONIZADO] = false;
             }
           }
         }
@@ -369,62 +362,11 @@ function Esquema(S, nombreEsquema) {
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         else if (!_VAL.hasOwnProperty(_atributo.nombre) || _VAL[_atributo.nombre] === undefined) {
           _VAL[_atributo.nombre] = _atributo.valorPorDefecto;
-          _VAL[CONFIG.ATR_SINCRONIZADO] = false;
         }
         return _atributo;
       }
     };
-    
-    /**
-     * sincronizar
-     * Marca internamente al esquema para indicar que sus contenidos ya fueron
-     * sincronizados. Esto quiere decir que los valores del objeto que hace uso
-     * del esquema concuerdan con los contenidos almacenados en la colección de
-     * pares "atributo-valor" que se mantiene dentro del propio esquema.
-     * Si se indica un "subesquema", entonces se marcan como "sincronizados" los
-     * contenidos de dicho subesquema en lugar del esquema completo.
-     * La "desincronización" puede ocurrir cuando los valores del esquema son 
-     * modificados externamente (por ejemplo, desde la GUI). La sincronización, 
-     * en ese caso, debe actualizar los datos del objeto que hace uso del esquema
-     * (por ejemplo, una "Escena") para que ambos concuerden.
-     */
-    _ESQ.sincronizar = (subesquema) => {
-      if (!subesquema) {
-        _VAL[CONFIG.ATR_SINCRONIZADO] = true;
-      }
-      else {
-        if (_VAL.hasOwnProperty(subesquema)) {
-          _VAL[subesquema][CONFIG.ATR_SINCRONIZADO] = true;
-        }
-      }
-    };
-
-    /**
-     * estaSincronizado
-     * Indica si los contenidos del esquema están sincronizados. Si se indica
-     * el nombre de un "subesquema", es decir, un tipo de atributo especial que 
-     * guarda un esquema de atributos subordinado en lugar de un valor simple, 
-     * entonces la función indica si los contenidos de dicho subesquema están 
-     * sincronizados.
-     * Un esquema está sincronizado, cuando los valores de sus atributos concuerdan
-     * con los del objeto que hace uso de éste (por ejemplo, una "Escena"). La 
-     * "desincronización" puede darse cuando el esquema es modificado de forma
-     * externa, por ejmplo, desde una GUI.
-     */
-    _ESQ.estaSincronizado = (subesquema) => {
-      if (!subesquema) {
-        return _VAL[CONFIG.ATR_SINCRONIZADO];
-      }
-      else {
-        if (_VAL.hasOwnProperty(subesquema) && _VAL[subesquema].hasOwnProperty(CONFIG.ATR_SINCRONIZADO)) {
-          return _VAL[subesquema][CONFIG.ATR_SINCRONIZADO];
-        }
-        else {
-          return true;
-        }
-      }
-    };
-  
+      
     /**
      * exportar
      * Devuelve una cadena de caracteres con el contenido del esquema
@@ -447,8 +389,11 @@ function Esquema(S, nombreEsquema) {
       let salida = esUnObjeto ? "{\n" : "\n";
       let existenValores = false;
         
-      for (const [atrNombre, atrValor] of Object.entries(atributos)) {
-        if (atrValor !== null && atrNombre != CONFIG.ATR_SINCRONIZADO) {
+      let nombres = Object.keys(atributos);
+      for (let i = 0; i < nombres.length; i++) {
+        let atrNombre = nombres[i];
+        let atrValor  = atributos[atrNombre];
+        if (atrValor !== null) {
           if (typeof atrValor === "object" && !Array.isArray(atrValor)) {
             let subesquema = atrValor.exportar?.(indentacion + "\t");
             if (subesquema === undefined) {
@@ -460,24 +405,31 @@ function Esquema(S, nombreEsquema) {
             }
           }
           else if (Array.isArray(atrValor)) {
-            salida += indentacion + "\t" + atrNombre + "\t:\t[";
-            for (let i = 0; i < atrValor.length; i++) {
+            salida += indentacion + "\t\"" + atrNombre + "\"\t:\t[";
+            for (let j = 0; j < atrValor.length; j++) {
                 let elementoArray = {};
-                elementoArray[CONFIG.ATR_ELEMENTO] = atrValor[i];
-                salida += _convertirATexto(elementoArray, indentacion + "\t") + (i < atrValor.length - 1 ? "," : "");              
+                elementoArray[CONFIG.ATR_ELEMENTO] = atrValor[j];
+                salida += _convertirATexto(elementoArray, indentacion + "\t") + (j < atrValor.length - 1 ? "," : "");              
             }
             salida += "\n" + indentacion + "\t],\n";
             existenValores = true;
           }
           else {
-            let valor = typeof atrValor === "number" || typeof atrValor === "boolean" ? atrValor : "'" + atrValor + "'";
+            let valor = typeof atrValor === "number" || typeof atrValor === "boolean" ? atrValor : "\"" + atrValor + "\"";
             salida += _formatearRegistroExportado(indentacion, atrNombre, valor, esUnObjeto);
             existenValores = true;
           }
         }
       }
-      salida += esUnObjeto ? indentacion + "}" : "";
-      return existenValores ? salida : null;      
+      if (existenValores) {
+        if (esUnObjeto) {
+            salida = salida.substring(0, salida.length-2) + "\n";
+            salida += indentacion + "}";
+        }
+        return salida;
+      }
+      else
+        return null;
     }
     
     /**
@@ -486,7 +438,7 @@ function Esquema(S, nombreEsquema) {
      */
     function _formatearRegistroExportado(indentacion, atrNombre, atrValor, esUnObjeto = true) {
         if (esUnObjeto)
-            return indentacion + "\t" + atrNombre + "\t:\t" + atrValor + ",\n";
+            return indentacion + "\t\"" + atrNombre + "\"\t:\t" + atrValor + ",\n";
         else
             return indentacion + "\t" + atrValor;
     }

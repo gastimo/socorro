@@ -54,7 +54,6 @@ const Config = (() => {
         ATR_SEPARADOR           : "$",
         
         // Atributos generales del "Esquema"
-        ATR_SINCRONIZADO        : 'sincronizado',
         ATR_ELEMENTO            : '$elemento$',
 
         // Sufijos para atributos de "Variables" dinámicas
