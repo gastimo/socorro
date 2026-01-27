@@ -19,6 +19,9 @@ import Esquema from './esquema';
  * (ej. "sumar", "mult", "mag", "dist", etc).
  */
 function Vector(S, a, b, c) {
+    if (S.O.S.esUnaVariable(a) || S.O.S.esUnaVariable(b) || S.O.S.esUnaVariable(c))
+        return VectorVar(S, a, b, c);
+
     const _VEC = {};
     let _vectorial = S.O.S.esUnVector(a);
     _VEC.x = _vectorial ? a.x : a;
@@ -26,15 +29,6 @@ function Vector(S, a, b, c) {
     _VEC.z = _vectorial ? a.z : c;
     _VEC.nombre = CONFIG.NOMBRE_VECTOR;
 
-        
-    
-    
-    // -------------------------------------------------------------
-    // 
-    // EXPOSICIÓN DE MÉTODOS DEL VECTOR
-    // 
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    
     /**
      * def
      * Permite la definición de los componentes del "Vector", es decir,
@@ -44,13 +38,34 @@ function Vector(S, a, b, c) {
      */
     _VEC.def = (atributos) => {
         if (atributos) {
-            if (atributos.hasOwnProperty('x'))
-                _VEC.x = atributos.x;
-            if (atributos.hasOwnProperty('y'))
-                _VEC.y = atributos.y;
-            if (atributos.hasOwnProperty('z'))
-                _VEC.z = atributos.z;        
-        }
+            const _ESQ = Esquema(S);
+            let _defX, _defY, _defZ;
+            if (atributos.hasOwnProperty('x')) {
+                _defX = _ESQ._obtenerFuncionSocorrista(atributos.x);
+                _VEC.x = _defX == S.O.S.Variable ? _VEC.x : atributos.x;
+            }
+            if (atributos.hasOwnProperty('y')) {
+                _defY = _ESQ._obtenerFuncionSocorrista(atributos.y);
+                _VEC.y = _defY == S.O.S.Variable ? _VEC.y : atributos.y;
+            }
+            if (atributos.hasOwnProperty('z')) {
+                _defZ = _ESQ._obtenerFuncionSocorrista(atributos.z);
+                _VEC.z = _defZ == S.O.S.Variable ? _VEC.z : atributos.z;
+            }
+            if (_defX == S.O.S.Variable || _defY == S.O.S.Variable || _defZ == S.O.S.Variable) {
+                return VectorVar(S).def(atributos);   
+            }
+        }        
+        return _VEC;
+    };
+    
+    /**
+     * val
+     * Esta función no hace nada en realidad. Se añade para mantener la compatibilidad
+     * con los restantes objetos que extienden de "Esquema". La función retorna el 
+     * mismo objeto "Vector" sin realizar ninguna modificación.
+     */
+    _VEC.val = () => {
         return _VEC;
     };
     
@@ -153,6 +168,118 @@ function Vector(S, a, b, c) {
     };
    
     return _VEC;    
+}
+
+
+
+// -------------------------------------------------------------
+//
+//               V E C T O R    V A R I A B L E
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+/**
+ * VectorVar
+ * Objeto utilitario para operar con "Vectores Variables", en otras palabras,
+ * se trata de vectores que admiten el uso de objetos "Variable" en cualquiera
+ * de sus componentes (<x,y,z>).
+ * A diferencia del objeto "Vector" simple, este objeto extiende del objeto 
+ * "Esquema". La invocación al método "val()" es lo que permite evaluar 
+ * dinámicamente la variables de cualquiera de sus componentes.
+ */
+function VectorVar(S, a, b, c) {
+    const _ESQ = Esquema(S, CONFIG.NOMBRE_VECTORVAR);
+    const _VEV = S.O.S.revelar({}, _ESQ);
+    let _vectorial = S.O.S.esUnVector(a);
+    _inicializar(a, b, c);
+
+    
+    /**
+     * _inicializar
+     * Método privado de inicialización de las propiedades del "Vector".
+     */
+    function _inicializar(a, b, c) {
+        const _definicion = {};
+        if (a !== undefined && a !== null)
+            _definicion.x = _vectorial ? a.x : a;
+        if (b !== undefined && b !== null)
+            _definicion.y = _vectorial ? a.y : b;
+        if (c !== undefined && c !== null)
+            _definicion.z = _vectorial ? a.z : c;
+        _ESQ.def(_definicion);
+    }
+
+    /**
+     * def
+     * Esta función es la misma que la del objeto "Esquema" de quien el
+     * "VectorVar" extiende. Se redefine simplemente para retornar, al final,
+     * el objeto "VectorVar" actual, que permite definiciones encadenadas.
+     */
+    _VEV.def = (atributos) => {
+        if (atributos) {
+            const _definicion = {};
+            for (const [atrNombre, atrValor] of Object.entries(atributos)) {
+                if (atrNombre === 'x' || atrNombre === 'y' || atrNombre === 'z') {
+                    _definicion[atrNombre] = atrValor;
+                }
+            }
+            _ESQ.def(_definicion);
+        }
+        return _VEV;
+    };
+
+    /**
+     * val
+     * Función de evaluación del "VectorVar". Básicamente, este método es lo que 
+     * diferencia al "Vector" del "VectorVar". Esta función evalúa cada uno de
+     * los componentes del vector y retorna un objeto "Vector" (simple) con sus
+     * tres componentes <x,y,z> evaluadas.
+     */
+    _VEV.val = (...atributos) => {
+        if (atributos.length == 0) {
+            return Vector(S, _ESQ.val('x'), _ESQ.val('y'), _ESQ.val('z'));
+        }
+        return _ESQ.val(...atributos);
+    };
+    
+    /**
+     * vacio
+     * Retorna "true" o "false" para indicar si el vector ya ha sido
+     * sido inicializado con algún valor o si todos sus componentes 
+     * están vacíos. 
+     */
+    _VEV.vacio = () => {
+       return (_VEV.x === undefined || _VEV.x === null) &&
+              (_VEV.y === undefined || _VEV.y === null) &&
+              (_VEV.z === undefined || _VEV.z === null);
+    };
+    
+    /**
+     * copiar
+     * Copia el contenido del vector recibido como argumento
+     * en el "VectorVar" corriente.
+     */
+    _VEV.copiar = (v) => {
+        if (v) {
+            if (S.O.S.esUnVectorVar(v))
+                _ESQ.def(v.defincion());
+            else
+                _inicializar(v?.x, v?.y, v?.z);
+        }
+        return _VEV;
+    };
+    
+    /**
+     * definicion
+     * Retorna la definición completa del "VectorVar". Esta función
+     * es utilizada internamente para copiar el contenido de un 
+     * "VectorVar" en otro "VectorVar".
+     */
+    _VEV.definicion = () => {
+        return _ESQ.val();  
+    };
+    
+    return _VEV;
 }
 
 

@@ -171,6 +171,15 @@ const Auxiliadora = (S, utilizaP5) => {
         },
 
         /**
+         * esUnVectorVar
+         * Función para indicar si el objeto recibido como argumento es un "VectorVar".
+         */
+        esUnVectorVar: (objeto) => {
+          let _aux = objeto ? objeto?.nombre : undefined;
+          return _aux !== undefined && _aux === CONFIG.NOMBRE_VECTORVAR;
+        },
+
+        /**
          * esUnEstilo
          * Función para indicar si el objeto recibido como argumento es un "Estilo".
          */

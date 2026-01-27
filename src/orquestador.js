@@ -35,7 +35,6 @@ function Orquestador(sos, contenedor) {
     let   _escena;
     let   _cuadros = 0;
     let   _reloj;
-    let   _diferido = false;
     
     // Variables para los actos (funciones) a ser orquestados
     let _funcionPreparacion;
@@ -45,6 +44,7 @@ function Orquestador(sos, contenedor) {
     let _actoPreparacionFinalizado = false;
     let _actoIniciacionIniciado = false;
     let _actoEjecucionIniciado = false;
+    let _acto$3Diferido = false;
     
     // Valores de los "uniforms" estándares
     let _valorUniformTiempo;
@@ -435,24 +435,24 @@ function Orquestador(sos, contenedor) {
     }
 
     /**
-     * diferido
-     * Permite gestionar el valor de un indicador de aplazamiento que informa
-     * si alguno de los actos ha sido diferido. Es utilizado por el socorrista
-     * (fuera del orquestador) para diferir el inicio del "Acto 3" hasta que el
-     * el "Acto 2" haya concluido.
+     * aplazarACTO$3
+     * Permite gestionar el valor de un indicador de aplazamiento para diferir 
+     * el inicio del "Acto 3". Esta función es utilizada por el socorrista
+     * (S.O.S) para instruir al "Orquestador" que el "Acto 3" debe ser diferido
+     * hasta que se indique lo contrario. 
      */
-    function diferido(diferir) {
+    function aplazarACTO$3(diferir) {
         if (diferir !== undefined) {
-            _diferido = diferir;
+            _acto$3Diferido = diferir;
         }
-        return _diferido;
+        return _acto$3Diferido;
     }
 
 
 // -----------------------------------------------------------------
 //
 //  FUNCIONES "PRE" Y "POS" ACTOS
-//  Ejecutan las tareas requeridas luega de la finalización de 
+//  Ejecutan las tareas requeridas luego de la finalización de 
 //  un acto (POS) o previo a su ejecución (PRE). Son invocadas
 //  externamente por el socorrista (S.O.S) y no por el orquestador.
 // 
@@ -574,9 +574,9 @@ function Orquestador(sos, contenedor) {
             asociar,
             funcionActuaria, 
             orquestar,
+            aplazarACTO$3,
             semaforoACTO$2,
             semaforoACTO$3,
-            diferido,
             posACTO$2,
             preACTO$3
            };

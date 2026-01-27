@@ -94,7 +94,7 @@ function Escena(S) {
                 S.O.S.P5.push();
                 S.O.S.P5.noFill();
                 S.O.S.P5.stroke(_estilo.trazo);
-                S.O.S.P5.strokeWeight(_estilo.grosor);
+                S.O.S.P5.strokeWeight(escalar(_estilo.grosor));
                 S.O.S.P5.rect(-ancho() / 2, -alto() / 2, ancho(), alto());
                 S.O.S.P5.pop();
             }
@@ -301,6 +301,15 @@ function Escena(S) {
     }
     
     /**
+     * escala
+     * Retorna el coeficiente que representa la variación en escala entre el tamaño
+     * actual de la "Escena" y las dimensiones de referencia iniciales.
+     */
+    function escala() {
+        return _contenedor.geometria.factorEscala;
+    }
+    
+    /**
      * escalar
      * Escala el valor recibido como argumento, en caso que aplique.
      */
@@ -317,7 +326,7 @@ function Escena(S) {
      * "Escena" debe ser escalable en adelante.
      */
     function escalable(esEscalable) {
-        if (esEscalable !== undefined) {
+        if (esEscalable !== undefined && esEscalable !== null) {
             _esEscalable = esEscalable;
         }
         return _esEscalable;

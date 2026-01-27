@@ -261,15 +261,16 @@ const Siervo = () => {
                         _orquestador.socorrista().O.S.def(JSON.parse(_archivoJSONImportado.contenido()));
                         _contenedor.ajustar(_escenas[_indice].val('guardarProporciones'), 
                                             _escenas[_indice].val('ancho'), _escenas[_indice].val('alto'));
+                        _escenas[_indice].escalable(_escenas[_indice].val('escalable'));
                     }
                     _escenas[_indice].emplazar(_contenedor);  // Creación del "canvas" para la escena
                     const _ACTO2 = _escenificadorComienzo ? _escenificadorComienzo(_orquestador.socorrista()) : 
                                                             _escenas[_indice][CONFIG.ACTO_INICIACION]();
                     _orquestador.posACTO$2();
-                    _orquestador.diferido(false);
+                    _orquestador.aplazarACTO$3(false);
                 }
                 else {
-                    _orquestador.diferido(true);
+                    _orquestador.aplazarACTO$3(true);
                 }
             };
             // Redefinición de funciones para el SETUP de psjs
@@ -292,7 +293,7 @@ const Siervo = () => {
             };
             // Redefinición de funciones para el DRAW de p5js
             FUNCION.draw = () => {
-                if (_orquestador.diferido())
+                if (_orquestador.aplazarACTO$3())
                     FUNCION[CONFIG.ACTO_INICIACION]();
                 FUNCION[CONFIG.ACTO_EJECUCION](); 
             };

@@ -12,7 +12,6 @@ const Color = (() => {
         GRADIENTES        : {},
         
         // Nombres de los gradientes predefinidos
-        GRAD_DEFAULT      : 'default',
         GRAD_CORALIA      : 'coralia',
         GRAD_ESMERALDA    : 'esmeralda',
         GRAD_UNIVERSAL    : 'universal',
@@ -35,11 +34,6 @@ const Color = (() => {
  * 
  * =============================================================================
  */
-
-Color.GRADIENTES[Color.GRAD_DEFAULT] = 
-  (S) => {
-    return [{pos: 0.0,  val: S.O.S.P5.color('rgb(255,255,255)')}];
-  };
 
 Color.GRADIENTES[Color.GRAD_CORALIA] = 
   (S) => {

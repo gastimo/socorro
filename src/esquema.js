@@ -155,14 +155,13 @@ function Esquema(S, nombreEsquema) {
             if (atrValor !== null && atrValor !== undefined && typeof atrValor === 'object' && !Array.isArray(atrValor)) {
               // Se verifica si el valor se corresponde a una DEFINICIÓN de algún objeto socorrista,
               // por ejemplo: un "Vector", una "Variable", un "Estilo", un "Actor", etc.
-              let _funcionSocorrista = _obtenerFuncionSocorrista(atrValor);
+              let _funcionSocorrista = _ESQ._obtenerFuncionSocorrista(atrValor);
               if (_funcionSocorrista !== undefined) {
-                  subesquema[atrNombre] = _funcionSocorrista();
-                  subesquema[atrNombre].def(atrValor);
+                  subesquema[atrNombre] = _funcionSocorrista().def(atrValor);
                   _incorporarAlReparto(subesquema[atrNombre]);
                   continue;
               }
-              else if (S.O.S.esUnVector(atrValor) || S.O.S.esUnaVariable(atrValor) || 
+              else if (S.O.S.esUnVector(atrValor) || S.O.S.esUnVectorVar(atrValor) || S.O.S.esUnaVariable(atrValor) || 
                        S.O.S.esUnEstilo(atrValor) || S.O.S.esUnActor(atrValor)) {
                   subesquema[atrNombre] = atrValor;
                   _incorporarAlReparto(subesquema[atrNombre]);
@@ -171,7 +170,7 @@ function Esquema(S, nombreEsquema) {
               // Si el nombre del "subesquema" no está definido actualmente o ya existe pero
               // no se trata de un objeto "subesquema" o es un "array", se inicializa en blanco
               else if (!subesquema.hasOwnProperty(atrNombre) || typeof subesquema[atrNombre] !== 'object' || Array.isArray(subesquema[atrNombre])) {
-                subesquema[atrNombre] = atrValor;      // ¡INTENCIONAL! para mantener el puntero al objeto recibido
+                subesquema[atrNombre] = {};
               }
               // Invocación recursiva para definir los valores del "subesquema"
               _defRecursiva(subesquema[atrNombre], atrValor);
@@ -282,7 +281,7 @@ function Esquema(S, nombreEsquema) {
     function _obtenerValor(_valores, atrNombre) {
       let _valor = _valores[atrNombre];
       if (_valor) {
-        if (S.O.S.esUnaVariable(_valor))
+        if (S.O.S.esUnaVariable(_valor) || S.O.S.esUnVectorVar(_valor))
           _valor = _valor.val();
         if (S.O.S.esUnColor(_valor)) {
           let _atrNombreExtra = atrNombre + CONFIG.ATR_VARIABLE_ALFA;
@@ -450,7 +449,7 @@ function Esquema(S, nombreEsquema) {
      * un "Actor", etc). En ese caso, retorna la función del socorrista que corresponda para 
      * crear el objeto. Sino, devuelve "undefined".
      */
-    function _obtenerFuncionSocorrista(objeto) {
+    _ESQ._obtenerFuncionSocorrista = (objeto) => {
       // --------------------------------------
       // Se verifica si es una "VARIABLE"
       // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -478,7 +477,7 @@ function Esquema(S, nombreEsquema) {
 
       // Si no corresponde a ningún objeto, se retorna "undefined"
       return undefined;
-    }
+    };
   
     /**
      * _cumplimentaDef

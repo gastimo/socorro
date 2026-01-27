@@ -26,6 +26,7 @@ const Config = (() => {
         NOMBRE_ESQUEMA          : 'ESQUEMA',    // Estructura de definición atributos/valores de entidades el socorro
         NOMBRE_VARIABLE         : 'VARIABLE',   // Variables para cálculo dinámico de valores de atributos
         NOMBRE_VECTOR           : 'VECTOR',     // Objeto genérico para realizar operaciones con vectores
+        NOMBRE_VECTORVAR        : 'VECTORVAR',  // Objeto "Vector" que admite "Variables" en sus componentes x, y, z.
         NOMBRE_ESTILO           : 'ESTILO',     // Definición de las variables para la represención visual de un objeto
         NOMBRE_ACTOR            : 'ACTOR',      // Objetos intérpretes principales de la "Escena"
         
