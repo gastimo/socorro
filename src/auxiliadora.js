@@ -7,10 +7,10 @@
  */
 import CONFIG from './config';
 import VariableInterna from './variable';
-import VariadorInterno from './variador';
 import VectorInterno from './vector';
 import EstiloInterno from './estilo';
 import ActorInterno from './actor';
+import TransicionadorInterno from './transicionador';
 
 
 /**
@@ -209,11 +209,7 @@ const Auxiliadora = (S, utilizaP5) => {
         Variable: (...parametros) => {
             return VariableInterna(S, ...parametros);
         },
-        
-        Variador: (valorIni, valorFin, cuadrosDuracion, cuadrosRetardo) => {
-            return VariadorInterno(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, cuadros);
-        },
-        
+                
         Vector: (x, y, z) => {
             return VectorInterno(S, x, y, z);
         },
@@ -225,6 +221,10 @@ const Auxiliadora = (S, utilizaP5) => {
         Actor(origen, velocidad, estilo) {
           return ActorInterno(S, origen, velocidad, estilo);  
         },
+        
+        Transicionador: (valorIni, valorFin, cuadrosDuracion, cuadrosRetardo) => {
+            return TransicionadorInterno(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, cuadros);
+        }
     };
     
     return _AUX;

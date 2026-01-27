@@ -1,20 +1,24 @@
 /*
  * =============================================================================
  * 
- *                         M Ó D U L O    V A R I A D O R
+ *                  M Ó D U L O    T R A N S I C I O N A D O R
  * 
  * =============================================================================
  */
 
 /**
- * Variador
- * Función que permite variar un número desde un valor inicial ("valorIni") 
- * hasta un valor final ("valorFin") en el tiempo estipulado por el parámetro
- * "cuadrosDuracion". Además, si el parámetro "cuadrosRetardo" es especificado,
- * la función esperará esa cantidad de cuadros antes de comenzar la variación.
- * Por el momento, la variación es únicamente "lineal".
+ * Transicionador
+ * Objeto utilitario que permite realizar una "transición animada", haciendo 
+ * variar un valor numérico desde un valor inicial ("valorIni") hasta un valor 
+ * final ("valorFin"), a lo largo de un período de tiempo estipulado por el 
+ * argumento "cuadrosDuracion". En otras palabras, se encarga de interpolar 
+ * el valor de un atributo numérico de cualquier entidad, en un lapso de tiempo, 
+ * desde un estado inicial hasta un estado final.
+ * Si el parámetro "cuadrosRetardo" es especificado, la función esperará esa 
+ * cantidad de cuadros antes de dar inicio a la transición. 
+ * NOTA: por el momento, la interpolación es únicamente "lineal".
  */
-function Variador(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, contadorDeCuadros) {
+function Transicionador(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, contadorDeCuadros) {
     let _recuentoDeCuadros = contadorDeCuadros;
     let _valorIni = valorIni;
     let _valorFin = valorFin;
@@ -104,4 +108,4 @@ function Variador(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, contad
 }
 
 
-export default Variador;
+export default Transicionador;
