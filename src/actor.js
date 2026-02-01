@@ -22,7 +22,6 @@ import Esquema from "./esquema";
 function Actor(S, origen, velocidad, estilo) {
     const _ESQ = Esquema(S, CONFIG.NOMBRE_ACTOR);
     const _ACT = S.O.S.revelar({}, _ESQ);
-    const _orden = S.O.S.obtenerOrden(_ACT);
     const _origen = S.O.S.Vector();
     const _posicion = S.O.S.Vector();
     const _velocidad = S.O.S.Vector();
@@ -31,8 +30,8 @@ function Actor(S, origen, velocidad, estilo) {
     const _nacimiento = S.O.S.tiempo();
     const _duracionMaxima  = CONFIG.ACTOR_TIEMPO_DE_VIDA;     // Tiempo de vida máximo 
     const _recorridoMaximo = CONFIG.ACTOR_RECORRIDO_MAXIMO;   // Distancia máxima a recorrer
-    let _fichaReparto;
     let _finalizado = false;
+    let _representador;
     _inicializar(origen, velocidad, estilo);
 
     
@@ -61,11 +60,9 @@ function Actor(S, origen, velocidad, estilo) {
     
     // -------------------------------------------------------------
     //
-    // EXPOSICIÓN DE PROPIEDADES ESTÁTICAS Y DINÁMICAS DEL ACTOR
+    // EXPOSICIÓN DE PROPIEDADES DEL ACTOR
     //
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    _ACT.id        = _ACT.clave;
-    _ACT.orden     = _orden;
     _ACT.origen    = _origen;
     _ACT.posicion  = _posicion;
     _ACT.velocidad = _velocidad;
@@ -123,6 +120,36 @@ function Actor(S, origen, velocidad, estilo) {
     };
 
     /**
+     * defRepresentador
+     * Función que permite definir el "Representador" por defecto asociado al "Actor".
+     * Este método hace exactamente lo mismo que la siguiente invocación:
+     *     def({representador: <nombre-representador});
+     */
+    _ACT.defRepresentador = (representador) => {
+        if (representador !== undefined && representador !== null) {
+            const _definicion = {};
+            _definicion[CONFIG.ACT_REPRESENTADOR] = representador;
+            _ESQ.def(_definicion);
+        }
+        return _ACT;
+    };
+    
+    /**
+     * representador
+     * Devuelve el nombre del "Representador" por defecto a emplear para el "Actor".
+     * El argumento de la función, además, permite definir un nuevo "Representador" 
+     * a utilizar en adelante para este "Actor" en particular.
+     */
+    _ACT.representador = (rep) => {
+        if (rep !== undefined && rep !== null) {
+            const _definicion = {};
+            _definicion[CONFIG.ACT_REPRESENTADOR] = rep;
+            _ESQ.def(_definicion);
+        }
+        return _representador;
+    };
+
+    /**
      * actualizar
      * Actualiza todas las variables dinámicas del "Actor". Esta función debe invocarse
      * una vez por cada iteración del ciclo de reproducción de la "Escena", antes de
@@ -137,8 +164,12 @@ function Actor(S, origen, velocidad, estilo) {
             // para el cálculo dinámico de los valores de sus variables.
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             S.O.S.ACTOR = _ACT;
+            
+            // 2. Actualización del "Representador" específico del "Actor"
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            _representador = _ESQ.val(CONFIG.ACT_REPRESENTADOR) ?? _representador;
 
-            // 2. ACTUALIZACIÓN DEL DESPLAZAMIENTO
+            // 3. ACTUALIZACIÓN DEL DESPLAZAMIENTO
             // Actualización de la posición y velocidad del "Actor" en la "Escena".
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (_origen.vacio()) {
@@ -153,7 +184,7 @@ function Actor(S, origen, velocidad, estilo) {
             _velocidad.sumar(_aceleracion);
             _ACT.distancia = S.O.S.Vector(_origen).restar(_posicion).mag() ?? 0;
 
-            // 3. VERIFICACIÓN DE LA VIGENCIA DEL ACTOR
+            // 4. VERIFICACIÓN DE LA VIGENCIA DEL ACTOR
             // Se verifica, en este punto, si el "Actor" debería ser finalizado, ya
             // sea porque sobrepasó la duración máxima permitida (tiempo de vida) o 
             // porque su recorrido superó la distancia máxima establecida.
@@ -162,7 +193,7 @@ function Actor(S, origen, velocidad, estilo) {
                 _ACT.finalizar();
             }
             else {
-                // 4. ACTUALIZACIÓN DE LOS ATRIBUTOS VISUALES
+                // 5. ACTUALIZACIÓN DE LOS ATRIBUTOS VISUALES
                 // Actualización del "Estilo" del "Actor".
                 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
                 let _e = _ESQ.val(CONFIG.ACT_ESTILO);
@@ -175,7 +206,7 @@ function Actor(S, origen, velocidad, estilo) {
                 }
             }
 
-            // 5. REESTABLECIMIENTO DEL CONTEXTO
+            // 6. REESTABLECIMIENTO DEL CONTEXTO
             // Se remueve el "Actor" actual del contexto de ejecución.
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             delete S.O.S.ACTOR;
@@ -186,42 +217,18 @@ function Actor(S, origen, velocidad, estilo) {
     
     /**
      * representar
-     * Función que se ocupa de la representación visual 
-     * del objeto "Actor" en la "Escena".
+     * Función que se ocupa de la representación visual del objeto "Actor" en la "Escena".
+     * Para la representación es necesario que previamente se haya invocado a la función
+     * "actualizar" del "Actor" que recalcula todas sus variables dinámicas. Esto es 
+     * realizado desde el "Orquestador" mediante el método "preACTO#3".
+     * La representación visual en sí del "Actor", o sea, el dibujo en el "canvas") es 
+     * realizada por la función del "Representador", configurada en el "Actor" o, en su
+     * defecto, por la configurada a nivel de la "Escena".
      */
     _ACT.representar = () => {
-        S.O.S.P5.push();
-        if (!_finalizado && _estilo.grandor !== undefined && _estilo.grandor !== null) {
-            if (_estilo.color !== undefined && _estilo.color !== null)
-                S.O.S.P5.fill(_estilo.color);
-            else
-                S.O.S.P5.noFill();
-            
-            if (_estilo.trazo !== undefined && _estilo.trazo !== null)
-                S.O.S.P5.stroke(_estilo.trazo);
-            else
-                S.O.S.P5.noStroke();
-            
-            if (_estilo.grosor !== undefined && _estilo.grosor !== null)
-                S.O.S.P5.strokeWeight(S.O.S.escalar(_estilo.grosor));
-
-            S.O.S.P5.circle(_posicion.x ? S.O.S.escalar(_posicion.x) : 0, 
-                            _posicion.y ? S.O.S.escalar(_posicion.y) : 0, 
-                            S.O.S.escalar(_estilo.grandor));
+        if (!_finalizado) {
+            S.O.S.REP[_representador ?? S.O.S.representador()](_ACT);
         }
-        S.O.S.P5.pop();
-    };
-
-    /**
-     * ficha
-     * Establece y/o devuelve la ficha del "Actor" con la información
-     * del "Reparto" al que pertenece.
-     */
-    _ACT.ficha = (fichaReparto) => {
-        if (fichaReparto !== undefined) {
-            _fichaReparto = fichaReparto;
-        }
-        return _fichaReparto;
     };
     
     /**
@@ -232,6 +239,15 @@ function Actor(S, origen, velocidad, estilo) {
       _finalizado = true; 
     };
 
+    /**
+     * finalizado
+     * Indica si al "Actor" ha finalizado se participación en la "Escena"
+     */
+    _ACT.finalizado = () => {
+      return _finalizado; 
+    };
+    
+    
     return _ACT;
 }
 

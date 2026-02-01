@@ -41,15 +41,15 @@ function Vector(S, a, b, c) {
             const _ESQ = Esquema(S);
             let _defX, _defY, _defZ;
             if (atributos.hasOwnProperty('x')) {
-                _defX = _ESQ._obtenerFuncionSocorrista(atributos.x);
+                _defX = S.O.S.entidad(atributos.x);
                 _VEC.x = _defX == S.O.S.Variable ? _VEC.x : atributos.x;
             }
             if (atributos.hasOwnProperty('y')) {
-                _defY = _ESQ._obtenerFuncionSocorrista(atributos.y);
+                _defY = S.O.S.entidad(atributos.y);
                 _VEC.y = _defY == S.O.S.Variable ? _VEC.y : atributos.y;
             }
             if (atributos.hasOwnProperty('z')) {
-                _defZ = _ESQ._obtenerFuncionSocorrista(atributos.z);
+                _defZ = S.O.S.entidad(atributos.z);
                 _VEC.z = _defZ == S.O.S.Variable ? _VEC.z : atributos.z;
             }
             if (_defX == S.O.S.Variable || _defY == S.O.S.Variable || _defZ == S.O.S.Variable) {

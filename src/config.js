@@ -21,14 +21,30 @@ const Config = (() => {
     // > NOMBRES DE LAS ENTIDADES DEL SOCORRO
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-        NOMBRE_SOS              : 'SOS',        // Singleton del Obsequioso Socorro (S.O.S)
-        NOMBRE_ESCENA           : 'ESCENA',     // Entidad principal para representación de la "Obra"
-        NOMBRE_ESQUEMA          : 'ESQUEMA',    // Estructura de definición atributos/valores de entidades el socorro
-        NOMBRE_VARIABLE         : 'VARIABLE',   // Variables para cálculo dinámico de valores de atributos
-        NOMBRE_VECTOR           : 'VECTOR',     // Objeto genérico para realizar operaciones con vectores
-        NOMBRE_VECTORVAR        : 'VECTORVAR',  // Objeto "Vector" que admite "Variables" en sus componentes x, y, z.
-        NOMBRE_ESTILO           : 'ESTILO',     // Definición de las variables para la represención visual de un objeto
-        NOMBRE_ACTOR            : 'ACTOR',      // Objetos intérpretes principales de la "Escena"
+        // Singleton del Obsequioso Socorro (S.O.S)
+        NOMBRE_SOS            : '_SOS',   
+
+        // Entidades generales de administración del módulo
+        NOMBRE_GUION          : '_GUI',   // Conjunto de descripciones de las entidades actuantes de la "Escena"
+        NOMBRE_DESGLOSE       : '_DES',   // Conjunto de fichas donde se desglosan los participantes de la "Escena"
+        
+        // Entidades que internamente son "Esquema"
+        NOMBRE_ESQUEMA        : '_ESQ',   // Estructura de definición atributos/valores de las entidades del "socorro"
+        NOMBRE_ESCENA         : '_ESC',   // Entidad principal para las representaciones de la "Obra"
+        NOMBRE_REPARTO        : '_RPT',   // Conjunto de "Actores" con dispociones y movimients coordinados entre sí
+        NOMBRE_ACTOR          : '_ACT',   // Intérpretes principales de la "Escena"
+        NOMBRE_ESTILO         : '_EST',   // Conjunto de variables para la represención visual de objetos de la escena
+        NOMBRE_VARIABLE       : '_VAR',   // Variables para cálculo dinámico de los valores de los atributos
+        NOMBRE_VARIADOR       : '_VRD',   // Generador de valores numéricos aleatorios dentro rangos preestablecidos
+        NOMBRE_VECTOR         : '_VEC',   // Objeto genérico para realizar operaciones con vectores
+        NOMBRE_VECTORVAR      : '_VEV',   // Objeto "Vector" que admite "Variables" en sus componentes x, y, z.
+        
+        // Entidades para definición de "Repertorios"
+        NOMBRE_REPERTORIO        : 'REPE',
+        NOMBRE_REPRESENTADOR     : 'REP',
+        NOMBRE_COREOGRAFIA       : 'COREO',
+        NOMBRE_COLOR             : 'COLOR',
+        NOMBRE_METODO_EVALUACION : 'EVAL',
         
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
@@ -48,28 +64,60 @@ const Config = (() => {
         
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-    // > NOMBRES DE ATRIBUTOS DE ESQUEMAS
+    // > NOMBRES DE ATRIBUTOS DE ESQUEMAS (SEGÚN ENTIDAD)
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-        // Separador
-        ATR_SEPARADOR           : "$",
         
-        // Atributos generales del "Esquema"
+        // Constantes para "Atributos" de "Esquemas"
+        ATR_SEPARADOR           : "$",
         ATR_ELEMENTO            : '$elemento$',
+        ATR_VARIABLE_ALFA       : "$alfa",       // Sufijo para cálculo dinámico (ej. 'color$alfa')
+        ATR_VARIABLE_TRAZO      : "$trazo",      // Sufijo para cálculo dinámico (ej. 'color$trazo')
 
-        // Sufijos para atributos de "Variables" dinámicas
-        ATR_VARIABLE_ALFA       : "$alfa",
-        ATR_VARIABLE_TRAZO      : "$trazo",
+        // Nombres de los atributos de las "Variables"
+        VAR_METODO              : 'metodo',
+        VAR_VALOR               : 'valor',
+        VAR_VALOR_DESDE         : 'valorDesde',   // Usado también por el "Variador"
+        VAR_VALOR_HASTA         : 'valorHasta',   // Usado también por el "Variador"
+        VAR_MODULADOR           : 'modulador',    // Usado también por el "Variador"
+        VAR_ORIGEN_DESDE        : 'origenDesde',
+        VAR_ORIGEN_HASTA        : 'origenHasta',
+        VAR_RUIDO_VELOCIDAD     : 'ruidoVelocidad',
+        VAR_RUIDO_ESCALA        : 'ruidoEscala',
 
         // Nombres de los atributos básicos del "Estilo"
+        // Sólo hay 2. Los restantes se forman añadiendo los sufijos "$alfa" y "$trazo"
         EST_COLOR               : 'color',
         EST_GRANDOR             : 'grandor',
+    
+        // Nombres de los atributos básicos de la "Escena" (ACTUANTE PRINCIPAL)
+        ESC_ANCHO               : 'ancho',
+        ESC_ALTO                : 'alto',
+        ESC_ESCALABLE           : 'escalable',
+        ESC_ESTILO              : 'estilo',
+        ESC_REPRESENTADOR       : 'representador',
+        ESC_GUARDAR_PROPORCION  : 'guardarProporciones',
+        ESC_INTERPRETAR_GLSL    : 'interpretarGLSL',
 
+        // Nombres de los atributos básicos del "Reparto"
+        RPT_COREOGRAFIA         : 'coreografia', 
+        RPT_CANTIDAD            : 'cantidad', 
+        RPT_PUESTOS             : 'puestos',
+        RPT_INTERVALO           : 'intervalo', 
+        RPT_VELOCIDAD           : 'velocidad',
+        RPT_DESVIO              : 'desvío',
+        RPT_SEPARACION          : 'separacion',
+        RPT_ESTILO              : 'estilo',
+        RPT_REPRESENTADOR       : 'representador',
+        RPT_DESPLAZAMIENTO      : 'desplazamiento',
+        RPT_DURACION            : 'duracion',
+        RPT_RECORRIDO           : 'recorrido',
+        
         // Nombres de los atributos básicos del "Actor"
         ACT_ORIGEN              : 'origen',
         ACT_VELOCIDAD           : 'velocidad',
         ACT_ESTILO              : 'estilo',
-        
+        ACT_REPRESENTADOR       : 'representador',
+
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
     // > VARIABLES DINÁMICAS
@@ -93,7 +141,38 @@ const Config = (() => {
         
         ACTOR_TIEMPO_DE_VIDA   : 1000 * 60 * 15,  // En milisegundos
         ACTOR_RECORRIDO_MAXIMO : 15000,           // En píxeles
+
+            
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+    // > COREOGRAFÍAS
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        COREO_RADIAL        : 'radial',
+        COREO_AXIAL         : 'axial',
+        COREO_RECTANGULAR   : 'rectangular',
+
     
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+    // > REPRESENTADORES
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        REP_ESTANDAR        : 'estandar',
+        REP_LINEAL          : 'lineal',
+        REP_ESTRELLA        : 'estrella',
+        REP_DANDELION       : 'dandelion',
+        REP_ESPINAL         : 'espinal',
+
+        
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+    // > GUION
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        GUI_NOMBRE          : 'nombre',
+        GUI_VALOR_DEFECTO   : 'valorPorDefecto',
+        GUI_VALOR_MINIMO    : 'valorMinimo',
+        GUI_VALOR_MAXIMO    : 'valorMaximo',
+        GUI_INCREMENTO      : 'incremento',
+        GUI_REPERTORIO      : 'repertorio',
+        GUI_HEREDAR         : 'heredar',
+        GUI_ETIQUETA        : 'etiqueta',
+        GUI_ATRIBUTO        : 'atributo'
     };
     
     return _PARAM;

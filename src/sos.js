@@ -5,9 +5,9 @@
  * =============================================================================
  */
 import CONFIG from './config';
-import Contenedor from './contenedor.js';
-import Orquestador from './orquestador.js';
-import Escena from './escena.js';
+import Contenedor from './contenedor';
+import Orquestador from './orquestador';
+import Escena from './escena';
 import * as THREE from 'three';
 import p5 from 'p5';
 
@@ -243,7 +243,7 @@ const Siervo = () => {
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             FUNCION[CONFIG.ACTO_PREPARACION] = () => {
                 _escenas[_indice] = Escena(_orquestador.socorrista());
-                _escenas[_indice].reproducirGLSL(!usarP5);
+                _escenas[_indice].interpretarGLSL(!usarP5);
                 _orquestador.vincular(_escenas[_indice]);
                 if (archivoJSON)
                     _archivoJSONImportado = _orquestador.socorrista().O.S.cargarArchivo(archivoJSON);
@@ -261,9 +261,8 @@ const Siervo = () => {
                         _orquestador.socorrista().O.S.def(JSON.parse(_archivoJSONImportado.contenido()));
                         _contenedor.ajustar(_escenas[_indice].val('guardarProporciones'), 
                                             _escenas[_indice].val('ancho'), _escenas[_indice].val('alto'));
-                        _escenas[_indice].escalable(_escenas[_indice].val('escalable'));
                     }
-                    _escenas[_indice].emplazar(_contenedor);  // Creación del "canvas" para la escena
+                    _escenas[_indice].emplazar(_contenedor);   // Creación del "canvas" para la escena
                     const _ACTO2 = _escenificadorComienzo ? _escenificadorComienzo(_orquestador.socorrista()) : 
                                                             _escenas[_indice][CONFIG.ACTO_INICIACION]();
                     _orquestador.posACTO$2();

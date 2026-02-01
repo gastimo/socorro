@@ -11,28 +11,29 @@ import Esquema from './esquema';
 
 /**
  * Escena
- * Entidad principal de la "Obra" que articula la representación de los
- * contenidos visuales en el lienzo del navegador (el "canvas").
- * La "Obra" puede estar compuesta por una o múltiples escenas.
- * 
- * A cada escena se le asigna un "orquestador" encargado de instrumentar
- * ordenadamente los tres actos en los que ésta se divide:
+ * Entidad principal de la "Obra" que articula la representación de los contenidos visuales en el
+ * lienzo del navegador (el "canvas"). La "Obra" puede estar compuesta por una o múltiples escenas.
+ * A cada escena se le asigna un "orquestador" encargado de instrumentar ordenadamente los tres
+ * actos en los que ésta se divide:
  * 
  * - ACTO 1 ("Preparación"): Cargar archivos que van a utilizarse (preload).
  * - ACTO 2 ("Iniciación") : Configuración y armado inicial de la escena (setup).
  * - ACTO 3 ("Ejecución")  : Representación (cuadro a cuadro) de la escena (draw).
  * 
- * NOTA 1: La escena es la entidad que permite encapsular el uso de las 
- *         librerías para la generación de gráficos (p5js o Three.js).
- * NOTA 2: La escena hace uso del objeto esquema (es un esquema).
- * 
+ * OBSERVACIONES:
+ * 1. Según los parámetros de creación de la "Escena" se utilizan las función de la librería "p5js" 
+ *    o de "Three.js" (o ambas) para la generación de la gráfica.
+ * 2. Al igual que la mayoría de los objetos del módulo, la "Escena" es un "Esquema".
  */
 function Escena(S) {
     const _ESQ = Esquema(S, CONFIG.NOMBRE_ESCENA);
+    const _ESC = S.O.S.revelar({}, _funcionActuaria(), _ESQ);
     const _estilo = {color: undefined, grandor: undefined, trazo: undefined, grosor: undefined};
+    
     let _contenedor;
     let _esEscalable = false;
-    let _reproducirCodigoGLSL = false;
+    let _representador = 'estandar';
+    let _interpretarCodigoGLSL = false;
 
     // Shaders
     let _vertexShader, _fragmentShader;
@@ -52,40 +53,132 @@ function Escena(S) {
 
 // =====================================================================
 // 
-//  DEFINICIÓN DE LOS ATRIBUTOS DE "ESTILO" DE LA ESCENA
+//  DEFINICIÓN & ACTUALIZACIÓN DE ATRIBUTOS DE LA ESCENA
 //  
 // =====================================================================
+
+    /**
+     * def
+     * Método que simplemente sobreescribe la función "def" del "Esquema"
+     * pero que al final retorna el objeto "Escena" corriente.
+     */
+    _ESC.def = (atributos) => {
+        _ESQ.def(atributos);
+        return _ESC;
+    };
+    
+    /**
+     * defRepresentador
+     * Función que permite definir el "Representador" por defecto asociado a la "Escena".
+     * Este método hace exactamente lo mismo que la siguiente invocación:
+     *     def({representador: <nombre-representador});
+     */
+    _ESC.defRepresentador = (representador) => {
+        if (representador !== undefined && representador !== null) {
+            const _definicion = {};
+            _definicion[CONFIG.ESC_REPRESENTADOR] = representador;
+            _ESQ.def(_definicion);
+        }
+        return _ESC;
+    };
     
     /**
      * defEstilo
      * Define los atributos básicos para la representación visual de la "Escena".
-     * El argumento recibido puede ser un objeto de tipo "Estilo" u otro objeto Javascript
-     * que contenga su definición.
+     * El argumento recibido puede ser un objeto de tipo "Estilo" u otro objeto 
+     * Javascript que contenga su definición.
      */
-    function defEstilo(estilo) {
-        const _definicion = {};
-        if (estilo !== undefined && estilo !== null)
-            _definicion[CONFIG.ACT_ESTILO] = estilo;
-        _ESQ.def(_definicion);
-    }
+    _ESC.defEstilo = (estilo) => {
+        if (estilo !== undefined && estilo !== null) {
+            const _definicion = {};
+            _definicion[CONFIG.ESC_ESTILO] = estilo;
+            _ESQ.def(_definicion);
+        }
+        return _ESC;
+    };
     
+    /**
+     * escalable
+     * Indica si el contenido de la "Escena" es escalable (o no) ante cualquier cambio
+     * cambio de tamaño del lienzo HTML. El argumento de la función permite definir si 
+     * la "Escena" debe ser escalable en adelante.
+     */
+    _ESC.escalable = (esEscalable) => {
+        if (esEscalable !== undefined && esEscalable !== null) {
+            const _definicion = {};
+            _definicion[CONFIG.ESC_ESCALABLE] = esEscalable;
+            _ESQ.def(_definicion);
+        }
+        return _esEscalable;
+    };
+    
+    /**
+     * representador
+     * Devuelve el nombre del "Representador" por defecto a emplear para la "Escena".
+     * El argumento de la función, además, permite definir un nuevo "Representador" 
+     * a utilizar en adelante para la "Escena".
+     */
+    _ESC.representador = (rep) => {
+        if (rep !== undefined && rep !== null) {
+            const _definicion = {};
+            _definicion[CONFIG.ESC_REPRESENTADOR] = rep;
+            _ESQ.def(_definicion);
+        }
+        return _representador;
+    };
+    
+    /**
+     * interpretarGLSL
+     * Indica si al representar la "Escena" se debe incluir también la reproducción
+     * de los programas GLSL que hayan sido definidos ("shaders"). El argumento de 
+     * la función permite definir si la ejecuión del código GLSL debe ser incluida
+     * en adelante en cada representación de la "Escena".
+     */
+    _ESC.interpretarGLSL = (mostrarShader) => {
+        if (mostrarShader !== undefined && mostrarShader !== null) {
+            const _definicion = {};
+            _definicion[CONFIG.ESC_INTERPRETAR_GLSL] = mostrarShader;
+            _ESQ.def(_definicion);
+        }
+        return _interpretarCodigoGLSL;
+    };    
+    
+    /**
+     * actualizar
+     * Recalcula el valor de los atributos dinámicos de la escena.
+     */
+    _ESC.actualizar = () => {
+        // Actualización del indicador "escalable"
+        _esEscalable = _ESQ.val(CONFIG.ESC_ESCALABLE) ?? _esEscalable;
+        
+        // Actualización del "Representador" por defecto
+        _representador = _ESQ.val(CONFIG.ESC_REPRESENTADOR) ?? _representador;
+
+        // Actualizar la variable que indica si se debe interpretar el código GLSL
+        _interpretarCodigoGLSL = _ESQ.val(CONFIG.ESC_INTERPRETAR_GLSL) ?? _interpretarCodigoGLSL;
+
+        // Actualización de los atributos del "Estilo"
+        let _est = _ESQ.val(CONFIG.ESC_ESTILO);
+        if (_est) {
+            _est.actualizar();
+            _estilo.color   = _est.color();
+            _estilo.trazo   = _est.color(true);
+            _estilo.grandor = _est.grandor();
+            _estilo.grosor  = _est.grandor(true);
+        }
+    };
+
     /**
      * estilar
      * Aplica los estilos básicos de la "Escena". Esto es:
      *  - color   : color de fondo de la escena
-     *  - grandor : na
+     *  - grandor : n/a
      *  - trazo   : color del trazo alrededor de la escena
      *  - grosor  : grosor del trazo alrededor de la escena
      */
-    function estilar() {
-        let _e = _ESQ.val(CONFIG.ACT_ESTILO);
+    _ESC.estilar = () => {
+        let _e = _ESQ.val(CONFIG.ESC_ESTILO);
         if (_e) {
-            _e.actualizar();
-            _estilo.color   = _e.color();
-            _estilo.trazo   = _e.color(true);
-            _estilo.grandor = _e.grandor();
-            _estilo.grosor  = _e.grandor(true);
-
             if (_estilo.color !== undefined && _estilo.color !== null) {
                 S.O.S.P5.background(_estilo.color);
             }
@@ -94,13 +187,14 @@ function Escena(S) {
                 S.O.S.P5.push();
                 S.O.S.P5.noFill();
                 S.O.S.P5.stroke(_estilo.trazo);
-                S.O.S.P5.strokeWeight(escalar(_estilo.grosor));
-                S.O.S.P5.rect(-ancho() / 2, -alto() / 2, ancho(), alto());
+                S.O.S.P5.strokeWeight(_ESC.escalar(_estilo.grosor));
+                S.O.S.P5.rect(-_ESC.ancho() / 2, -_ESC.alto() / 2, _ESC.ancho(), _ESC.alto());
                 S.O.S.P5.pop();
             }
         }
-    }
-    
+        return _ESC;
+    };
+
 
 // =====================================================================
 // 
@@ -109,11 +203,11 @@ function Escena(S) {
 // =====================================================================
     
     /**
-     * functionActuaria
+     * _funcionActuaria
      * Definición dinámica de las funciones a ser invocadas 
      * para cada uno de los tres actos de la escena.
      */
-    function functionActuaria() {  
+    function _funcionActuaria() {  
         const _FUNCION = {};
         
         /**
@@ -140,7 +234,7 @@ function Escena(S) {
          * y se encarga de representar la escena (cuadro a cuadro).
          */
         _FUNCION[CONFIG.ACTO_EJECUCION] = (mostrarActores = true) => {
-            if (_reproducirCodigoGLSL) {
+            if (_interpretarCodigoGLSL) {
                 if (rendererTHREE) {
                     rendererTHREE.render(scene, camera);
                 }
@@ -155,7 +249,7 @@ function Escena(S) {
                 }
             }
             if (mostrarActores) {
-                S.O.S.representarReparto();
+                S.O.S.Reparto.representar();
             }
         };
         
@@ -170,19 +264,19 @@ function Escena(S) {
 //  
 // =====================================================================
 
-    function vertexShader(shader) {
+    _ESC.vertexShader = (shader) => {
         if (shader !== undefined) {
             _vertexShader = shader;     
         }
         return _vertexShader;
-    }
+    };
     
-    function fragmentShader(shader) {
+    _ESC.fragmentShader = (shader) => {
         if (shader !== undefined) {
             _fragmentShader = shader;
         }
         return _fragmentShader;
-    }
+    };
 
     
     
@@ -192,50 +286,7 @@ function Escena(S) {
 //  
 // =====================================================================
     
-    function uniformTiempo(nombre) {
-        if (nombre !== undefined) {
-            _nombreUniformTiempo = nombre;
-            uniform(nombre, 1.0);        
-        }
-        return uniform(nombre);
-    }
-    
-    function uniformResolucion(nombre) {
-        if (nombre !== undefined) {
-            _nombreUniformResolucion = nombre;
-            uniform(nombre, new S.O.S.THREE.Vector2());
-        }
-        return uniform(nombre);
-    }
-    
-    function uniformMouse(nombre) {
-        if (nombre !== undefined) {
-            _nombreUniformMouse = nombre;
-            uniform(nombre, new S.O.S.THREE.Vector2());
-        }
-        return uniform(nombre);
-    }
-    
-    function uniform(nombre, valor, valor2) {
-        if (valor2 !== undefined) {
-            let v = new S.O.S.THREE.Vector2(valor, valor2);
-            return uniform(nombre, v);
-        }
-        if (valor !== undefined) {
-            if (!_uniforms.hasOwnProperty(nombre))
-                _uniforms[nombre] = {};
-            _uniforms[nombre][CONFIG.UNIFORM_VALOR] = valor;
-            uniformP5(nombre, valor);
-        }
-        else {
-            if (!_uniforms.hasOwnProperty(nombre) || !_uniforms[nombre].hasOwnProperty(CONFIG.UNIFORM_VALOR)) {
-                return undefined;
-            }
-        }
-        return _uniforms[nombre];
-    }
-
-    function uniformP5(nombre, valor) {
+    _ESC.uniformP5 = (nombre, valor) => {
         if (valor !== null && _p5Shader) {
             if (typeof valor === 'object' && !Array.isArray(valor)) {
                 if (valor.hasOwnProperty('x') && valor.hasOwnProperty('y') && valor.hasOwnProperty('z')) {
@@ -255,20 +306,63 @@ function Escena(S) {
                 _p5Shader.setUniform(nombre, valor);
             }
         }
-    }
+    };
     
-    function uniformTiempoP5(valor) {
-        uniformP5(_nombreUniformTiempo, valor);
-    }
+    _ESC.uniformTiempoP5 = (valor) => {
+        _ESC.uniformP5(_nombreUniformTiempo, valor);
+    };
     
-    function uniformResolucionP5(valor) {
-        uniformP5(_nombreUniformResolucion, valor);
-    }
+    _ESC.uniformResolucionP5 = (valor) => {
+        _ESC.uniformP5(_nombreUniformResolucion, valor);
+    };
     
-    function uniformMouseP5(valor) {
-        uniformP5(_nombreUniformMouse, valor);
-    }
+    _ESC.uniformMouseP5 = (valor) => {
+        _ESC.uniformP5(_nombreUniformMouse, valor);
+    };
+
+    _ESC.uniform = (nombre, valor, valor2) => {
+        if (valor2 !== undefined) {
+            let v = new S.O.S.THREE.Vector2(valor, valor2);
+            return _ESC.uniform(nombre, v);
+        }
+        if (valor !== undefined) {
+            if (!_uniforms.hasOwnProperty(nombre))
+                _uniforms[nombre] = {};
+            _uniforms[nombre][CONFIG.UNIFORM_VALOR] = valor;
+            _ESC.uniformP5(nombre, valor);
+        }
+        else {
+            if (!_uniforms.hasOwnProperty(nombre) || !_uniforms[nombre].hasOwnProperty(CONFIG.UNIFORM_VALOR)) {
+                return undefined;
+            }
+        }
+        return _uniforms[nombre];
+    };
+
+    _ESC.uniformTiempo = (nombre) => {
+        if (nombre !== undefined) {
+            _nombreUniformTiempo = nombre;
+            _ESC.uniform(nombre, 1.0);        
+        }
+        return _ESC.uniform(nombre);
+    };
     
+    _ESC.uniformResolucion = (nombre) => {
+        if (nombre !== undefined) {
+            _nombreUniformResolucion = nombre;
+            _ESC.uniform(nombre, new S.O.S.THREE.Vector2());
+        }
+        return _ESC.uniform(nombre);
+    };
+    
+    _ESC.uniformMouse = (nombre) => {
+        if (nombre !== undefined) {
+            _nombreUniformMouse = nombre;
+            _ESC.uniform(nombre, new S.O.S.THREE.Vector2());
+        }
+        return _ESC.uniform(nombre);
+    };
+        
 
 // =====================================================================
 // 
@@ -281,63 +375,50 @@ function Escena(S) {
      * Devuelve el ancho de la escena, o sea, la anchura
      * del lienzo donde se realiza el "render".
      */
-    function ancho() {
+    _ESC.ancho = () => {
         if (_contenedor) {
             return _contenedor.geometria.ancho;
         }
         return 0;
-    }
+    };
     
     /**
      * alto
      * Devuelve el alto de la escena, o sea, la altura
      * del lienzo donde se realiza el "render".
      */
-    function alto() {
+    _ESC.alto = () => {
         if (_contenedor) {
             return _contenedor.geometria.alto;
         }
         return 0;
-    }
+    };
     
     /**
      * escala
      * Retorna el coeficiente que representa la variación en escala entre el tamaño
      * actual de la "Escena" y las dimensiones de referencia iniciales.
      */
-    function escala() {
+    _ESC.escala = () => {
         return _contenedor.geometria.factorEscala;
-    }
+    };
     
     /**
      * escalar
      * Escala el valor recibido como argumento, en caso que aplique.
      */
-    function escalar(valor) {
+    _ESC.escalar = (valor) => {
         return !(_esEscalable && valor) ? valor : 
                   (S.O.S.esUnVector(valor) ? valor.multiplicar(_contenedor.geometria.factorEscala)  :
                                                        valor * _contenedor.geometria.factorEscala);
-    }
-    
-    /**
-     * escalable
-     * Indica si el contenido de la "Escena" es escalable o no ante cualquier cambio
-     * de tamaño del lienzo HTML. El argumento de la función permite definir si la 
-     * "Escena" debe ser escalable en adelante.
-     */
-    function escalable(esEscalable) {
-        if (esEscalable !== undefined && esEscalable !== null) {
-            _esEscalable = esEscalable;
-        }
-        return _esEscalable;
-    }
+    };
     
     /**
      * dimensionar
      * Establece el ancho y alto del lienzo donde se
      * representa la escena (el canvas del renderer).
      */
-    function dimensionar(ancho, alto) {
+    _ESC.dimensionar = (ancho, alto) => {
         if (rendererTHREE) {
             rendererTHREE.setSize(ancho, alto); 
         }
@@ -345,30 +426,16 @@ function Escena(S) {
             S.O.S.P5.resizeCanvas(ancho, alto);
             S.O.S.P5.ortho(-ancho / 2, ancho / 2, -alto / 2, alto / 2);             
         }
-    }
+    };
 
     /**
      * lienzo
      * Devuelve el lienzo (el "canvas" HTML) que se utiliza
      * para llevar a cabo el "render" de la escena.
      */
-    function lienzo() {
-        _contenedor.lienzo();  
-    }
-    
-    /**
-     * reproducirGLSL
-     * Indica si al representar la "Escena" se debe incluir también la reproducción
-     * de los programas GLSL que hayan sido definidos ("shaders"). El argumento de 
-     * la función permite definir si la ejecuión del código GLSL debe ser incluida
-     * en adelante en cada representación de la "Escena".
-     */
-    function reproducirGLSL(mostrarShader) {
-        if (mostrarShader !== undefined) {
-            _reproducirCodigoGLSL = mostrarShader;
-        }
-        return _reproducirCodigoGLSL;
-    }
+    _ESC.lienzo = () => {
+        return _contenedor.lienzo();  
+    };
     
     /**
      * emplazar
@@ -376,7 +443,7 @@ function Escena(S) {
      * para construir el "canvas" de la escena en la página HTML. El emplazamiento
      * del lienzo de la escena tiene lugar justo antes del inicio del segundo acto.
      */
-    function emplazar(contenedor) {
+    _ESC.emplazar = (contenedor) => {
         _contenedor = contenedor;
         if (!S.O.S.P5) {
             // Se crea el lienzo ("canvas") en el contenedor HTML de la página
@@ -400,8 +467,8 @@ function Escena(S) {
         // para reflejar las dimensiones actuales del lienzo. El "canvas" de la escena siempre asume
         // las medidas del contenedor de la página HTML y no al revés.
         _contenedor.actualizar();
-        dimensionar(_contenedor.geometria.ancho, _contenedor.geometria.alto);
-    }
+        _ESC.dimensionar(_contenedor.geometria.ancho, _contenedor.geometria.alto);
+    };
             
     /**
      * iniciarGLSL
@@ -409,7 +476,7 @@ function Escena(S) {
      * poder utilizar "shaders". Esta función se invoca una vez que los dos 
      * primeros actos finalizaron y justo antes del tercer acto.
      */
-    function iniciarGLSL() {
+    _ESC.iniciarGLSL = () => {
         if (!S.O.S.P5) {
             // LIBRERIA "THREE.js"
             // Se especifican los "shaders" a emplear para la escena, se definen sus
@@ -433,43 +500,14 @@ function Escena(S) {
                 _p5Shader = S.O.S.P5.createShader(_vshader, _fragmentShader.contenido());
                 for (const [uNombre, uValor] of Object.entries(_uniforms)) {
                     if (uValor.hasOwnProperty(CONFIG.UNIFORM_VALOR)) {
-                        uniformP5(uNombre, uValor[CONFIG.UNIFORM_VALOR]);
+                        _ESC.uniformP5(uNombre, uValor[CONFIG.UNIFORM_VALOR]);
                     }
                 }
             }
         }       
-    }
+    };
     
-
-    // ===============================================================
-    // ===> Se exponen únicamente las funciones públicas de la escena
-    // ==> ("Revealing Module Pattern") y se implementa la herencia.
-    // ===============================================================
-    return S.O.S.revelar({
-                         ancho,
-                         alto,
-                         dimensionar,
-                         escalar,
-                         escalable,
-                         emplazar,
-                         lienzo,
-                         defEstilo,
-                         estilar,
-                         reproducirGLSL,
-                         iniciarGLSL,
-                         vertexShader,
-                         fragmentShader,
-                         uniformTiempo,
-                         uniformResolucion,
-                         uniformMouse,
-                         uniform,
-                         uniformP5,
-                         uniformTiempoP5,
-                         uniformResolucionP5,
-                         uniformMouseP5,
-                         }, 
-                         functionActuaria(),   // Se adicionan los métodos de la "Función Actuaria"
-                         _ESQ);                // Se heredan las funciones públicas del "Esquema"
+    return _ESC;
 }
 
 

@@ -6,7 +6,6 @@
  * =============================================================================
  */
 import CONFIG from './config';
-import COLOR  from './color';
 import Esquema from './esquema';
 
 
@@ -254,22 +253,24 @@ function Variable(S, ...parametros) {
             let _valorVar   = _ESQ.val('valor');
             let _valorDesde = _ESQ.val('valorDesde');
             let _valorHasta = _ESQ.val('valorHasta');
-            if (_esUnRangoDeValores(_valorVar)) {
-                let _valoresRango = []; 
-                if (COLOR.GRADIENTES.hasOwnProperty(_valorVar))  // TODO: ¿Podrían ser otros rangos además de colores?
-                    _valoresRango = COLOR.GRADIENTES[_valorVar](S);
-                _calculadora.desde(_metodo, _ESQ.val('origenDesde'), _ESQ.val('origenHasta')).hasta(..._valoresRango);
+            if (_esUnRangoDeValores(_valorVar)) {  // TODO: Sólo está controlando rangos de colores (GRADIENTES)
+                _calculadora.desde(_metodo, _ESQ.val('origenDesde'), _ESQ.val('origenHasta')).hasta(...S.O.S.COLOR[_valorVar]);
             }
-            else if (_valorDesde || _valorHasta)
+            else if (_valorDesde || _valorHasta) {
                 _calculadora.desde(_metodo, _ESQ.val('origenDesde'), _ESQ.val('origenHasta')).hasta(_valorDesde, _valorHasta);
-            else 
+            }
+            else { 
                 _calculadora.desde(_metodo, _ESQ.val('origenDesde'), _ESQ.val('origenHasta')).hasta(_valorVar);
+            }
         }
 
         // 2. PREPARACIÓN DEL CONTEXTO DE EJECUCIÓN Y CÁLCULO DINÁMICO DE LA VARIABLE
         // Se pone a disposición el contexto de ejecución y se realiza el cálculo del valor dinámico.
+        // Si bien el objeto auxiliar "Calculadora" es único para la "Variable", sus contextos de
+        // ejecución son múltiples. La "Calculadora" crea un contexto diferente por cada 
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        _contextoEjecucion = _calculadora.contexto(_ESQ.clave, _ESQ.val('modulador') ?? EVAL[_metodo]?.mod, _ESQ.val('ruidoVelocidad'));
+        let _claveContexto = S.O.S.hasOwnProperty('ACTOR') ? S.O.S.ACTOR.identificador : _ESQ.identificador;
+        _contextoEjecucion = _calculadora.contexto(_claveContexto, _ESQ.val('modulador') ?? EVAL[_metodo]?.mod, _ESQ.val('ruidoVelocidad'));
         let _v = _calculadora.calc(_contextoEjecucion);
         
         // 3. ADICIÓN DEL RUIDO
@@ -293,7 +294,7 @@ function Variable(S, ...parametros) {
      * todos los "Gradientes" son rangos de colores, definidos bajo un nombre.
      */
     function _esUnRangoDeValores(argumento) {
-        return typeof argumento === 'string';
+        return S.O.S.COLOR.hasOwnProperty(argumento);
     }
     
     /**
@@ -426,7 +427,8 @@ function _Calculadora(S) {
     /**
      * contexto
      * Retorna un objeto que almacena las variables dinámicas del contexto
-     * de ejecución para la clave recibida como argumento.
+     * de ejecución para la clave recibida como argumento. La función crea
+     * y almacena internamente un contexto por cada clave diferente.
      */
     _VAL.contexto = (clave, modulador, ruidoVelocidad) => {
         if (!_contexto.hasOwnProperty(clave)) {
@@ -664,14 +666,6 @@ EVAL[CONFIG.EVAL_DISTANCIA].met = (S) => {return S.O.S.ACTOR.distancia * S.O.S.V
 
 EVAL[CONFIG.EVAL_RECORRIDO].mod = 1;
 EVAL[CONFIG.EVAL_RECORRIDO].met = (S) => {return S.O.S.ACTOR.recorrido * S.O.S.VAR.mod;};
-
-
-// LEGACY METHODS
-/*
-  distanceToOrigin   : (stimulus) => {return stimulus.position.dist(stimulus.origin)},
-  orderMod200        : (stimulus) => {return stimulus.order % 200},
-  zPositionMod200    : (stimulus) => {return Math.abs(stimulus.position.z) % 200},
-*/
 
 
 export default Variable;

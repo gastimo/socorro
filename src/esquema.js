@@ -32,25 +32,12 @@ import CONFIG from './config';
  *                  atributos durante su inicialización.
  *  - exportar    : exporta el contenido del esquema (nombre de atributos y
  *                  sus valores) en formato JSON.
- *  - sincronizar : marca internamente el contenido del esquema como "sincronizado"
- *                  (ver apartado "SINCRONIZACIÓN", debajo).
- * 
- * SINCRONIZACIÓN:
- * La "sincronización" es un mecanismo opcional. Puede ser útil cuando el objeto
- * que hace uso del esquema mantiene internamente una copia de los mismos atributos
- * almacenados en su esquema. De esta forma, si el esquema fuera modificado de
- * manera externa (desde la GUI, por ejemplo), los valores del esquema no concordarían
- * con los valores que el objeto tiene almacenados (estarían "desincronizados").
- * Para solucionar esto, en cada iteración del bucle de la "Obra", los objetos que
- * hagan uso de esquemas (y que mantienen copias internas de los mismos atributos),
- * debe preguntar si sus esquemas asociados se encuentran "desincronizados" y, de ser
- * así, encargarse de la actualización.
  */
 function Esquema(S, nombreEsquema) {
     const _ESQ = {};   // Esquema corriente (funciones y propiedades del "Esquema" en sí).
     const _VAL = {};   // Definición de atributos variables del esquema y sus valores.
     const _DEF = {};   // Configuraciones de atributos (para valores x defecto y GUI).
-
+          
     // Inicialización del "Esquema"
     _ESQ.nombre = nombreEsquema ?? CONFIG.NOMBRE_ESQUEMA;
     _ESQ.clave  = S.O.S.obtenerClave(_ESQ.nombre);
@@ -87,6 +74,7 @@ function Esquema(S, nombreEsquema) {
     function ConfigAtributo (...parametros) {
       let _nombrePropiedad;  // Para mapear el atributo a una propiedad del objeto maestro
       let _etiqueta;         // Para la descripción o rótulo a desplegar en la GUI
+      let _heredar;          // Indicador para calcular valores por "herencia"
       const _configuracion = {
         nombre          : null,
         valorPorDefecto : null,
@@ -94,8 +82,9 @@ function Esquema(S, nombreEsquema) {
         valorMaximo     : null,
         incremento      : null,
         listaDeValores  : null,
-        etiqueta        : (texto) => {_etiqueta = texto; return _configuracion;},
-        propiedad       : (prop)  => {_nombrePropiedad = prop; return _configuracion;}
+        etiqueta        : (texto)  => {_etiqueta = texto; return _configuracion;},
+        propiedad       : (prop)   => {_nombrePropiedad = prop; return _configuracion;},
+        heredar         : (hereda) => {_heredar = hereda; return _configuracion;}
       };
       _configuracion.nombre          = parametros.length > 0 ? parametros[0] : null;
       _configuracion.valorPorDefecto = parametros.length > 1 ? parametros[1] : null;
@@ -103,7 +92,7 @@ function Esquema(S, nombreEsquema) {
       _configuracion.valorMaximo     = parametros.length > 3 ? parametros[3] : null;
       _configuracion.incremento      = parametros.length > 4 ? parametros[4] : null;
       if (Array.isArray(_configuracion.valorMinimo)) {
-        listaDeValores = _configuracion.valorMinimo;
+        _configuracion.listaDeValores = _configuracion.valorMinimo;
         _configuracion.valorMinimo = null;
         _configuracion.valorMaximo = null;
       }
@@ -146,25 +135,26 @@ function Esquema(S, nombreEsquema) {
      */  
     _ESQ.def = (atributos) => {
       if (atributos) {
-        const _defRecursiva = (subesquema, subatributos) => {
+        const _defRecursiva = (subesquema, subatributos, arreglo) => {
           for (const [atrNombre, atrValor] of Object.entries(subatributos)) {
               
             // --------------------------------------------
             // DEFINCIÓN DE VALORES DEL OBJETO SUBESQUEMA
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (atrValor !== null && atrValor !== undefined && typeof atrValor === 'object' && !Array.isArray(atrValor)) {
-              // Se verifica si el valor se corresponde a una DEFINICIÓN de algún objeto socorrista,
-              // por ejemplo: un "Vector", una "Variable", un "Estilo", un "Actor", etc.
-              let _funcionSocorrista = _ESQ._obtenerFuncionSocorrista(atrValor);
-              if (_funcionSocorrista !== undefined) {
-                  subesquema[atrNombre] = _funcionSocorrista().def(atrValor);
-                  _incorporarAlReparto(subesquema[atrNombre]);
+              // Se verifica si el valor se corresponde a una DEFINICIÓN de algún objeto socorrista, por
+              // ejemplo: un "Vector", una "Variable", un "Variador", un "Estilo", un "Actor", etc.
+              let _entidadSocorrista = S.O.S.entidad(atrValor);
+              if (_entidadSocorrista !== undefined) {
+                  subesquema[atrNombre] = _entidadSocorrista().def(atrValor);
+                  S.O.S.Reparto.fichar(_ESQ.identificador, subesquema[atrNombre], subesquema, atrNombre, arreglo);
                   continue;
               }
-              else if (S.O.S.esUnVector(atrValor) || S.O.S.esUnVectorVar(atrValor) || S.O.S.esUnaVariable(atrValor) || 
-                       S.O.S.esUnEstilo(atrValor) || S.O.S.esUnActor(atrValor)) {
+              else if (S.O.S.esUnVector(atrValor)   || S.O.S.esUnVectorVar(atrValor) || S.O.S.esUnaVariable(atrValor) || 
+                       S.O.S.esUnVariador(atrValor) || S.O.S.esUnEstilo(atrValor)    || S.O.S.esUnActor(atrValor) || 
+                       S.O.S.esUnReparto(atrValor)) {
                   subesquema[atrNombre] = atrValor;
-                  _incorporarAlReparto(subesquema[atrNombre]);
+                  S.O.S.Reparto.fichar(_ESQ.identificador, subesquema[atrNombre], subesquema, atrNombre, arreglo);
                   continue;
               }
               // Si el nombre del "subesquema" no está definido actualmente o ya existe pero
@@ -182,12 +172,12 @@ function Esquema(S, nombreEsquema) {
             else if (Array.isArray(atrValor)) {
                 subesquema[atrNombre] = [];
                 // Invocación recursiva para definir los valores del "arreglo"
-                _defRecursiva(subesquema[atrNombre], atrValor);
+                _defRecursiva(subesquema[atrNombre], atrValor, atrNombre);
             }  
               
-            // ------------------------------------------
-            // DEFINICIÓN DE VALORES SIMPLES
-            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            // ---------------------------------------------
+            // DEFINICIÓN DE VALORES SIMPLES (ÚLTIMO NIVEL)
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             else {
               subesquema[atrNombre] = atrValor;
             }
@@ -247,7 +237,7 @@ function Esquema(S, nombreEsquema) {
               //                 
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
               let _subesquema = _valoresDeAtributos[atributos[i]];
-              if (S.O.S.esUnEstilo(_subesquema) || S.O.S.esUnActor(_subesquema)) {
+              if (S.O.S.esUnEstilo(_subesquema) || S.O.S.esUnActor(_subesquema) || S.O.S.esUnReparto(_subesquema)) {
                 return _subesquema.val(atributos.slice(i+1));
               }
                 
@@ -270,23 +260,29 @@ function Esquema(S, nombreEsquema) {
      * _obtenerValor
      * Función privada para extraer el valor del atributo existente en el esquema.
      * Esta función tiene en cuenta los siguientes tipos de valores de atributos:
-     * - VARIABLE: Si el valor buscado está representado como una "Variable", 
-     *   entonces realiza el cálculo dinámico o "evaluación" y retorna su valor.
+     *
+     * - VARIABLE / VARIADOR: Si el valor buscado está representado como un objeto
+     *   de tipo "Variable" o "Variador", entonces realiza el cálculo dinámico, según 
+     *   el "método de evaluación" y retorna su valor.
+     * 
      * - COLOR: Si el valor obtenido es un "color" (de p5js), entonces verifica si 
      *   existe el atributo asociado que defina su opacidad. De ser así, lo calcula y
-     *   lo aplica (los atributos asociados son los que añaden un sufijo, ej: "$alfa").
-     * - OTROS: Si no se trata de una "Variable" ni de un color, retorna el valor 
-     *   sin ningún tipo de procesamiento. Los "Vectores" caen en esta categoría.
+     *   lo aplica (los atributos asociados son atributos "vecinos" en el esquema a
+     *   los que se le añaden un sufijo, ejemplo: "$alfa" para indicar "opacidad").
+     * 
+     * - OTROS: Si no se trata de una "Variable", ni de un "Variador", ni de un color, 
+     *   se retorna el valor sin ningún tipo de procesamiento. Los "Vectores", por
+     *   ejemplo, caen en esta categoría.
      */
     function _obtenerValor(_valores, atrNombre) {
       let _valor = _valores[atrNombre];
       if (_valor) {
-        if (S.O.S.esUnaVariable(_valor) || S.O.S.esUnVectorVar(_valor))
+        if (S.O.S.esUnaVariable(_valor) || S.O.S.esUnVariador(_valor) || S.O.S.esUnVectorVar(_valor))
           _valor = _valor.val();
         if (S.O.S.esUnColor(_valor)) {
           let _atrNombreExtra = atrNombre + CONFIG.ATR_VARIABLE_ALFA;
           if (_valores.hasOwnProperty(_atrNombreExtra)) {
-            let _alfa = _obtenerValor(_valores, _atrNombreExtra);
+            let _alfa = _obtenerValor(_valores, _atrNombreExtra); // Busca la opacidad como atributo "vecino"
             if (_alfa) {
               _valor.setAlpha(_alfa * 255);
             }
@@ -441,83 +437,7 @@ function Esquema(S, nombreEsquema) {
         else
             return indentacion + "\t" + atrValor;
     }
-
-    /**
-     * _obtenerFuncionSocorrista
-     * Verifica si el objeto recibido como argumento corresponde a alguna de las definiciones
-     * de entidades del módulo del "socorro" (ej.: una "Variable", un "Vector", un "Estilo", 
-     * un "Actor", etc). En ese caso, retorna la función del socorrista que corresponda para 
-     * crear el objeto. Sino, devuelve "undefined".
-     */
-    _ESQ._obtenerFuncionSocorrista = (objeto) => {
-      // --------------------------------------
-      // Se verifica si es una "VARIABLE"
-      // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-      if (objeto.hasOwnProperty('metodo') &&
-         (objeto.hasOwnProperty('valor') || objeto.hasOwnProperty('valorDesde') || objeto.hasOwnProperty('valorDesde'))) {
-        return S.O.S.Variable;
-      }
-      // --------------------------------------
-      // Se verifica si es un "VECTOR"
-      // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-      else if (_cumplimentaDef(objeto, 'x', 'y', 'z')) {
-        return S.O.S.Vector;
-      }
-      // --------------------------------------
-      // Se verifica si es un "ESTILO"
-      // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-      else if (_cumplimentaDef(objeto, CONFIG.EST_COLOR, CONFIG.EST_GRANDOR, 
-                                       CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO, CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO,
-                                       CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_ALFA, CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO + CONFIG.ATR_VARIABLE_ALFA)) {
-          return S.O.S.Estilo;
-      }
-      else if (_cumplimentaDef(objeto, CONFIG.ACT_ORIGEN, CONFIG.ACT_VELOCIDAD, CONFIG.ACT_ESTILO)) {
-          return S.O.S.Actor;
-      }
-
-      // Si no corresponde a ningún objeto, se retorna "undefined"
-      return undefined;
-    };
-  
-    /**
-     * _cumplimentaDef
-     * Retorna "true" o "false" indicando si el objeto recibido como primer
-     * argumento cumplimenta con los atributos indicados por la lista del
-     * segundo argumento. Es decir, cualquier atributo del objeto debe estar
-     * definido en la lista de atributos indicada. No debe necesariamente
-     * incluirlos todos, pero no puede tampoco tener atributos que no estén
-     * indicados en dicha lista.
-     */
-    function _cumplimentaDef(objeto, ...atributos) {
-      const _claves = Object.keys(objeto);
-      let _verifica = true;
-      for (let i = 0; i < _claves.length; i++) {
-        let _claveEncontrada = false;
-        for (let j = 0; j < atributos.length; j++) {
-          if (_claves[i] == atributos[j]) {
-            _claveEncontrada = true;
-            break;
-          }
-        }
-        if (!_claveEncontrada) {
-          _verifica = false;
-          break;
-        }
-      }
-      return _verifica && _claves.length >= 1 && _claves.length <= atributos.length;
-    }
-    
-    /**
-     * _incorporarAlReparto
-     * Función interna que se encarga de sumar al objeto recibido como argumento
-     * al reparto general de la "Escena", siempre y cuando el objeto sea un "Actor".
-     */
-    function _incorporarAlReparto(objeto) {
-        if (S.O.S.esUnActor(objeto)) {
-            objeto.ficha(S.O.S.ficharReparto(_ESQ.identificador, objeto));
-        }
-    }
-    
+        
     return _ESQ;
 }
 

@@ -6,6 +6,8 @@
  * =============================================================================
  */
 import CONFIG from './config';
+import Desglose from './desglose';
+import Repertorio from './repertorio';
 import Auxiliadora from './auxiliadora';
 
 
@@ -28,11 +30,15 @@ import Auxiliadora from './auxiliadora';
  */
 function Orquestador(sos, contenedor) {
     const S = sos.socorrista();
-    let   _contenedor = contenedor;
+    let   _utilizaP5 = false;
+
+    // Variables para la "Escena"
+    let   _escena;
     let   _escenaImportada;
     let   _funcionActuaria;
-    let   _utilizaP5 = false;
-    let   _escena;
+    let   _contenedor = contenedor;
+    
+    // Variables para el procesamiento del ciclo de representación
     let   _cuadros = 0;
     let   _reloj;
     
@@ -53,11 +59,11 @@ function Orquestador(sos, contenedor) {
         
     
     
-// ==========================================================
+// =====================================================================
 // 
 //  DEFINICIÓN DEL OBJETO PARA ALMACENAR ARCHIVOS DE TEXTO
 //  
-// ==========================================================
+// =====================================================================
 
     /**
      * Archivo
@@ -77,11 +83,11 @@ function Orquestador(sos, contenedor) {
     }
 
     
-// ==========================================================
+// =====================================================================
 // 
-//  DEFINICIÓN DEL GESTOR PARA LA CARGA DE ARCHIVOS
+//  DEFINICIÓN DEL GESTOR PARA LA CARGA DE ARCHIVOS ("CARGADOR")
 //  
-// ==========================================================
+// =====================================================================
 
     /**
      * Cargador
@@ -172,62 +178,14 @@ function Orquestador(sos, contenedor) {
         
         return {cargarArchivo, cargarShader, cargarTextura2D, cargarFuente, cargaCompletada};
     }
-    
-    
-    
-// ==========================================================
-// 
-//  DEFINICIÓN DEL REPARTO GENERAL DE LA ESCENA
-//  
-// ==========================================================
-
-    /**
-     * Reparto
-     * Registro de los actores participanes de la "Escena".
-     */
-    function Reparto() {
-        const _REP = {};
         
-        function _ficha(identificador) {
-            return {cabezaReparto: identificador,
-                    actores      : []};
-        }
-        
-        function ficharReparto(identificador, actor) {
-            if (!_REP.hasOwnProperty(identificador)) {
-                _REP[identificador] = _ficha(identificador);
-            }
-            _REP[identificador].actores.push(actor);
-            return _REP[identificador];
-        }
-
-        function actualizarReparto() {
-            for (const [identificador, ficha] of Object.entries(_REP)) {
-                for (let i = 0; i < ficha.actores.length; i++) {
-                    ficha.actores[i].actualizar();
-                }
-            }
-        }
-        
-        function representarReparto() {
-            for (const [identificador, ficha] of Object.entries(_REP)) {
-                for (let i = 0; i < ficha.actores.length; i++) {
-                    ficha.actores[i].representar();
-                }
-            }            
-        }
-
-        return {ficharReparto, actualizarReparto, representarReparto};
-    }
-
     
-    
-// ==============================================================
+// =====================================================================
 // 
 //  ORQUESTADOR
 //  Definición de los métodos propios del objeto "Orquestador"
 //  
-// ==============================================================
+// =====================================================================
     
     /**
      * processing
@@ -239,16 +197,25 @@ function Orquestador(sos, contenedor) {
   
     /**
      * vincular
-     * Mediante esta función, el "Orquestador" estalece el vínculo entre el socorrista
-     * designado por el propio "Orquestador", por un lado, y la "Escena", el objeto 
-     * "Cargador" de archivos, el "Reparto" de actores y la función "Auxiliadora", por
-     * otro. Esto se lleva a cabo concediéndole al siervo convocado al momento de la 
-     * creación del "Orquestador" (S.O.S), la información necesaria para convertirlo en
-     * el socorrista designado (se hace uso de la "herencia" por prototipos de JS).
+     * Mediante esta función se actualiza la estructra del socorrista designado por el
+     * "Orquestador" para vincularlo con la "Escena" que debe orquestar, es decir, a
+     * través del mecanismo de "herencia por prototipos" de JS, toda la información y
+     * métodos de la "Escena" pueden accederse directamente desde el propio socorrista. 
+     * Adicionalmente, se vinculan al socorrista designado algunas otras entidades:
+     * 
+     * - Reparto       : Registro jerárquico de los "Actores" y los "Repartos" de la "Escena"
+     * - Representador : Colección de "Representadores" (funciones para representación de "Actores")
+     * - Coreografia   : Colección de "Coreografías" (disposición y desplazamiento de "Actores" del "Reparto")
+     * - Cargador      : Métodos de ayuda para la carga de archivos de la "Escena"
+     * - Auxiliadora   : Colección de funciones de asistencia general para las entidades del "socorro" 
+     * 
      */
     function vincular(escena) {
         _escena = escena;
-        S.O.S.revelar(S.O.S, Auxiliadora(S, _utilizaP5), Cargador(), Reparto(), escena);
+        const _r = Repertorio(S);
+        asociar('Repertorio', _r.funciones());
+        asociar('Reparto', Desglose(S, escena));
+        S.O.S.revelar(S.O.S, _r.revelar(), Auxiliadora(S, _utilizaP5), Cargador(), escena);
     }  
     
     /**
@@ -516,11 +483,12 @@ function Orquestador(sos, contenedor) {
             // Se actualiza el "uniform" para el tiempo
             _actualizarUniformTiempo();
          
-            // Definir los atributos del estilo de la "Escena"
+            // Actualizar la "Escena" y aplicar sus atributos de "Estilo" (si corresponde)
+            _escena.actualizar();
             _escena.estilar();
             
-            // Se actualizan los "Actores" del reparto
-            S.O.S.actualizarReparto();
+            // Se actualizan los atributos y variables de los "Actores" del reparto
+            S.O.S.Reparto.actualizar();
         }
     }
 
