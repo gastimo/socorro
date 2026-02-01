@@ -18,33 +18,33 @@ const Config = (() => {
     const _PARAM = {
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-    // > NOMBRES DE LAS ENTIDADES DEL SOCORRO
+    // > LISTADO DE ENTIDADES DEL SOCORRO Y CÓDIGOS
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
         // Singleton del Obsequioso Socorro (S.O.S)
-        NOMBRE_SOS            : '_SOS',   
+        SOS                     : '_SOS',   
 
         // Entidades generales de administración del módulo
-        NOMBRE_GUION          : '_GUI',   // Conjunto de descripciones de las entidades actuantes de la "Escena"
-        NOMBRE_DESGLOSE       : '_DES',   // Conjunto de fichas donde se desglosan los participantes de la "Escena"
+        SOS_GUION               : '_GUI',   // Conjunto de descripciones de las entidades actuantes de la "Escena"
+        SOS_DESGLOSE            : '_DES',   // Conjunto de fichas donde se desglosan los participantes de la "Escena"
         
         // Entidades que internamente son "Esquema"
-        NOMBRE_ESQUEMA        : '_ESQ',   // Estructura de definición atributos/valores de las entidades del "socorro"
-        NOMBRE_ESCENA         : '_ESC',   // Entidad principal para las representaciones de la "Obra"
-        NOMBRE_REPARTO        : '_RPT',   // Conjunto de "Actores" con dispociones y movimients coordinados entre sí
-        NOMBRE_ACTOR          : '_ACT',   // Intérpretes principales de la "Escena"
-        NOMBRE_ESTILO         : '_EST',   // Conjunto de variables para la represención visual de objetos de la escena
-        NOMBRE_VARIABLE       : '_VAR',   // Variables para cálculo dinámico de los valores de los atributos
-        NOMBRE_VARIADOR       : '_VRD',   // Generador de valores numéricos aleatorios dentro rangos preestablecidos
-        NOMBRE_VECTOR         : '_VEC',   // Objeto genérico para realizar operaciones con vectores
-        NOMBRE_VECTORVAR      : '_VEV',   // Objeto "Vector" que admite "Variables" en sus componentes x, y, z.
+        SOS_ESQUEMA             : '_ESQ',   // Estructura de definición atributos/valores de las entidades del "socorro"
+        SOS_ESCENA              : '_ESC',   // Entidad principal para las representaciones de la "Obra"
+        SOS_REPARTO             : '_RPT',   // Conjunto de "Actores" con dispociones y movimients coordinados entre sí
+        SOS_ACTOR               : '_ACT',   // Intérpretes principales de la "Escena"
+        SOS_ESTILO              : '_EST',   // Conjunto de variables para la represención visual de objetos de la escena
+        SOS_VARIABLE            : '_VAR',   // Variables para cálculo dinámico de los valores de los atributos
+        SOS_VARIADOR            : '_VRD',   // Generador de valores numéricos aleatorios dentro rangos preestablecidos
+        SOS_VECTOR              : '_VEC',   // Objeto genérico para realizar operaciones con vectores
+        SOS_VECTORVAR           : '_VEV',   // Objeto "Vector" que admite "Variables" en sus componentes x, y, z.
         
         // Entidades para definición de "Repertorios"
-        NOMBRE_REPERTORIO        : 'REPE',
-        NOMBRE_REPRESENTADOR     : 'REP',
-        NOMBRE_COREOGRAFIA       : 'COREO',
-        NOMBRE_COLOR             : 'COLOR',
-        NOMBRE_METODO_EVALUACION : 'EVAL',
+        SOS_REPERTORIO          : 'REPE',
+        SOS_REPRESENTADOR       : 'REP',
+        SOS_COREOGRAFIA         : 'COREO',
+        SOS_COLOR               : 'COLOR',
+        SOS_METODO_EVALUACION   : 'EVAL',
         
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        

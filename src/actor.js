@@ -20,7 +20,7 @@ import Esquema from "./esquema";
  *
  */
 function Actor(S, origen, velocidad, estilo) {
-    const _ESQ = Esquema(S, CONFIG.NOMBRE_ACTOR);
+    const _ESQ = Esquema(S, CONFIG.SOS_ACTOR);
     const _ACT = S.O.S.revelar({}, _ESQ);
     const _origen = S.O.S.Vector();
     const _posicion = S.O.S.Vector();

@@ -241,7 +241,7 @@ const Auxiliadora = (S, utilizaP5) => {
          */
         esUnaVariable: (objeto) => {
           let _aux = objeto ? objeto?.nombre : undefined;
-          return _aux !== undefined && _aux === CONFIG.NOMBRE_VARIABLE;
+          return _aux !== undefined && _aux === CONFIG.SOS_VARIABLE;
         },
 
         /**
@@ -250,7 +250,7 @@ const Auxiliadora = (S, utilizaP5) => {
          */
         esUnVariador: (objeto) => {
           let _aux = objeto ? objeto?.nombre : undefined;
-          return _aux !== undefined && _aux === CONFIG.NOMBRE_VARIADOR;
+          return _aux !== undefined && _aux === CONFIG.SOS_VARIADOR;
         },
 
         /**
@@ -259,7 +259,7 @@ const Auxiliadora = (S, utilizaP5) => {
          */
         esUnVector: (objeto) => {
           let _aux = objeto ? objeto?.nombre : undefined;
-          return _aux !== undefined && _aux === CONFIG.NOMBRE_VECTOR;
+          return _aux !== undefined && _aux === CONFIG.SOS_VECTOR;
         },
 
         /**
@@ -268,7 +268,7 @@ const Auxiliadora = (S, utilizaP5) => {
          */
         esUnVectorVar: (objeto) => {
           let _aux = objeto ? objeto?.nombre : undefined;
-          return _aux !== undefined && _aux === CONFIG.NOMBRE_VECTORVAR;
+          return _aux !== undefined && _aux === CONFIG.SOS_VECTORVAR;
         },
 
         /**
@@ -277,7 +277,7 @@ const Auxiliadora = (S, utilizaP5) => {
          */
         esUnEstilo: (objeto) => {
           let _aux = objeto ? objeto?.nombre : undefined;
-          return _aux !== undefined && _aux === CONFIG.NOMBRE_ESTILO;
+          return _aux !== undefined && _aux === CONFIG.SOS_ESTILO;
         },
         
         /**
@@ -286,7 +286,7 @@ const Auxiliadora = (S, utilizaP5) => {
          */
         esUnActor: (objeto) => {
           let _aux = objeto ? objeto?.nombre : undefined;
-          return _aux !== undefined && _aux === CONFIG.NOMBRE_ACTOR;
+          return _aux !== undefined && _aux === CONFIG.SOS_ACTOR;
         },
         
         /**
@@ -295,7 +295,7 @@ const Auxiliadora = (S, utilizaP5) => {
          */
         esUnReparto: (objeto) => {
           let _aux = objeto ? objeto?.nombre : undefined;
-          return _aux !== undefined && _aux === CONFIG.NOMBRE_REPARTO;
+          return _aux !== undefined && _aux === CONFIG.SOS_REPARTO;
         },
 
         

@@ -125,7 +125,7 @@ const Siervo = () => {
      * para un nombre dado.
      */
     function obtenerClave(nombre) {
-        let _nombre = nombre ?? CONFIG.NOMBRE_SOS;
+        let _nombre = nombre ?? CONFIG.SOS;
         if (!_claves.hasOwnProperty(_nombre)) {
             _claves[_nombre] = 0;
         }

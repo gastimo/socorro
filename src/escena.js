@@ -26,7 +26,7 @@ import Esquema from './esquema';
  * 2. Al igual que la mayoría de los objetos del módulo, la "Escena" es un "Esquema".
  */
 function Escena(S) {
-    const _ESQ = Esquema(S, CONFIG.NOMBRE_ESCENA);
+    const _ESQ = Esquema(S, CONFIG.SOS_ESCENA);
     const _ESC = S.O.S.revelar({}, _funcionActuaria(), _ESQ);
     const _estilo = {color: undefined, grandor: undefined, trazo: undefined, grosor: undefined};
     

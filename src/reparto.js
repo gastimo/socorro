@@ -82,7 +82,7 @@ import Esquema from './esquema';
  *
  */
 function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desvío, separacion) {
-    const _ESQ = Esquema(S, CONFIG.NOMBRE_REPARTO);
+    const _ESQ = Esquema(S, CONFIG.SOS_REPARTO);
     const _RPT = S.O.S.revelar({}, _ESQ);
     _inicializar(coreografia, cantidad, puestos, intervalo, velocidad, desvío, separacion);
 

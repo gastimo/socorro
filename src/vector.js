@@ -27,7 +27,7 @@ function Vector(S, a, b, c) {
     _VEC.x = _vectorial ? a.x : a;
     _VEC.y = _vectorial ? a.y : b;
     _VEC.z = _vectorial ? a.z : c;
-    _VEC.nombre = CONFIG.NOMBRE_VECTOR;
+    _VEC.nombre = CONFIG.SOS_VECTOR;
 
     /**
      * def
@@ -157,7 +157,7 @@ function Vector(S, a, b, c) {
      * Devuelve un texto con la representación JSON del vector.
      */
     _VEC.exportar = (indentacion = "") => {
-        let _esq = Esquema(S, CONFIG.NOMBRE_VECTOR);
+        let _esq = Esquema(S, CONFIG.SOS_VECTOR);
         if (_VEC.x !== null && _VEC.x !== undefined)
             _esq.def({x: _VEC.x});
         if (_VEC.y !== null && _VEC.y !== undefined)
@@ -188,7 +188,7 @@ function Vector(S, a, b, c) {
  * dinámicamente la variables de cualquiera de sus componentes.
  */
 function VectorVar(S, a, b, c) {
-    const _ESQ = Esquema(S, CONFIG.NOMBRE_VECTORVAR);
+    const _ESQ = Esquema(S, CONFIG.SOS_VECTORVAR);
     const _VEV = S.O.S.revelar({}, _ESQ);
     let _vectorial = S.O.S.esUnVector(a);
     _inicializar(a, b, c);

@@ -56,7 +56,7 @@ function Guion() {
     _GUION.cargar = (guiones) => {
         if (guiones) {
             for (const [esquema, guion] of Object.entries(guiones)) {
-                if (esquema == CONFIG.NOMBRE_ESCENA || esquema == CONFIG.NOMBRE_ACTOR || esquema == CONFIG.NOMBRE_REPARTO) {
+                if (esquema == CONFIG.SOS_ESCENA || esquema == CONFIG.SOS_ACTOR || esquema == CONFIG.SOS_REPARTO) {
                     _GUION.def(esquema, guion);
                 }
             }

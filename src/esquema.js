@@ -39,7 +39,7 @@ function Esquema(S, nombreEsquema) {
     const _DEF = {};   // Configuraciones de atributos (para valores x defecto y GUI).
           
     // Inicialización del "Esquema"
-    _ESQ.nombre = nombreEsquema ?? CONFIG.NOMBRE_ESQUEMA;
+    _ESQ.nombre = nombreEsquema ?? CONFIG.SOS_ESQUEMA;
     _ESQ.clave  = S.O.S.obtenerClave(_ESQ.nombre);
     _ESQ.identificador = _ESQ.nombre + CONFIG.ATR_SEPARADOR + _ESQ.clave;
     _ESQ.visible = true;

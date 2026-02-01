@@ -39,7 +39,7 @@ import Esquema from './esquema';
  *  - val()   - Obtención del valor. Redefine la función heredada de "Esquema" para hacer el mapeo.
  */
 function Variable(S, ...parametros) {
-    const _ESQ = Esquema(S, CONFIG.NOMBRE_VARIABLE);
+    const _ESQ = Esquema(S, CONFIG.SOS_VARIABLE);
     const _VAR = S.O.S.revelar({}, _ESQ);
     let _calculadora = null;
     _inicializar();

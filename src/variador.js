@@ -21,7 +21,7 @@ import CONFIG from './config';
 function Variador(S, valorDesde, valorHasta, modulador) {
     const _VAR = S.O.S.Variable(S, CONFIG.EVAL_RUIDO, valorDesde, valorHasta, modulador);
     const _VRD = {};
-    _VRD.nombre = CONFIG.NOMBRE_VARIADOR;
+    _VRD.nombre = CONFIG.SOS_VARIADOR;
     _VRD.clave  = S.O.S.obtenerClave(_VRD.nombre);
     _VRD.identificador = _VRD.nombre + CONFIG.ATR_SEPARADOR + _VRD.clave;
     

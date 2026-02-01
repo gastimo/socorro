@@ -17,7 +17,7 @@ import Esquema from './esquema';
  * de su trazo o contorno (si aplica).
  */
 function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo) {
-    const _ESQ = Esquema(S, CONFIG.NOMBRE_ESTILO);
+    const _ESQ = Esquema(S, CONFIG.SOS_ESTILO);
     const _EST = S.O.S.revelar({}, _ESQ);
     let   _color, _colorTrazo, _grandor, _grandorTrazo;
     _inicializar(color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo);
