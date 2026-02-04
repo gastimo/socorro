@@ -52,7 +52,7 @@ function Escena(S) {
      * Función privada de inicialización de la "Escena"
      */
     function _inicializar() {
-        // Inicialización de las propiedades del "Actor"
+        // Inicialización de las propiedades públicas de la "Escena"
         _ESC.escalable       = undefined;
         _ESC.representador   = undefined;
         _ESC.interpretarGLSL = undefined;

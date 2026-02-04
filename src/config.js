@@ -115,6 +115,7 @@ const Config = (() => {
         // Nombres de los atributos básicos del "Actor"
         ACT_ORIGEN              : 'origen',
         ACT_VELOCIDAD           : 'velocidad',
+        ACT_ACELERACION         : 'aceleracion',
         ACT_ESTILO              : 'estilo',
         ACT_REPRESENTADOR       : 'representador',
         ACT_MAX_DURACION        : 'duracion',

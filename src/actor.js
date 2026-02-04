@@ -23,6 +23,8 @@ import Esquema from "./esquema";
 function Actor(S, origen, velocidad, estilo) {
     const _ESQ = Esquema(S, CONFIG.SOS_ACTOR);
     const _ACT = S.O.S.revelar({}, _ESQ);
+    
+    // Variables internas del "Actor"
     const _originado = S.O.S.tiempo();
     let   _finalizado = false;
 
@@ -32,15 +34,18 @@ function Actor(S, origen, velocidad, estilo) {
      * Función privada de inicialización del "Actor"
      */
     function _inicializar(origen, velocidad, estilo) {
-        const _definicion = {};
         
         // Definición de las entidades subordinadas (Vectores, Estilos, etc)
-        _definicion[CONFIG.ACT_ORIGEN]    = origen    ?? S.O.S.Vector();
-        _definicion[CONFIG.ACT_VELOCIDAD] = velocidad ?? S.O.S.Vector();
-        _definicion[CONFIG.ACT_ESTILO]    = estilo    ?? S.O.S.Estilo();
+        const _definicion = {};
+        if (origen)
+            _definicion[CONFIG.ACT_ORIGEN] = origen;
+        if (velocidad)
+            _definicion[CONFIG.ACT_VELOCIDAD] = velocidad;
+        if (estilo)
+            _definicion[CONFIG.ACT_ESTILO] = estilo;
         _ESQ.def(_definicion);
 
-        // Inicialización de las propiedades del "Actor"
+        // Inicialización de las propiedades públicas del "Actor"
         _ACT.origen         = undefined;
         _ACT.posicion       = undefined;
         _ACT.velocidad      = undefined;
@@ -86,6 +91,18 @@ function Actor(S, origen, velocidad, estilo) {
     _ACT.defVelocidad = (velocidad) => {
         const _definicion = {};
         _definicion[CONFIG.ACT_VELOCIDAD] = velocidad;
+        _ESQ.def(_definicion);
+        return _ACT;
+    };
+
+    /**
+     * defAceleracion
+     * Define los componentes del vector de aceleración del "Actor". El argumento
+     * recibido puede ser un vector o un objeto conteniendo su definición (<x,y,z>).
+     */
+    _ACT.defAceleracion = (aceleracion) => {
+        const _definicion = {};
+        _definicion[CONFIG.ACT_ACELERACION] = aceleracion;
         _ESQ.def(_definicion);
         return _ACT;
     };
@@ -178,12 +195,14 @@ function Actor(S, origen, velocidad, estilo) {
                 _ACT.velocidad = _ESQ.val(CONFIG.ACT_VELOCIDAD);
             }
             if (_ACT.aceleracion === undefined) {
-                _ACT.aceleracion = S.O.S.Vector(0, 0, 0);
+                _ACT.aceleracion = _ESQ.val(CONFIG.ACT_ACELERACION) ?? S.O.S.Vector(0, 0, 0);
             }
-            _ACT.recorrido += _ACT.velocidad.mag() ?? 0;
-            _ACT.posicion.sumar(_ACT.velocidad);
-            _ACT.velocidad.sumar(_ACT.aceleracion);
-            _ACT.distancia = S.O.S.Vector(_ACT.origen).restar(_ACT.posicion).mag() ?? 0;
+            if (_ACT.velocidad) {
+                _ACT.recorrido += _ACT.velocidad.mag() ?? 0;
+                _ACT.posicion.sumar(_ACT.velocidad);
+                _ACT.velocidad.sumar(_ACT.aceleracion);
+                _ACT.distancia = S.O.S.Vector(_ACT.origen).restar(_ACT.posicion).mag() ?? 0;
+            }
 
             // 4. ACTUALIZACIÓN DEL ALCANCE & VERIFICACIÓN DE LA VIGENCIA DEL ACTOR
             // Se verifica, en este punto, si el "Actor" debería ser finalizado, ya
@@ -228,14 +247,6 @@ function Actor(S, origen, velocidad, estilo) {
         if (!_finalizado) {
             S.O.S.REP[_ACT.representador ?? S.O.S.representador](_ACT);
         }
-    };
-    
-    /**
-     * aceleracion
-     * Define la aceleración del "Actor".
-     */
-    _ACT.aceleracion = (acelVector) => {
-        _ACT.aceleracion.copiar(acelVector);
     };
     
     /**

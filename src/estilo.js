@@ -19,7 +19,7 @@ import Esquema from './esquema';
 function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo) {
     const _ESQ = Esquema(S, CONFIG.SOS_ESTILO);
     const _EST = S.O.S.revelar({}, _ESQ);
-    _inicializar(color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo);
+
     
     /**
      * _inicializar
@@ -45,10 +45,14 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
             _definicion[CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO] = grosorTrazo;
     
         _ESQ.def(_definicion);
+        
+        // Inicialización de las propiedades públicas del "Estilo"
         _EST.color   = undefined;
         _EST.grandor = undefined;
         _EST.trazo   = undefined;
         _EST.grosor  = undefined;
+        
+        return _EST;
     }
     
     /**
@@ -119,7 +123,7 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
         return _EST;
     };
     
-    return _EST;
+    return _inicializar(color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo);
 }
 
 

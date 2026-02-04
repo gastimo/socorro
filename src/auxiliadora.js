@@ -83,12 +83,12 @@ const Auxiliadora = (S, utilizaP5) => {
          * en cada iteración del bucle de la "Obra", sólo ejecutará la función
          * indicada como argumento, una vez por cada intervalo indicado.
          */
-         repetidor: (argumentoRepeticion, intervaloEspera) => {
+         repetidor: (entidad, intervaloEspera) => {
             let c = 0;
             let f = (funcionRepeticion) => {
               if (c <= 0) {
                 c = intervaloEspera ?? 1;
-                funcionRepeticion(argumentoRepeticion);
+                funcionRepeticion(entidad);
               }
               c--;
             };
@@ -211,9 +211,11 @@ const Auxiliadora = (S, utilizaP5) => {
               // --------------------------------------
               // Se verifica si es un "ACTOR"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, CONFIG.ACT_ORIGEN, CONFIG.ACT_VELOCIDAD, CONFIG.ACT_ESTILO, CONFIG.ACT_REPRESENTADOR)) {
+              else if (_cumplimentaDef(objeto, CONFIG.ACT_ORIGEN, CONFIG.ACT_VELOCIDAD, CONFIG.ACT_ACELERACION, CONFIG.ACT_ESTILO,
+                                               CONFIG.ACT_REPRESENTADOR, CONFIG.ACT_MAX_DURACION, CONFIG.ACT_MAX_RECORRIDO)) {
                   return S.O.S.Actor;
               }
+                
               // --------------------------------------
               // Se verifica si es un "REPARTO"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv

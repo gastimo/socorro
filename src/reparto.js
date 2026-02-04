@@ -85,6 +85,9 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desví
     const _ESQ = Esquema(S, CONFIG.SOS_REPARTO);
     const _RPT = S.O.S.revelar({}, _ESQ);
     
+    // Variables internas del "Reparto"
+    const _repetidor = S.O.S.repetidor(_RPT, intervalo ?? 1);
+    
         
     /**
      * _inicializar
@@ -110,7 +113,7 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desví
         // Inicialización de las definiciones de los atributos on los valores provistos
         _ESQ.def(_definicion);
         
-        // Inicialización de las propiedades del "Reparto"
+        // Inicialización de las propiedades públicas del "Reparto"
         _RPT.estilo         = undefined;
         _RPT.representador  = undefined;
         _RPT.desplazamiento = undefined; 
@@ -231,7 +234,7 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desví
         // Actualización del vector de "Desplazamiento"
         _RPT.desplazamiento = _ESQ.val(CONFIG.RPT_DESPLAZAMIENTO) ?? _RPT.desplazamiento;
         
-        // Actualización de los "Alances Máximos"
+        // Actualización de los "Alcances Máximos"
         _RPT.maxDuracion    = _ESQ.val(CONFIG.RPT_MAX_DURACION) ?? _RPT.maxDuracion;
         _RPT.maxRecorrido   = _ESQ.val(CONFIG.RPT_MAX_RECORRIDO) ?? _RPT.maxRecorrido;
         
