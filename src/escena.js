@@ -28,12 +28,9 @@ import Esquema from './esquema';
 function Escena(S) {
     const _ESQ = Esquema(S, CONFIG.SOS_ESCENA);
     const _ESC = S.O.S.revelar({}, _funcionActuaria(), _ESQ);
-    const _estilo = {color: undefined, grandor: undefined, trazo: undefined, grosor: undefined};
     
+    // Objeto "Contenedor" para gestionar el elemento HTML donde se alojará el "canvas"
     let _contenedor;
-    let _esEscalable = false;
-    let _representador = 'estandar';
-    let _interpretarCodigoGLSL = false;
 
     // Shaders
     let _vertexShader, _fragmentShader;
@@ -50,6 +47,19 @@ function Escena(S) {
     let rendererTHREE;
     let rendererP5;
     
+    /**
+     * _inicializar
+     * Función privada de inicialización de la "Escena"
+     */
+    function _inicializar() {
+        // Inicialización de las propiedades del "Actor"
+        _ESC.escalable       = undefined;
+        _ESC.representador   = undefined;
+        _ESC.interpretarGLSL = undefined;
+        return _ESC;
+    }
+    
+    
 
 // =====================================================================
 // 
@@ -59,88 +69,63 @@ function Escena(S) {
 
     /**
      * def
-     * Método que simplemente sobreescribe la función "def" del "Esquema"
-     * pero que al final retorna el objeto "Escena" corriente.
+     * Esta función es la misma que la del objeto "Esquema" de quien 
+     * "Escena" extiende. Se redefine simplemente para retornar, al final,
+     * el objeto "Escena" actual, que permite definiciones encadenadas.
      */
     _ESC.def = (atributos) => {
         _ESQ.def(atributos);
         return _ESC;
     };
-    
+
+    /**
+     * defEstilo
+     * Define los atributos para la representación visual por defecto para los "Actores" de
+     * la "Escena". El argumento recibido puede ser un objeto de tipo "Estilo" u otro objeto 
+     * Javascript que contenga su definición.
+     */
+    _ESC.defEstilo = (estilo) => {
+        const _definicion = {};
+        _definicion[CONFIG.ESC_ESTILO] = estilo;
+        _ESQ.def(_definicion);
+        return _ESC;
+    };
+
     /**
      * defRepresentador
-     * Función que permite definir el "Representador" por defecto asociado a la "Escena".
+     * Función que permite definir el "Representador" por defecto para mostror a los "Actores".
      * Este método hace exactamente lo mismo que la siguiente invocación:
      *     def({representador: <nombre-representador});
      */
     _ESC.defRepresentador = (representador) => {
-        if (representador !== undefined && representador !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.ESC_REPRESENTADOR] = representador;
-            _ESQ.def(_definicion);
-        }
+        const _definicion = {};
+        _definicion[CONFIG.ESC_REPRESENTADOR] = representador;
+        _ESQ.def(_definicion);
         return _ESC;
     };
     
     /**
-     * defEstilo
-     * Define los atributos básicos para la representación visual de la "Escena".
-     * El argumento recibido puede ser un objeto de tipo "Estilo" u otro objeto 
-     * Javascript que contenga su definición.
+     * defEscalable
+     * Función para determinar si el contenido de la "Escena" es escalable (o no) ante
+     * cualquier cambio cambio de tamaño del lienzo HTML.
      */
-    _ESC.defEstilo = (estilo) => {
-        if (estilo !== undefined && estilo !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.ESC_ESTILO] = estilo;
-            _ESQ.def(_definicion);
-        }
+    _ESC.defEscalable = (esEscalable) => {
+        const _definicion = {};
+        _definicion[CONFIG.ESC_ESCALABLE] = esEscalable;
+        _ESQ.def(_definicion);
         return _ESC;
     };
-    
+        
     /**
-     * escalable
-     * Indica si el contenido de la "Escena" es escalable (o no) ante cualquier cambio
-     * cambio de tamaño del lienzo HTML. El argumento de la función permite definir si 
-     * la "Escena" debe ser escalable en adelante.
+     * defInterpretarGLSL
+     * Función que permite determinar si al representar la "Escena" se debe incluir 
+     * también la reproducción de los programas GLSL que hayan sido definidos ("shaders"). 
      */
-    _ESC.escalable = (esEscalable) => {
-        if (esEscalable !== undefined && esEscalable !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.ESC_ESCALABLE] = esEscalable;
-            _ESQ.def(_definicion);
-        }
-        return _esEscalable;
-    };
-    
-    /**
-     * representador
-     * Devuelve el nombre del "Representador" por defecto a emplear para la "Escena".
-     * El argumento de la función, además, permite definir un nuevo "Representador" 
-     * a utilizar en adelante para la "Escena".
-     */
-    _ESC.representador = (rep) => {
-        if (rep !== undefined && rep !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.ESC_REPRESENTADOR] = rep;
-            _ESQ.def(_definicion);
-        }
-        return _representador;
-    };
-    
-    /**
-     * interpretarGLSL
-     * Indica si al representar la "Escena" se debe incluir también la reproducción
-     * de los programas GLSL que hayan sido definidos ("shaders"). El argumento de 
-     * la función permite definir si la ejecuión del código GLSL debe ser incluida
-     * en adelante en cada representación de la "Escena".
-     */
-    _ESC.interpretarGLSL = (mostrarShader) => {
-        if (mostrarShader !== undefined && mostrarShader !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.ESC_INTERPRETAR_GLSL] = mostrarShader;
-            _ESQ.def(_definicion);
-        }
-        return _interpretarCodigoGLSL;
+    _ESC.defInterpretarGLSL = (mostrarShader) => {
+        const _definicion = {};
+        _definicion[CONFIG.ESC_INTERPRETAR_GLSL] = mostrarShader;
+        _ESQ.def(_definicion);
+        return _ESC;
     };    
     
     /**
@@ -149,22 +134,18 @@ function Escena(S) {
      */
     _ESC.actualizar = () => {
         // Actualización del indicador "escalable"
-        _esEscalable = _ESQ.val(CONFIG.ESC_ESCALABLE) ?? _esEscalable;
+        _ESC.escalable = _ESQ.val(CONFIG.ESC_ESCALABLE) ?? _ESC.escalable;
+
+        // Actualización del "Representador" por defecto para la "Escena"
+        _ESC.representador = _ESQ.val(CONFIG.ESC_REPRESENTADOR) ?? _ESC.representador;
         
-        // Actualización del "Representador" por defecto
-        _representador = _ESQ.val(CONFIG.ESC_REPRESENTADOR) ?? _representador;
-
         // Actualizar la variable que indica si se debe interpretar el código GLSL
-        _interpretarCodigoGLSL = _ESQ.val(CONFIG.ESC_INTERPRETAR_GLSL) ?? _interpretarCodigoGLSL;
+        _ESC.interpretarGLSL = _ESQ.val(CONFIG.ESC_INTERPRETAR_GLSL) ?? _ESC.interpretarGLSL;
 
-        // Actualización de los atributos del "Estilo"
-        let _est = _ESQ.val(CONFIG.ESC_ESTILO);
-        if (_est) {
-            _est.actualizar();
-            _estilo.color   = _est.color();
-            _estilo.trazo   = _est.color(true);
-            _estilo.grandor = _est.grandor();
-            _estilo.grosor  = _est.grandor(true);
+        // Actualización del "Estilo" por defecto
+        _ESC.estilo = _ESQ.val(CONFIG.ESC_ESTILO);  // Devuelve el "Estilo" sin evaluar
+        if (_ESC.estilo) {
+            _ESC.estilo.actualizar();               // Acá recién se evalúa el "Estilo"
         }
     };
 
@@ -177,19 +158,16 @@ function Escena(S) {
      *  - grosor  : grosor del trazo alrededor de la escena
      */
     _ESC.estilar = () => {
-        let _e = _ESQ.val(CONFIG.ESC_ESTILO);
-        if (_e) {
-            if (_estilo.color !== undefined && _estilo.color !== null) {
-                S.O.S.P5.background(_estilo.color);
+        if (_ESC.estilo) {
+            if (_ESC.estilo.color !== undefined && _ESC.estilo.color !== null) {
+                S.O.S.P5.background(_ESC.estilo.color);
             }
-            if (_estilo.trazo !== undefined && _estilo.trazo !== null &&
-                _estilo.grosor !== undefined && _estilo.grosor !== null) {
-                S.O.S.P5.push();
+            if (_ESC.estilo.trazo  !== undefined && _ESC.estilo.trazo  !== null &&
+                _ESC.estilo.grosor !== undefined && _ESC.estilo.grosor !== null) {
                 S.O.S.P5.noFill();
-                S.O.S.P5.stroke(_estilo.trazo);
-                S.O.S.P5.strokeWeight(_ESC.escalar(_estilo.grosor));
+                S.O.S.P5.stroke(_ESC.estilo.trazo);
+                S.O.S.P5.strokeWeight(_ESC.escalar(_ESC.estilo.grosor));
                 S.O.S.P5.rect(-_ESC.ancho() / 2, -_ESC.alto() / 2, _ESC.ancho(), _ESC.alto());
-                S.O.S.P5.pop();
             }
         }
         return _ESC;
@@ -234,7 +212,7 @@ function Escena(S) {
          * y se encarga de representar la escena (cuadro a cuadro).
          */
         _FUNCION[CONFIG.ACTO_EJECUCION] = (mostrarActores = true) => {
-            if (_interpretarCodigoGLSL) {
+            if (_ESC.interpretarGLSL) {
                 if (rendererTHREE) {
                     rendererTHREE.render(scene, camera);
                 }
@@ -408,7 +386,7 @@ function Escena(S) {
      * Escala el valor recibido como argumento, en caso que aplique.
      */
     _ESC.escalar = (valor) => {
-        return !(_esEscalable && valor) ? valor : 
+        return !(_ESC.escalable && valor) ? valor : 
                   (S.O.S.esUnVector(valor) ? valor.multiplicar(_contenedor.geometria.factorEscala)  :
                                                        valor * _contenedor.geometria.factorEscala);
     };
@@ -507,7 +485,7 @@ function Escena(S) {
         }       
     };
     
-    return _ESC;
+    return _inicializar();
 }
 
 

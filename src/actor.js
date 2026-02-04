@@ -8,6 +8,7 @@
 import CONFIG from "./config";
 import Esquema from "./esquema";
 
+
 /**
  * Actor
  * Los "Actores" son los objetos participantes de la puesta en "Escena".
@@ -22,60 +23,37 @@ import Esquema from "./esquema";
 function Actor(S, origen, velocidad, estilo) {
     const _ESQ = Esquema(S, CONFIG.SOS_ACTOR);
     const _ACT = S.O.S.revelar({}, _ESQ);
-    const _origen = S.O.S.Vector();
-    const _posicion = S.O.S.Vector();
-    const _velocidad = S.O.S.Vector();
-    const _aceleracion = S.O.S.Vector(0, 0, 0);
-    const _estilo = {color: undefined, grandor: undefined, trazo: undefined, grosor: undefined};
-    const _nacimiento = S.O.S.tiempo();
-    const _duracionMaxima  = CONFIG.ACTOR_TIEMPO_DE_VIDA;     // Tiempo de vida máximo 
-    const _recorridoMaximo = CONFIG.ACTOR_RECORRIDO_MAXIMO;   // Distancia máxima a recorrer
-    let _finalizado = false;
-    let _representador;
-    _inicializar(origen, velocidad, estilo);
+    const _originado = S.O.S.tiempo();
+    let   _finalizado = false;
 
     
     /**
      * _inicializar
-     * Método privado de inicialización de las propiedades del "Actor".
+     * Función privada de inicialización del "Actor"
      */
     function _inicializar(origen, velocidad, estilo) {
         const _definicion = {};
-
-        // Definición del "Vector" con las coordenadas origen
-        if (origen !== undefined && origen !== null)
-            _definicion[CONFIG.ACT_ORIGEN] = origen;
         
-        // Definición del "Vector" de velocidad
-        if (velocidad !== undefined && velocidad !== null)
-            _definicion[CONFIG.ACT_VELOCIDAD] = velocidad;
-        
-        // Definición del "Estilo" para la representación visual del "Actor"
-        if (estilo !== undefined && estilo !== null)
-            _definicion[CONFIG.ACT_ESTILO] = estilo;
-        
+        // Definición de las entidades subordinadas (Vectores, Estilos, etc)
+        _definicion[CONFIG.ACT_ORIGEN]    = origen    ?? S.O.S.Vector();
+        _definicion[CONFIG.ACT_VELOCIDAD] = velocidad ?? S.O.S.Vector();
+        _definicion[CONFIG.ACT_ESTILO]    = estilo    ?? S.O.S.Estilo();
         _ESQ.def(_definicion);
-    }
-    
-    
-    // -------------------------------------------------------------
-    //
-    // EXPOSICIÓN DE PROPIEDADES DEL ACTOR
-    //
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    _ACT.origen    = _origen;
-    _ACT.posicion  = _posicion;
-    _ACT.velocidad = _velocidad;
-    _ACT.estilo    = _estilo;
-    _ACT.distancia = 0;
-    _ACT.recorrido = 0;
 
-    
-    // -------------------------------------------------------------
-    //
-    // EXPOSICIÓN DE MÉTODOS DEL ACTOR
-    //
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        // Inicialización de las propiedades del "Actor"
+        _ACT.origen         = undefined;
+        _ACT.posicion       = undefined;
+        _ACT.velocidad      = undefined;
+        _ACT.aceleracion    = undefined;
+        _ACT.estilo         = undefined;
+        _ACT.representador  = undefined; 
+        _ACT.maxDuracion    = undefined;
+        _ACT.maxRecorrido   = undefined;
+        _ACT.distancia      = 0;
+        _ACT.recorrido      = 0;
+        
+        return _ACT;
+    }
 
     /**
      * def
@@ -94,7 +72,9 @@ function Actor(S, origen, velocidad, estilo) {
      * puede ser un vector o un objeto conteniendo su definición (<x,y,z>).
      */
     _ACT.defOrigen = (origen) => {
-        _inicializar(origen);
+        const _definicion = {};
+        _definicion[CONFIG.ACT_ORIGEN] = origen;
+        _ESQ.def(_definicion);
         return _ACT;
     };
 
@@ -104,7 +84,9 @@ function Actor(S, origen, velocidad, estilo) {
      * recibido puede ser un vector o un objeto conteniendo su definición (<x,y,z>).
      */
     _ACT.defVelocidad = (velocidad) => {
-        _inicializar(null, velocidad);
+        const _definicion = {};
+        _definicion[CONFIG.ACT_VELOCIDAD] = velocidad;
+        _ESQ.def(_definicion);
         return _ACT;
     };
 
@@ -115,7 +97,9 @@ function Actor(S, origen, velocidad, estilo) {
      * que contenga su definición.
      */
     _ACT.defEstilo = (estilo) => {
-        _inicializar(null, null, estilo);
+        const _definicion = {};
+        _definicion[CONFIG.ACT_ESTILO] = estilo;
+        _ESQ.def(_definicion);
         return _ACT;
     };
 
@@ -126,28 +110,40 @@ function Actor(S, origen, velocidad, estilo) {
      *     def({representador: <nombre-representador});
      */
     _ACT.defRepresentador = (representador) => {
-        if (representador !== undefined && representador !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.ACT_REPRESENTADOR] = representador;
-            _ESQ.def(_definicion);
-        }
+        const _definicion = {};
+        _definicion[CONFIG.ACT_REPRESENTADOR] = representador;
+        _ESQ.def(_definicion);
         return _ACT;
     };
     
     /**
-     * representador
-     * Devuelve el nombre del "Representador" por defecto a emplear para el "Actor".
-     * El argumento de la función, además, permite definir un nuevo "Representador" 
-     * a utilizar en adelante para este "Actor" en particular.
+     * defMaxDuracion
+     * Función que permite definir el tiempo máximo de duración de la participación del
+     * "Actor" en la "Escena" (en milisegundos). 
+     * Por ejemplo:
+     *    defMaxDuracion(20000);  // El "Actor" culmina su participación en 20 segundos
      */
-    _ACT.representador = (rep) => {
-        if (rep !== undefined && rep !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.ACT_REPRESENTADOR] = rep;
-            _ESQ.def(_definicion);
-        }
-        return _representador;
+    _ACT.defMaxDuracion = (tiempoMaximo) => {
+        const _definicion = {};
+        _definicion[CONFIG.ACT_MAX_DURACION] = tiempoMaximo;
+        _ESQ.def(_definicion);
+        return _ACT;
     };
+    
+    /**
+     * defMaxRecorrido
+     * Función que permite definir el recorrido máximo que el "Actor" puede realizar
+     * dentro de la "Escena" (en píxeles). 
+     * Por ejemplo:
+     *    defMaxRecorrido(50000);  // El "Actor" termina después de recorrer una distancia de 50.000 píxeles
+     */
+    _ACT.defMaxRecorrido = (distanciaMaxima) => {
+        const _definicion = {};
+        _definicion[CONFIG.ACT_MAX_RECORRIDO] = distanciaMaxima;
+        _ESQ.def(_definicion);
+        return _ACT;
+    };
+
 
     /**
      * actualizar
@@ -167,42 +163,45 @@ function Actor(S, origen, velocidad, estilo) {
             
             // 2. Actualización del "Representador" específico del "Actor"
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-            _representador = _ESQ.val(CONFIG.ACT_REPRESENTADOR) ?? _representador;
+            _ACT.representador = _ESQ.val(CONFIG.ACT_REPRESENTADOR) ?? _ACT.representador;
 
             // 3. ACTUALIZACIÓN DEL DESPLAZAMIENTO
             // Actualización de la posición y velocidad del "Actor" en la "Escena".
+            // Los vectores de "Origen" y "Velocidad" se evalúan sólo la primera vez.
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-            if (_origen.vacio()) {
-                _origen.copiar(_ESQ.val(CONFIG.ACT_ORIGEN));
-                _posicion.copiar(_origen);
+            if (_ACT.origen === undefined) {
+                _ACT.origen = _ESQ.val(CONFIG.ACT_ORIGEN);
+                _ACT.posicion = S.O.S.Vector();
+                _ACT.posicion.copiar(_ACT.origen);
             }
-            if (_velocidad.vacio()) {
-                _velocidad.copiar(_ESQ.val(CONFIG.ACT_VELOCIDAD));
+            if (_ACT.velocidad === undefined) {
+                _ACT.velocidad = _ESQ.val(CONFIG.ACT_VELOCIDAD);
             }
-            _ACT.recorrido += _velocidad.mag() ?? 0;
-            _posicion.sumar(_velocidad);
-            _velocidad.sumar(_aceleracion);
-            _ACT.distancia = S.O.S.Vector(_origen).restar(_posicion).mag() ?? 0;
+            if (_ACT.aceleracion === undefined) {
+                _ACT.aceleracion = S.O.S.Vector(0, 0, 0);
+            }
+            _ACT.recorrido += _ACT.velocidad.mag() ?? 0;
+            _ACT.posicion.sumar(_ACT.velocidad);
+            _ACT.velocidad.sumar(_ACT.aceleracion);
+            _ACT.distancia = S.O.S.Vector(_ACT.origen).restar(_ACT.posicion).mag() ?? 0;
 
-            // 4. VERIFICACIÓN DE LA VIGENCIA DEL ACTOR
+            // 4. ACTUALIZACIÓN DEL ALCANCE & VERIFICACIÓN DE LA VIGENCIA DEL ACTOR
             // Se verifica, en este punto, si el "Actor" debería ser finalizado, ya
             // sea porque sobrepasó la duración máxima permitida (tiempo de vida) o 
             // porque su recorrido superó la distancia máxima establecida.
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-            if (_ACT.recorrido > _recorridoMaximo || S.O.S.tiempo() - _nacimiento > _duracionMaxima) {
+            _ACT.maxDuracion  = _ESQ.val(CONFIG.ACT_MAX_DURACION)  ?? _ACT.maxDuracion;
+            _ACT.maxRecorrido = _ESQ.val(CONFIG.ACT_MAX_RECORRIDO) ?? _ACT.maxRecorrido;
+            if (_ACT.recorrido > _ACT.maxRecorrido || S.O.S.tiempo() - _originado > _ACT.maxDuracion) {
                 _ACT.finalizar();
             }
             else {
                 // 5. ACTUALIZACIÓN DE LOS ATRIBUTOS VISUALES
                 // Actualización del "Estilo" del "Actor".
                 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-                let _e = _ESQ.val(CONFIG.ACT_ESTILO);
-                if (_e) {
-                    _e.actualizar();
-                    _estilo.color   = _e.color();
-                    _estilo.trazo   = _e.color(true);
-                    _estilo.grandor = _e.grandor();
-                    _estilo.grosor  = _e.grandor(true);
+                _ACT.estilo = _ESQ.val(CONFIG.ACT_ESTILO);  // Devuelve el "Estilo" sin evaluar
+                if (_ACT.estilo) {
+                    _ACT.estilo.actualizar();               // Acá recién se evalúa el "Estilo"
                 }
             }
 
@@ -227,8 +226,16 @@ function Actor(S, origen, velocidad, estilo) {
      */
     _ACT.representar = () => {
         if (!_finalizado) {
-            S.O.S.REP[_representador ?? S.O.S.representador()](_ACT);
+            S.O.S.REP[_ACT.representador ?? S.O.S.representador](_ACT);
         }
+    };
+    
+    /**
+     * aceleracion
+     * Define la aceleración del "Actor".
+     */
+    _ACT.aceleracion = (acelVector) => {
+        _ACT.aceleracion.copiar(acelVector);
     };
     
     /**
@@ -248,7 +255,7 @@ function Actor(S, origen, velocidad, estilo) {
     };
     
     
-    return _ACT;
+    return _inicializar(origen, velocidad, estilo);
 }
 
 

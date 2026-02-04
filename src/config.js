@@ -109,14 +109,16 @@ const Config = (() => {
         RPT_ESTILO              : 'estilo',
         RPT_REPRESENTADOR       : 'representador',
         RPT_DESPLAZAMIENTO      : 'desplazamiento',
-        RPT_DURACION            : 'duracion',
-        RPT_RECORRIDO           : 'recorrido',
+        RPT_MAX_DURACION        : 'duracion',
+        RPT_MAX_RECORRIDO       : 'recorrido',
         
         // Nombres de los atributos básicos del "Actor"
         ACT_ORIGEN              : 'origen',
         ACT_VELOCIDAD           : 'velocidad',
         ACT_ESTILO              : 'estilo',
         ACT_REPRESENTADOR       : 'representador',
+        ACT_MAX_DURACION        : 'duracion',
+        ACT_MAX_RECORRIDO       : 'recorrido',
 
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
@@ -135,14 +137,6 @@ const Config = (() => {
         EVAL_RECORRIDO   : 'recorrido',      // ACTOR
 
         
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-    // > ACTORES
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        
-        ACTOR_TIEMPO_DE_VIDA   : 1000 * 60 * 15,  // En milisegundos
-        ACTOR_RECORRIDO_MAXIMO : 15000,           // En píxeles
-
-            
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
     // > COREOGRAFÍAS
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv

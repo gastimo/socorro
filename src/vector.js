@@ -28,6 +28,22 @@ function Vector(S, a, b, c) {
     _VEC.y = _vectorial ? a.y : b;
     _VEC.z = _vectorial ? a.z : c;
     _VEC.nombre = CONFIG.SOS_VECTOR;
+    
+    /**
+     * _convertirEnEsquema
+     * Función privada que retorna la definición del "Vector" corriente
+     * como un objeto de tipo "Esquema".
+     */
+    function _convertirEnEsquema() {
+        let _esq = Esquema(S, CONFIG.SOS_VECTOR);
+        if (_VEC.x !== null && _VEC.x !== undefined)
+            _esq.def({x: _VEC.x});
+        if (_VEC.y !== null && _VEC.y !== undefined)
+            _esq.def({y: _VEC.y});
+        if (_VEC.z !== null && _VEC.z !== undefined)
+            _esq.def({z: _VEC.z});
+        return _esq;
+    }
 
     /**
      * def
@@ -38,7 +54,6 @@ function Vector(S, a, b, c) {
      */
     _VEC.def = (atributos) => {
         if (atributos) {
-            const _ESQ = Esquema(S);
             let _defX, _defY, _defZ;
             if (atributos.hasOwnProperty('x')) {
                 _defX = S.O.S.entidad(atributos.x);
@@ -125,7 +140,7 @@ function Vector(S, a, b, c) {
     _VEC.mag = () => {
         return Math.sqrt(Math.pow(_VEC.x ?? 0, 2) + Math.pow(_VEC.y ?? 0, 2) + Math.pow(_VEC.z ?? 0, 2));
     };
-    
+        
     /**
      * copiar
      * Copia el contenido del vector recibido como argumento
@@ -153,20 +168,22 @@ function Vector(S, a, b, c) {
     };
     
     /**
+     * defval
+     * Retorna el contenido completo del "Vector" como la definición
+     * de un objeto de tipo "Esquema".
+     */
+    _VEC.defval = () => {
+        return _convertirEnEsquema().defval();
+    };
+
+    /**
      * exportar
      * Devuelve un texto con la representación JSON del vector.
      */
     _VEC.exportar = (indentacion = "") => {
-        let _esq = Esquema(S, CONFIG.SOS_VECTOR);
-        if (_VEC.x !== null && _VEC.x !== undefined)
-            _esq.def({x: _VEC.x});
-        if (_VEC.y !== null && _VEC.y !== undefined)
-            _esq.def({y: _VEC.y});
-        if (_VEC.z !== null && _VEC.z !== undefined)
-            _esq.def({z: _VEC.z});
-        return _esq.exportar(indentacion);
+        return _convertirEnEsquema().exportar(indentacion);
     };
-   
+       
     return _VEC;    
 }
 

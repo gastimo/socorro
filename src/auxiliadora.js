@@ -179,48 +179,52 @@ const Auxiliadora = (S, utilizaP5) => {
          * para crear dicha entidad. En caso contrario, devuelve "undefined".
          */
         entidad: (objeto) => {
-          // --------------------------------------
-          // Se verifica si es una "VARIABLE"
-          // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-          if (objeto.hasOwnProperty(CONFIG.VAR_METODO) &&
-             (objeto.hasOwnProperty(CONFIG.VAR_VALOR) || objeto.hasOwnProperty(CONFIG.VAR_VALOR_DESDE) || objeto.hasOwnProperty(CONFIG.VAR_VALOR_HASTA))) {
-            return S.O.S.Variable;
-          }
-          // --------------------------------------
-          // Se verifica si es un "VECTOR"
-          // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-          else if (_cumplimentaDef(objeto, 'x', 'y', 'z')) {
-            return S.O.S.Vector;
-          }
-          // --------------------------------------
-          // Se verifica si es un "VARIADOR"
-          // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-          else if (_cumplimentaDef(objeto, CONFIG.VAR_VALOR_DESDE, CONFIG.VAR_VALOR_HASTA, CONFIG.VAR_MODULADOR)) {
-            return S.O.S.Variador;
-          }
-          // --------------------------------------
-          // Se verifica si es un "ESTILO"
-          // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-          else if (_cumplimentaDef(objeto, CONFIG.EST_COLOR, CONFIG.EST_GRANDOR, 
-                                           CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO, CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO,
-                                           CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_ALFA, CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO + CONFIG.ATR_VARIABLE_ALFA)) {
-              return S.O.S.Estilo;
-          }
-          // --------------------------------------
-          // Se verifica si es un "ACTOR"
-          // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-          else if (_cumplimentaDef(objeto, CONFIG.ACT_ORIGEN, CONFIG.ACT_VELOCIDAD, CONFIG.ACT_ESTILO, CONFIG.ACT_REPRESENTADOR)) {
-              return S.O.S.Actor;
-          }
-          // --------------------------------------
-          // Se verifica si es un "REPARTO"
-          // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-          else if (_cumplimentaDef(objeto, CONFIG.RPT_COREOGRAFIA, CONFIG.RPT_CANTIDAD, CONFIG.RPT_PUESTOS, CONFIG.RPT_INTERVALO, 
-                                           CONFIG.RPT_VELOCIDAD, CONFIG.RPT_DESVIO, CONFIG.RPT_SEPARACION, CONFIG.RPT_RECORRIDO,
-                                           CONFIG.RPT_DURACION, CONFIG.RPT_ESTILO, CONFIG.RPT_REPRESENTADOR, CONFIG.RPT_DESPLAZAMIENTO)) {
-              return S.O.S.Reparto;
-          }
+            if (objeto) {
+                
+              // --------------------------------------
+              // Se verifica si es una "VARIABLE"
+              // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+              if (objeto.hasOwnProperty(CONFIG.VAR_METODO) &&
+                 (objeto.hasOwnProperty(CONFIG.VAR_VALOR) || objeto.hasOwnProperty(CONFIG.VAR_VALOR_DESDE) || objeto.hasOwnProperty(CONFIG.VAR_VALOR_HASTA))) {
+                return S.O.S.Variable;
+              }
+              // --------------------------------------
+              // Se verifica si es un "VECTOR"
+              // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+              else if (_cumplimentaDef(objeto, 'x', 'y', 'z')) {
+                return S.O.S.Vector;
+              }
+              // --------------------------------------
+              // Se verifica si es un "VARIADOR"
+              // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+              else if (_cumplimentaDef(objeto, CONFIG.VAR_VALOR_DESDE, CONFIG.VAR_VALOR_HASTA, CONFIG.VAR_MODULADOR)) {
+                return S.O.S.Variador;
+              }
+              // --------------------------------------
+              // Se verifica si es un "ESTILO"
+              // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+              else if (_cumplimentaDef(objeto, CONFIG.EST_COLOR, CONFIG.EST_GRANDOR, 
+                                               CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO, CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO,
+                                               CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_ALFA, CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO + CONFIG.ATR_VARIABLE_ALFA)) {
+                  return S.O.S.Estilo;
+              }
+              // --------------------------------------
+              // Se verifica si es un "ACTOR"
+              // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+              else if (_cumplimentaDef(objeto, CONFIG.ACT_ORIGEN, CONFIG.ACT_VELOCIDAD, CONFIG.ACT_ESTILO, CONFIG.ACT_REPRESENTADOR)) {
+                  return S.O.S.Actor;
+              }
+              // --------------------------------------
+              // Se verifica si es un "REPARTO"
+              // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+              else if (_cumplimentaDef(objeto, CONFIG.RPT_COREOGRAFIA, CONFIG.RPT_CANTIDAD, CONFIG.RPT_PUESTOS, CONFIG.RPT_INTERVALO, 
+                                               CONFIG.RPT_VELOCIDAD, CONFIG.RPT_DESVIO, CONFIG.RPT_SEPARACION, CONFIG.RPT_RECORRIDO,
+                                               CONFIG.RPT_DURACION, CONFIG.RPT_ESTILO, CONFIG.RPT_REPRESENTADOR, CONFIG.RPT_DESPLAZAMIENTO)) {
+                  return S.O.S.Reparto;
+              }
 
+          }
+        
           // Si no corresponde a ningún objeto, se retorna "undefined"
           return undefined;
         },
@@ -296,6 +300,20 @@ const Auxiliadora = (S, utilizaP5) => {
         esUnReparto: (objeto) => {
           let _aux = objeto ? objeto?.nombre : undefined;
           return _aux !== undefined && _aux === CONFIG.SOS_REPARTO;
+        },
+        
+        /**
+         * esUnEsquema
+         * Función para indicar si el objeto recibido como argumento es un "Esquema"
+         * (o es cualquier objeto que extiende del objeto "Esquema").
+         */
+        esUnEsquema: (objeto) => {
+            let _aux = objeto ? objeto?.nombre : undefined;
+            return _aux !== undefined && 
+                  (_aux == CONFIG.SOS_ESQUEMA  || _aux == CONFIG.SOS_ESCENA   ||
+                   _aux == CONFIG.SOS_REPARTO  || _aux == CONFIG.SOS_ACTOR    ||
+                   _aux == CONFIG.SOS_ESTILO   || _aux == CONFIG.SOS_VARIABLE ||
+                   _aux == CONFIG.SOS_VARIADOR || _aux == CONFIG.SOS_VECTOR   || _aux == CONFIG.SOS_VECTORVAR);
         },
 
         

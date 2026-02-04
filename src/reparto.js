@@ -84,8 +84,7 @@ import Esquema from './esquema';
 function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desvío, separacion) {
     const _ESQ = Esquema(S, CONFIG.SOS_REPARTO);
     const _RPT = S.O.S.revelar({}, _ESQ);
-    _inicializar(coreografia, cantidad, puestos, intervalo, velocidad, desvío, separacion);
-
+    
         
     /**
      * _inicializar
@@ -112,10 +111,13 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desví
         _ESQ.def(_definicion);
         
         // Inicialización de las propiedades del "Reparto"
-        _RPT.estilo = {color: undefined, grandor: undefined, trazo: undefined, grosor: undefined};
-        _RPT.representador = undefined;
-        _RPT.alcance = {recorrido: undefined, tiempo: undefined};
-        _RPT.desplazamiento = S.O.S.Vector(); 
+        _RPT.estilo         = undefined;
+        _RPT.representador  = undefined;
+        _RPT.desplazamiento = undefined; 
+        _RPT.maxDuracion    = undefined;
+        _RPT.maxRecorrido   = undefined;
+        
+        return _RPT;
     }
         
     /**
@@ -131,8 +133,8 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desví
                 if (atrNombre === CONFIG.RPT_COREOGRAFIA   || atrNombre === CONFIG.RPT_CANTIDAD || 
                     atrNombre === CONFIG.RPT_PUESTOS       || atrNombre === CONFIG.RPT_INTERVALO ||
                     atrNombre === CONFIG.RPT_VELOCIDAD     || atrNombre === CONFIG.RPT_DESVIO ||
-                    atrNombre === CONFIG.RPT_SEPARACION    || atrNombre === CONFIG.RPT_RECORRIDO ||
-                    atrNombre === CONFIG.RPT_DURACION      || atrNombre === CONFIG.RPT_ESTILO ||
+                    atrNombre === CONFIG.RPT_SEPARACION    || atrNombre === CONFIG.RPT_ESTILO ||
+                    atrNombre === CONFIG.RPT_MAX_DURACION  || atrNombre === CONFIG.RPT_MAX_RECORRIDO ||
                     atrNombre === CONFIG.RPT_REPRESENTADOR || atrNombre === CONFIG.RPT_DESPLAZAMIENTO) {
                     _definicion[atrNombre] = atrValor;
                 }
@@ -146,34 +148,29 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desví
      * defEstilo
      * Define los atributos básicos para la representación visual de los actores del
      * "Reparto". El argumento recibido puede ser un objeto de tipo "Estilo" u otro
-     * objeto Javascript que contenga su definición. Por ejemplo, las dos declaraciones 
-     * de abajo hacen exactamente lo mismo:
+     * objeto Javascript que contenga su definición. 
+     * Por ejemplo, las dos declaraciones de abajo hacen exactamente lo mismo:
      * 
      *    defEstilo({color: 'rgb(255, 255, 255)', color$alfa: 127, grandor: 12, color$trazo: 100});
      *    defEstilo(S.O.S.Estilo('rgb(255, 255, 255)', 127, 12, 100));
      */
     _RPT.defEstilo = (estilo) => {
-        if (estilo !== undefined && estilo !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.RPT_ESTILO] = estilo;
-            _ESQ.def(_definicion);
-        }
+        const _definicion = {};
+        _definicion[CONFIG.RPT_ESTILO] = estilo;
+        _ESQ.def(_definicion);
         return _RPT;
     };
-    
+
     /**
      * defRepresentador
-     * Función que permite definir el nombre del "Representador" por defecto
-     * asociado al "Reparto". Por ejemplo:
-     *  
-     *    defRepresentador(S.O.S.REP.romboide);
+     * Función que permite definir el "Representador" por defecto para mostror a los "Actores".
+     * Este método hace exactamente lo mismo que la siguiente invocación:
+     *     def({representador: <nombre-representador});
      */
     _RPT.defRepresentador = (representador) => {
-        if (representador !== undefined && representador !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.RPT_REPRESENTADOR] = representador;
-            _ESQ.def(_definicion);
-        }
+        const _definicion = {};
+        _definicion[CONFIG.RPT_REPRESENTADOR] = representador;
+        _ESQ.def(_definicion);
         return _RPT;
     };
     
@@ -187,11 +184,9 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desví
      *    defDesplazamiento(S.O.S.Vector(10, -100, 0));
      */
     _RPT.defDesplazamiento = (vector) => {
-        if (vector !== undefined && vector !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.RPT_DESPLAZAMIENTO] = vector;
-            _ESQ.def(_definicion);
-        }
+        const _definicion = {};
+        _definicion[CONFIG.RPT_DESPLAZAMIENTO] = vector;
+        _ESQ.def(_definicion);
         return _RPT;
     };
     
@@ -203,11 +198,9 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desví
      *    defMaxDuracion(20000);  // El "Actor" culmina su participación en 20 segundos
      */
     _RPT.defMaxDuracion = (tiempoMaximo) => {
-        if (tiempoMaximo !== undefined && tiempoMaximo !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.RPT_DURACION] = tiempoMaximo;
-            _ESQ.def(_definicion);
-        }
+        const _definicion = {};
+        _definicion[CONFIG.RPT_DURACION] = tiempoMaximo;
+        _ESQ.def(_definicion);
         return _RPT;
     };
     
@@ -219,22 +212,37 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, velocidad, desví
      *    defMaxRecorrido(50000);  // El "Actor" termina después de recorrer una distancia de 50.000 píxeles
      */
     _RPT.defMaxRecorrido = (distanciaMaxima) => {
-        if (distanciaMaxima !== undefined && distanciaMaxima !== null) {
-            const _definicion = {};
-            _definicion[CONFIG.RPT_RECORRIDO] = distanciaMaxima;
-            _ESQ.def(_definicion);
-        }
+        const _definicion = {};
+        _definicion[CONFIG.RPT_RECORRIDO] = distanciaMaxima;
+        _ESQ.def(_definicion);
         return _RPT;
     };
         
     
     /**
      * actualizar
+     * Actualiza, en primer lugar, todas las variables dinámicas del "Reparto".
+     * Luego, se ocupa de actualizar a cada uno de los "Actores" del "Reparto".
      */
     _RPT.actualizar = () => {
+        // Actualización del "Representador" por defecto para el "Reparto"
+        _RPT.representador = _ESQ.val(CONFIG.RPT_REPRESENTADOR) ?? _RPT.representador;
+
+        // Actualización del vector de "Desplazamiento"
+        _RPT.desplazamiento = _ESQ.val(CONFIG.RPT_DESPLAZAMIENTO) ?? _RPT.desplazamiento;
+        
+        // Actualización de los "Alances Máximos"
+        _RPT.maxDuracion    = _ESQ.val(CONFIG.RPT_MAX_DURACION) ?? _RPT.maxDuracion;
+        _RPT.maxRecorrido   = _ESQ.val(CONFIG.RPT_MAX_RECORRIDO) ?? _RPT.maxRecorrido;
+        
+        // Actualización del "Estilo" por defecto
+        _RPT.estilo = _ESQ.val(CONFIG.RPT_ESTILO);  // Devuelve el "Estilo" sin evaluar
+        if (_RPT.estilo) {
+            _RPT.estilo.actualizar();               // Acá recién se evalúa el "Estilo"
+        }
     };
         
-    return _RPT;
+    return  _inicializar(coreografia, cantidad, puestos, intervalo, velocidad, desvío, separacion);
 }
 
 

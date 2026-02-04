@@ -48,6 +48,14 @@ function Variador(S, valorDesde, valorHasta, modulador) {
     };
     
     /**
+     * deffal
+     * Redefinición del método "defval" del objeto "Variable"
+     */
+    _VRD.defval = () => {
+        return _VAR.defval();  
+    };
+    
+    /**
      * val
      * Redefinición del método "val" del objeto "Variable".
      */

@@ -10,33 +10,73 @@ import CONFIG from './config';
 
 /**
  * Esquema
- * Un esquema es un objeto genérico para almacenar un conjunto de datos (en la 
- * forma de una colección de pares <atributo, valor>, junto con sus metadatos, 
- * en otras palabras, permite guardar la definición del esquema (las "configuraciones"
- * de sus atributos) además de los valores para cada uno de ellos (su contenido).
- * La utilización de esquemas permite, entre otras cosas:
- *  - Inicializar objetos automáticamente con sus valores por defecto.
- *  - Validar los valores que se le asignen a sus atributos mediante la GUI.
- *  - Importar y exportar los datos de los atributos en formato JSON.
- *  - Construir una GUI (panel de control) para modificar los valores
- *    de sus atributos en tiempo real.
+ * El "Esquema" es el objeto central que posibilita la definición de la gran mayoría
+ * de las restantes "entidades del socorro", ya no como objetos estáticos, sino como 
+ * colecciones de atributos cuyos valores pueden ser recalculados durante el ciclo 
+ * de ejecución de la "Escena". En otras palabras, la mayoría de las "entidades del 
+ * socorro" son "Esquemas" con configuraciones de atributos que se evalúan en tiempo
+ * de ejecución permitiendo, de esta manera, la implementación de lógica generativa.
  * 
- * MÉTODOS PRINCIPALES:
- *  - def         : define los atributos del esquema con sus valores. No requiere
- *                  la invocación de la función "config" previamente.
- *  - val         : retorna el valor de un atributo del esquema o, incluso, un 
- *                  subesquema. No requiere el uso previo de la función "config".
- *  - config      : establece la configuración de un atributo del esquema. Las 
- *                  configuraciones son opcionales. Sólo son necesarias para 
- *                  construir la GUI o definir los valores por defecto de los 
- *                  atributos durante su inicialización.
- *  - exportar    : exporta el contenido del esquema (nombre de atributos y
- *                  sus valores) en formato JSON.
+ * ESQUEMAS PROTAGONISTAS DE LA OBRA:
+ * La "entidades del socorro" (esquemas) esenciales para la representación de la "Obra" son:
+ * 
+ *  - La "Escena"  : representación de contenidos visuales en el espacio (el lienzo HTML) 
+ *                   y en en el tiempo. Una "Obra" puede incluir múltiples "Escenas". 
+ *  - El "Actor"   : es la única entidad que verdaderamente es representada en la "Escena".
+ *                   Es una entidad con comportamiento, que se desplaza en la "Escena" y
+ *                   que tiene representación visual (se dibuja en el lienzo).
+ *  - El "Reparto" : definición de conjuntos de actores con posiciones y desplazamientos 
+ *                   predeterminados dentro de la "Escena". El "Reparto" dirige a los
+ *                   "Actores", determina sus posiciones en la "Escena", controla sus
+ *                   entradas y salidas del cuadro y, también, puede coreografiar a otros
+ *                   "Repartos" dentro de éste. 
+ * 
+ * ESQUEMAS PARA DEFINICIONES DINÁMICAS:
+ * Una de las funciones principales del "Esquema" es la definición de los atributos de las
+ * "entidades del socorro", pero su relevancia radica en el hecho de que, en lugar de definir
+ * valores estáticos para los atributos, posibilita definir la manera en que sus valores serán
+ * calculados (evaluados) dinámicamente durante la representación de la "Escena".
+ * Las "entidades del socorro" que contribuyen a este fin son (también "Esquemas"):
+ * 
+ * - La "Variable" : representación de un método de cálculo dinámico de un atributo del
+ *                   "Esquema". En general, definen un mapeo entre un rango de valores 
+ *                   de origen y un rango de valores de destino, donde es posible añadir
+ *                   variaciones aleatorias o ruido en el cálculo del resultado.
+ * - El "Variador" : es simplemente un caso particular de una "Variable", donde el método
+ *                   de cálculo es aleatorio (por ruido "perlin").
+ * - El "Estilo"   : colección de defniciones de atributos vinculados con la representación
+ *                   visual de un "Actor". Básicamente, el "Estilo" reúne dos triadas de
+ *                   valores: por un lado, <color-opacidad-grandor> (de la figura del "Actor")
+ *                   y, por otro lado, <color-opacidad-grosor> (del trazo a utilizar). 
+ *                   Cualquiera de los componentes de ambas triadas puede ser definido 
+ *                   mediante objetos "Variable" para su evaluación dinámica.
+ * 
+ * ESQUEMA AUXILIARES DE REPRESENTACIÓN:
+ * Adicionalmente, existen "entidades del socorro" con fines utilitarios a la hora de la
+ * definición de los atributos. 
+ * 
+ *  - El "Vector"    : estructura de datos simple que permite operar con vectores de hasta
+ *                     tres componentes <x,y,z>.
+ *  - El "VectorVar" : es un tipo de "Vector" utilizado internamente cuando algunas de las
+ *                     componentes <x,y,z> es definida mediante objetos "Variable".
+ * 
+ * MÉTODOS PRINCIPALES DEL ESQUEMA:
+ *  - def         : define los atributos del esquema con sus valores. En realidad, define 
+ *                  manera en que los valores de dichos atributos son calculados.
+ *  - defval      : devuelve un objeto con todas las definiciones de atributos y valores
+ *                  del "Esquema".
+ *  - val         : Devuelve el valor de un atributo del "Esquema". Dependiendo cómo haya sido
+ *                  definido el "Esquema", esta función puede retornar un valor simple, otra
+ *                  "entidad del socorro", o un "subesquema". Cuando el valor del atributo
+ *                  fue definido a través de las entidades de cálculo dinámico ("Variable" o 
+ *                  "Variador"), esta función es la encargada de llevar a cabo la evaluación
+ *                  dinámica en tiempo de ejecuión (motor de la lógica generativa).
+ *  - exportar    : exporta el contenido del esquema (definición de atributos en formato JSON.
  */
 function Esquema(S, nombreEsquema) {
     const _ESQ = {};   // Esquema corriente (funciones y propiedades del "Esquema" en sí).
     const _VAL = {};   // Definición de atributos variables del esquema y sus valores.
-    const _DEF = {};   // Configuraciones de atributos (para valores x defecto y GUI).
+    const _DEF = {};   // Configuraciones de atributos
           
     // Inicialización del "Esquema"
     _ESQ.nombre = nombreEsquema ?? CONFIG.SOS_ESQUEMA;
@@ -44,100 +84,33 @@ function Esquema(S, nombreEsquema) {
     _ESQ.identificador = _ESQ.nombre + CONFIG.ATR_SEPARADOR + _ESQ.clave;
     _ESQ.visible = true;
     
-  
-   /*
-    * =============================================================================
-    * 
-    *           O B J E T O S    I N T E R N O S    D E L    E S Q U E M A
-    * 
-    * =============================================================================
-    */
-  
+    
     /**
-     * ConfigAtributo
-     * Objeto para almacenar la configuración de un atributo individual del esquema.
-     * Admite una serie de parámetros (sólo el primero es obligatorio):
-     *  1. Nombre               : Nombre del atributo del esquema.
-     *  2. Valor por defecto    : Valor para su incialización.
-     *  3. Valor mínimo/valores : Junto con el siguiente argumento, definen
-     *                            el rango de valores aceptado. Pero, si se indica
-     *                            un "array", entonces es la "Lista de valores".
-     *  4. Valor máximo         : Junto con el argumento anterior (si no es un 
-     *                            "array") definen el rango de valores aceptado.
-     *  5. Incremento           : Si se estableció un rango de valores (con los 
-     *                            dos argumentos anteriores), indica de cuánto 
-     *                            en cuánto se debe incrementar el valor.
+     * _defEsquema
+     * Función privada, utilizada internamente por el método "def" para definir
+     * los valroes de los atributos del "Esquema" (de manera recursiva). 
+     * Lo relevante de la definición de los atributos de un "Esquema" es que 
+     * posibilitan no sólo la asociación de valores simples a los atributos, 
+     * sino la definición de la manera en que dicho valor debe ser calculado.
      * 
-     * NOTA : esta objeto es usado únicamente por la función "config" para almacenar
-     *        las definiciones de un atributo. Su uso principal es en el armado de la GUI.
+     * En otras palabras: 
+     * "LA DEFINICIÓN DE ATRIBUTOS SIGNIFICA LA DEFINICIÓN DE LA MANERA DE
+     *  CALCULAR SUS VALORES EN TIEMPO DE EJECUCIÓN".
+     * 
+     * Cada atributo de un esquema puede albergar:
+     *  - Un valor escalar simple.
+     *  - Una definición de un "subesquema" de atributos.
+     *  - Cualquier otra entidad del socorro que extienda de "Esquema".
+     *  - Un arreglo (array) de valores simples o, también, de entidades del socorro.
+     * 
+     * Este mecanismo vuelve al "Esquema" extremadamente flexible. Por un lado, el
+     * "Esquema" permite definir uns jerarquía de entidades, por ejemplo, permite
+     * definir los "Actores" de un "Reparto" de una "Escena" y, por otro, permite
+     * definir "Variables" o "Variadores" asociados a sus atributos para que su
+     * valor sea calculado dinámicamente, en tiempo de ejecución.
      */
-    function ConfigAtributo (...parametros) {
-      let _nombrePropiedad;  // Para mapear el atributo a una propiedad del objeto maestro
-      let _etiqueta;         // Para la descripción o rótulo a desplegar en la GUI
-      let _heredar;          // Indicador para calcular valores por "herencia"
-      const _configuracion = {
-        nombre          : null,
-        valorPorDefecto : null,
-        valorMinimo     : null,
-        valorMaximo     : null,
-        incremento      : null,
-        listaDeValores  : null,
-        etiqueta        : (texto)  => {_etiqueta = texto; return _configuracion;},
-        propiedad       : (prop)   => {_nombrePropiedad = prop; return _configuracion;},
-        heredar         : (hereda) => {_heredar = hereda; return _configuracion;}
-      };
-      _configuracion.nombre          = parametros.length > 0 ? parametros[0] : null;
-      _configuracion.valorPorDefecto = parametros.length > 1 ? parametros[1] : null;
-      _configuracion.valorMinimo     = parametros.length > 2 ? parametros[2] : null;
-      _configuracion.valorMaximo     = parametros.length > 3 ? parametros[3] : null;
-      _configuracion.incremento      = parametros.length > 4 ? parametros[4] : null;
-      if (Array.isArray(_configuracion.valorMinimo)) {
-        _configuracion.listaDeValores = _configuracion.valorMinimo;
-        _configuracion.valorMinimo = null;
-        _configuracion.valorMaximo = null;
-      }
-      return _configuracion;
-    }
-
-
-/*
- * =============================================================================
- * 
- *                              E S Q U E M A
- * 
- * =============================================================================
- */
-
-    
-    
-    /**
-     * def
-     * Función para definir el valor de un atributo del esquema. La función 
-     * recibe un único argumento en la forma de un objeto JavaScript con la 
-     * colección de pares <atributo, valor> a ser definidos. Ejemplo:
-     * 
-     *   def({atributo1 : valor1, 
-     *        atributo2 : valor2,
-     *        ...
-     *        atributoN : valorN});
-     * 
-     * La función permite definir tanto valores simples para los atributos
-     * como "subesquemas". En este caso, el valor del atributo debe ser
-     * otro objeto JavaScript con la información del "subesquema".
-     *   def({atributo: {subatributo1 : valor1,
-     *                   subatributo2 : valor2,
-     *                   ...
-     *                   subatributoN : valorN}
-     *       });
-     * 
-     * Esta misma función puede ser usada para definir el esquema a partir
-     * de los datos importados desde un archivo JSON.
-     */  
-    _ESQ.def = (atributos) => {
-      if (atributos) {
-        const _defRecursiva = (subesquema, subatributos, arreglo) => {
-          for (const [atrNombre, atrValor] of Object.entries(subatributos)) {
-              
+    function _defEsquema(subesquema, subatributos, arreglo) {
+        for (const [atrNombre, atrValor] of Object.entries(subatributos)) {
             // --------------------------------------------
             // DEFINCIÓN DE VALORES DEL OBJETO SUBESQUEMA
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -163,97 +136,144 @@ function Esquema(S, nombreEsquema) {
                 subesquema[atrNombre] = {};
               }
               // Invocación recursiva para definir los valores del "subesquema"
-              _defRecursiva(subesquema[atrNombre], atrValor);
+              _defEsquema(subesquema[atrNombre], atrValor);
             }
-              
+
             // ------------------------------------------
             // DEFINICIÓN DE VALORES DE ARREGLOS (ARRAYS)
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             else if (Array.isArray(atrValor)) {
                 subesquema[atrNombre] = [];
                 // Invocación recursiva para definir los valores del "arreglo"
-                _defRecursiva(subesquema[atrNombre], atrValor, atrNombre);
+                _defEsquema(subesquema[atrNombre], atrValor, atrNombre);
             }  
-              
+
             // ---------------------------------------------
             // DEFINICIÓN DE VALORES SIMPLES (ÚLTIMO NIVEL)
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             else {
               subesquema[atrNombre] = atrValor;
             }
-          }
-        };
-        _defRecursiva(_VAL, atributos);
-      }
-      return _ESQ;
+        }
+    }
+
+    /**
+     * def
+     * Función para definir el valor de un atributo del esquema. Lo que es importante
+     * remarcar de estar función es que, si bien permite definir los valores individuales
+     * de los atributos, en la mayoría de los casos lo que se almacena es la definición
+     * acerca de cómo calcular el valor del atributo dinámicamente en tiempo de ejecución.
+     * Esto se consigue asociando objetos de tipo "Variable" o "Variador" en la definición
+     * del atributo del "Esquema".
+     * 
+     * Adicionalmente, la función "def" permite asociar otras "entidades del socorro" en 
+     * la definición de los atributos del "Esquema" creando, de esta forma, jerarquías
+     * de entidades. Por ejemplo, la entidad "Escena" puede contener atributos que sean
+     * "Actores" o "Repartos". Estos últimos, además, pueden tener "Actores" asociados o,
+     * incluso, "Subrepartos".
+     * 
+     * ARGUMENTOS DE LA FUNCIÓN:
+     * La función recibe un único argumento en la forma de un objeto JavaScript con la 
+     * colección de pares <atributo, valor> a ser definidos. Por ejemplo:
+     * 
+     *   def({atributo1 : valor1, 
+     *        atributo2 : valor2,
+     *        ...
+     *        atributoN : valorN});
+     * 
+     * Mediante esta función es posible definir jerarquías dentro del "Esquema". En decir,
+     * además de poder definir valores simples para los atributos, es posible definir un
+     * "subesquema" como valor de un atributo. En este caso, el valor del atributo pasar
+     * a ser otro objeto JavaScript con la definición de tal "subesquema".
+     * 
+     *   def({atributo: {subatributo1 : valor1,
+     *                   subatributo2 : valor2,
+     *                   ...
+     *                   subatributoN : valorN}
+     *       });
+     * 
+     * Finalmente, esta misma función puede ser usada para definir el esquema a partir
+     * de los datos importados desde un archivo JSON.
+     */  
+    _ESQ.def = (atributos) => {
+        if (atributos) {
+            _defEsquema(_VAL, atributos);
+        }
+        return _ESQ;
+    };    
+
+    /**
+     * defval
+     * Retorna la definición completa de los atributos del "Esquema" con sus valores,
+     * es decir, retorna un objeto JavaScript con la estructura jerárquica del esquema
+     * y subesquemas, detatallando los atributos y sus definiciones. Vale aclarar que
+     * esta función no "evalúa" los valores, simplemente retorna sus definiciones.
+     */
+    _ESQ.defval = () => {
+        return _ESQ.val();    
     };
-  
+    
     /**
      * val
-     * Función para obtener el valor de un atributo del esquema o, incluso, el
-     * conjunto completo de todos los valores de los atributos del esquema. 
-     * La función puede recibir un único argumento (el nombre del atributo del
-     * cual se quiere obtener su valor) o más de un argumento (en caso que se
-     * quiere obtener el valor de un atributo de un subesquema). Si la función
-     * es invocada sin argumentos, retorna un objeto con todos los valores.
+     * Función para obtener el valor de un atributo del "Esquema". Esta función es la
+     * responsable de la "Evaluación Dinámica" de aquellos atributos definidos a través
+     * de "Variables" o "Variadores", es decir, cuyo valor no es estático y se calcula
+     * en tiempo de ejeución mediante la invocación de funciones (ver la definición de
+     * los objetos "Variable" y "Variador").
      * 
-     *  val()                    : Devuelve un objeto con todos los atributos
-     *                             del esquema y sus respectivos valores.
-     *  val(<nombre>)            : Devuelve el valor del atributo indicado 
+     * La función puede recibir un único argumento (el nombre del atributo del "Esquema"
+     * del cual se quiere obtener su valor) o más de un argumento (en caso que se quiera
+     * obtener el valor de un atributo de un subesquema). 
+     * EJEMPLOS:
+     * 
+     *  val(<nombre>)            : Devuelve el valor (evaluado) del atributo indicado 
      *                             en el argumento (o "null" si no existe).
      *  val(<nombre1>, <nombre2>): Se asume que el valor del atributo <nombre1> es
      *                             un "subesquema". Se retorna, entonces, el valor
      *                             del atributo <nombre2> del subesquema <nombre1>.
      */
     _ESQ.val = (...atributos) => {
-      if (atributos.length == 0) {
-        return _VAL;
-      }
-      else {
-        let _valoresDeAtributos = _VAL;
-        for (let i = 0; i < atributos.length; i++) {
-          if (_valoresDeAtributos.hasOwnProperty(atributos[i])) {
-              
-            // Si se trata del último nombre de la lista, se retorna su valor almacenado.
-            // Podría tratarse de un valor simple o un objeto ("Vector", "Estilo", etc).
-            // Ejemplo: en la instrucción de abajo "colorFondo" es el valor solicitado.
-            // 
-            //   escena.val("paletas", "nocturna", "colorFondo");
-            //                 ^           ^            ^
-            //             subesquema  subesquema    atributo                   
-            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-            if (i == atributos.length - 1) {
-              return _obtenerValor(_valoresDeAtributos, atributos[i]);
+        if (atributos.length > 0) {
+            let _valoresDeAtributos = _VAL;
+            for (let i = 0; i < atributos.length; i++) {
+                if (_valoresDeAtributos.hasOwnProperty(atributos[i])) {
+                    
+                    // Si se trata del último nombre de la lista, se retorna su valor almacenado.
+                    // Podría tratarse de un valor simple o un objeto ("Vector", "Estilo", etc).
+                    // Ejemplo: en la instrucción de abajo "colorFondo" es el valor solicitado.
+                    // 
+                    //   escena.val("paletas", "nocturna", "colorFondo");
+                    //                 ^           ^            ^
+                    //             subesquema  subesquema    atributo                   
+                    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                    if (i == atributos.length - 1) {
+                      return _obtenerValor(_valoresDeAtributos, atributos[i]);
+                    }
+                    else {
+                        // Si no se trata del último valor, se verifica si se está solicitando el 
+                        // atributo de un objeto (ej. "Estilo", "Actor"). En ese caso, se delega el
+                        // llamado a la función homónima del objeto en cuestión.
+                        // Ejemplo: si el valor del atributo "opciones" fuese un objeto "Estilo".
+                        // 
+                        //    escena.val("opciones")          => Retorna un objeto de tipo "Estilo"
+                        //    escena.val("opciones", "color") => Retorna el color del objeto "Estilo"
+                        //                 
+                        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                        let _subesquema = _valoresDeAtributos[atributos[i]];
+                        if (S.O.S.esUnEstilo(_subesquema) || S.O.S.esUnActor(_subesquema) || S.O.S.esUnReparto(_subesquema)) {
+                            return _subesquema.val(atributos.slice(i+1));
+                        }
+                        // Sino, se baja un nivel más en la jerarquía (al subesquema) y se continúa 
+                        // con la búsqueda del valor del atributo solicitado en el "loop" principal.
+                        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                        else {
+                            _valoresDeAtributos = _subesquema;
+                        }
+                    }
+                }
             }
-              
-            else {
-              // Si no se trata del último valor, se verifica si se está solicitando el 
-              // atributo de un objeto (ej. "Estilo", "Actor"). En ese caso, se delega el
-              // llamado a la función homónima del objeto en cuestión.
-              // Ejemplo: si el valor del atributo "opciones" fuese un objeto "Estilo".
-              // 
-              //    escena.val("opciones")          => Retorna un objeto de tipo "Estilo"
-              //    escena.val("opciones", "color") => Retorna el color del objeto "Estilo"
-              //                 
-              // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              let _subesquema = _valoresDeAtributos[atributos[i]];
-              if (S.O.S.esUnEstilo(_subesquema) || S.O.S.esUnActor(_subesquema) || S.O.S.esUnReparto(_subesquema)) {
-                return _subesquema.val(atributos.slice(i+1));
-              }
-                
-              // Sino, se baja un nivel más en la jerarquía (al subesquema) y se continúa 
-              // con la búsqueda del valor del atributo solicitado en el "loop" principal.
-              // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else {
-                _valoresDeAtributos = _subesquema;
-              }
-            }
-          }
-          else {
-            return null;
-          }
         }
-      }
+        return null;
     };
   
     /**
@@ -271,8 +291,8 @@ function Esquema(S, nombreEsquema) {
      *   los que se le añaden un sufijo, ejemplo: "$alfa" para indicar "opacidad").
      * 
      * - OTROS: Si no se trata de una "Variable", ni de un "Variador", ni de un color, 
-     *   se retorna el valor sin ningún tipo de procesamiento. Los "Vectores", por
-     *   ejemplo, caen en esta categoría.
+     *   se retorna el valor sin ningún tipo de procesamiento. Por ejemplo, los "Vectores",
+     *   los "Estilos", los "Actores" caen en esta categoría.
      */
     function _obtenerValor(_valores, atrNombre) {
       let _valor = _valores[atrNombre];

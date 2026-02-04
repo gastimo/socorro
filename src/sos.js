@@ -243,7 +243,7 @@ const Siervo = () => {
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             FUNCION[CONFIG.ACTO_PREPARACION] = () => {
                 _escenas[_indice] = Escena(_orquestador.socorrista());
-                _escenas[_indice].interpretarGLSL(!usarP5);
+                _escenas[_indice].defInterpretarGLSL(!usarP5);
                 _orquestador.vincular(_escenas[_indice]);
                 if (archivoJSON)
                     _archivoJSONImportado = _orquestador.socorrista().O.S.cargarArchivo(archivoJSON);

@@ -19,7 +19,6 @@ import Esquema from './esquema';
 function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo) {
     const _ESQ = Esquema(S, CONFIG.SOS_ESTILO);
     const _EST = S.O.S.revelar({}, _ESQ);
-    let   _color, _colorTrazo, _grandor, _grandorTrazo;
     _inicializar(color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo);
     
     /**
@@ -46,6 +45,10 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
             _definicion[CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO] = grosorTrazo;
     
         _ESQ.def(_definicion);
+        _EST.color   = undefined;
+        _EST.grandor = undefined;
+        _EST.trazo   = undefined;
+        _EST.grosor  = undefined;
     }
     
     /**
@@ -103,37 +106,19 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
      * Actualiza todas las variables dinámicas del "Estilo". Esta función debe invocarse
      * una vez por cada iteración del ciclo de reproducción de la "Escena", antes de 
      * hacer uso de los valores del "Estilo"
+     * 
+     * ACTUALIZACIÓN DEL COLOR (color & color$trazo)
+     * En caso de haber definido el valor del atributo "opacidad", entonces, el color devuelto
+     * incluye también el canal "alfa" (aplica tanto a "color" como "color$trazo").
      */
     _EST.actualizar = () => {
-        _color        = _ESQ.val(CONFIG.EST_COLOR);
-        _colorTrazo   = _ESQ.val(CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO);
-        _grandor      = _ESQ.val(CONFIG.EST_GRANDOR);
-        _grandorTrazo = _ESQ.val(CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO);
+        _EST.color   = _ESQ.val(CONFIG.EST_COLOR);
+        _EST.trazo   = _ESQ.val(CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO);
+        _EST.grandor = _ESQ.val(CONFIG.EST_GRANDOR);
+        _EST.grosor  = _ESQ.val(CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO);
         return _EST;
     };
     
-    /**
-     * color
-     * Devuelve el valor del atributo "color" del "Estilo". En caso de haber definido el valor
-     * del atributo "opacidad", entonces, el color devuelto incluye también el canal "alfa".
-     * Si se indica un valor verdadero para el argumento "trazo" la función retorna, entonces,
-     * el color del trazo (si es que está definido) junto con su opacidad.
-     */
-    _EST.color = (trazo = false) => {
-        return trazo ? _colorTrazo : _color;
-    };
-    
-    /**
-     * grandor
-     * Devuelve el valor del atributo "grandor" del "Estilo". El grandor es un atributo que
-     * puede ser utilizado para definir un tamaño (ancho/alto) o el grosor de un trazo.
-     * Si se indica un valor verdadero para el argumento "trazo" la función retorna, entonces,
-     * el grandor (grosor) del trazo (si es que está definido).
-     */
-    _EST.grandor = (trazo = false) => {
-        return trazo ? _grandorTrazo : _grandor;
-    };
-        
     return _EST;
 }
 
