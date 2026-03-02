@@ -6,7 +6,6 @@
  * =============================================================================
  */
 import CONFIG from './config';
-import Desglose from './desglose';
 import Repertorio from './repertorio';
 import Auxiliadora from './auxiliadora';
 
@@ -43,20 +42,20 @@ function Orquestador(sos, contenedor) {
     let   _reloj;
     
     // Variables para los actos (funciones) a ser orquestados
-    let _funcionPreparacion;
-    let _funcionIniciacion;
-    let _funcionEjecucion;
-    let _actoPreparacionIniciado = false;
-    let _actoPreparacionFinalizado = false;
-    let _actoIniciacionIniciado = false;
-    let _actoEjecucionIniciado = false;
-    let _acto$3Diferido = false;
+    let   _funcionPreparacion;
+    let   _funcionIniciacion;
+    let   _funcionEjecucion;
+    let   _actoPreparacionIniciado = false;
+    let   _actoPreparacionFinalizado = false;
+    let   _actoIniciacionIniciado = false;
+    let   _actoEjecucionIniciado = false;
+    let   _acto$3Diferido = false;
     
     // Valores de los "uniforms" estándares
-    let _valorUniformTiempo;
-    let _valorUniformResolucion;
-    let _valorUniformMouse;
-        
+    let   _valorUniformTiempo;
+    let   _valorUniformResolucion;
+    let   _valorUniformMouse;
+
     
     
 // =====================================================================
@@ -197,25 +196,31 @@ function Orquestador(sos, contenedor) {
   
     /**
      * vincular
-     * Mediante esta función se actualiza la estructra del socorrista designado por el
-     * "Orquestador" para vincularlo con la "Escena" que debe orquestar, es decir, a
-     * través del mecanismo de "herencia por prototipos" de JS, toda la información y
-     * métodos de la "Escena" pueden accederse directamente desde el propio socorrista. 
-     * Adicionalmente, se vinculan al socorrista designado algunas otras entidades:
+     * Mediante esta función se actualiza la estructra del socorrista designado por el "Orquestador" para 
+     * vincularlo con la "Escena" que debe orquestar, es decir, a través del mecanismo de "herencia por 
+     * prototipos" de JS, toda la información y métodos de la "Escena" pueden accederse directamente desde 
+     * el propio socorrista. En otras palabras, el socorrista designado se convierte en la propia "Escena".
      * 
-     * - Reparto       : Registro jerárquico de los "Actores" y los "Repartos" de la "Escena"
-     * - Representador : Colección de "Representadores" (funciones para representación de "Actores")
-     * - Coreografia   : Colección de "Coreografías" (disposición y desplazamiento de "Actores" del "Reparto")
-     * - Cargador      : Métodos de ayuda para la carga de archivos de la "Escena"
-     * - Auxiliadora   : Colección de funciones de asistencia general para las entidades del "socorro" 
+     * Además, se inicializan las listas para llevar el registro de los "Actores" y "Repartos":
+     *  - S.O.S.Actores  : Objeto conteniendo los actores agrupados jerárquicamente
+     *  - S.O.S.Repartos : Objeto conteniendo los repartos agrupados jerárquicamente
+     *  
+     * También se ponen a disponibilidad del usuario los "Repertorios" necesarios:
+     * - S.O.S.REP       : Colección de "Representadores" (funciones para representación de "Actores")
+     * - S.O.S.COREO     : Colección de "Coreografías" (disposición y desplazamiento de "Actores" de un "Reparto")
+     * - S.O.S.COLOR     : Listado de gradientes de colores preestablecidos 
      * 
+     * Por último, se inyectan funciones de asistencia adicionales para la "Escena":
+     * - Cargador        : Se habilitan los métodos de ayuda para la carga de archivos de la "Escena".
+     * - Auxiliadora     : Se publica la colección de funciones de asistencia general para las "entidades del socorro".
      */
     function vincular(escena) {
         _escena = escena;
-        const _r = Repertorio(S);
-        asociar('Repertorio', _r.funciones());
-        asociar('Reparto', Desglose(S, escena));
-        S.O.S.revelar(S.O.S, _r.revelar(), Auxiliadora(S, _utilizaP5), Cargador(), escena);
+        const _repertorios = Repertorio(S);
+        asociar('Actores',    {});
+        asociar('Repartos',   {});
+        asociar('Repertorio', _repertorios.funciones());   // Para la personalización de repertorios
+        S.O.S.revelar(S.O.S, _repertorios.publicar(), Auxiliadora(S, _utilizaP5), Cargador(), escena);
     }  
     
     /**
@@ -486,9 +491,6 @@ function Orquestador(sos, contenedor) {
             // Actualizar la "Escena" y aplicar sus atributos de "Estilo" (si corresponde)
             _escena.actualizar();
             _escena.estilar();
-            
-            // Se actualizan los atributos y variables de los "Actores" del reparto
-            S.O.S.Reparto.actualizar();
         }
     }
 

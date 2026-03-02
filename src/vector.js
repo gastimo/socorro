@@ -83,7 +83,7 @@ function Vector(S, a, b, c) {
     _VEC.val = () => {
         return _VEC;
     };
-    
+        
     /**
      * sumar
      * Suma el vector recibido como argumento al vector actual.
@@ -135,10 +135,38 @@ function Vector(S, a, b, c) {
     
     /**
      * mag
-     * Devuelve la magnitud del vector, o sea, su longitud.
+     * Devuelve y/o define la magnitud del vector, o sea, su longitud o radio.
+     * Si el argumento "magnitud" es especificado, entonces se actualiza el vector
+     * para alterar su magnitud (radio) pero manteniendo la misma dirección (ángulo).
      */
-    _VEC.mag = () => {
-        return Math.sqrt(Math.pow(_VEC.x ?? 0, 2) + Math.pow(_VEC.y ?? 0, 2) + Math.pow(_VEC.z ?? 0, 2));
+    _VEC.mag = (magnitud) => {
+        let _magActual = Math.sqrt(Math.pow(_VEC.x ?? 0, 2) + Math.pow(_VEC.y ?? 0, 2) + Math.pow(_VEC.z ?? 0, 2));
+        if (magnitud !== null & magnitud !== undefined) {
+            _VEC.multiplicar(magnitud / _magActual);
+            return magnitud;
+        }
+        return _magActual;
+    };
+    
+    /**
+     * ang
+     * Devuelve y/o define el ángulo que el vector forma con el lado positivo
+     * del eje X de coordenadas. SOLO PARA VECTORES DE DOS DIMENSIONES.
+     * Si su argumento es especificado, entonces el vector actual es modificado 
+     * manteniendo su magnitud pero cambiando el ángulo de acuerdo al valor (en
+     * radianes) recibido como argumento.
+     */
+    _VEC.ang = (angulo) => {
+        if (angulo !== null && angulo !== undefined) {
+            let magnitud = _VEC.mag();
+            _VEC.x = magnitud * Math.cos(angulo);
+            _VEC.y = magnitud * Math.sin(angulo);
+            _VEC.z = 0;
+            return angulo;
+        }
+        else {
+            return Math.atan2(_VEC.x ?? 0, _VEC.y ?? 0);
+        }
     };
         
     /**
@@ -167,15 +195,6 @@ function Vector(S, a, b, c) {
               (_VEC.z === undefined || _VEC.z === null);
     };
     
-    /**
-     * defval
-     * Retorna el contenido completo del "Vector" como la definición
-     * de un objeto de tipo "Esquema".
-     */
-    _VEC.defval = () => {
-        return _convertirEnEsquema().defval();
-    };
-
     /**
      * exportar
      * Devuelve un texto con la representación JSON del vector.
@@ -206,7 +225,7 @@ function Vector(S, a, b, c) {
  */
 function VectorVar(S, a, b, c) {
     const _ESQ = Esquema(S, CONFIG.SOS_VECTORVAR);
-    const _VEV = S.O.S.revelar({}, _ESQ);
+    const _VEV = _ESQ.extender();
     let _vectorial = S.O.S.esUnVector(a);
     _inicializar(a, b, c);
 

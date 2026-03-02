@@ -18,7 +18,7 @@ import Esquema from './esquema';
  */
 function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo) {
     const _ESQ = Esquema(S, CONFIG.SOS_ESTILO);
-    const _EST = S.O.S.revelar({}, _ESQ);
+    const _EST = _ESQ.extender();
 
     
     /**
@@ -26,9 +26,14 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
      * Método privado de inicialización de las propiedades del "Estilo".
      */
     function _inicializar(color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo) {
-        const _definicion = {};
         
-        // Definición de la tríada básica de atributos del "Estilo" (color, opacidad, grandor)
+        // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESTILO")
+        // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
+        // los atributos del "Estilo", recibidas como argumento.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        let _definicion = {};
+        
+        // >>> TRIADA DE ATRIBUTOS DE LA FORMA <color, opacidad, grandor>
         if (color !== undefined && color !== null)
             _definicion[CONFIG.EST_COLOR] = color;
         if (opacidad !== undefined && opacidad !== null)
@@ -36,7 +41,7 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
         if (grandor !== undefined && grandor !== null)
             _definicion[CONFIG.EST_GRANDOR] = grandor;
 
-        // Definición de la tríada de atributos del trazo (color, opacidad, grosor)
+        // >>> TRIADA DE ATRIBUTOS DEL TRAZO <color, opacidad, grosor>
         if (colorTrazo !== undefined && colorTrazo !== null)
             _definicion[CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO] = colorTrazo;
         if (opacidadTrazo !== undefined && opacidadTrazo !== null)
@@ -46,11 +51,13 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
     
         _ESQ.def(_definicion);
         
-        // Inicialización de las propiedades públicas del "Estilo"
-        _EST.color   = undefined;
-        _EST.grandor = undefined;
-        _EST.trazo   = undefined;
-        _EST.grosor  = undefined;
+        // 2. INICIALIZACIÓN DE PROPIEDADES PÚBLICAS (DEL "ESTILO")
+        // Las propiedades públicas son las variables del "Estilo" donde 
+        // se colocan los valores evaluados de los atributos dinámicos.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        for (let i = 0; i < CONFIG.Estilo.length; i++) {
+            _EST[CONFIG.Estilo[i]] = undefined;
+        }        
         
         return _EST;
     }
@@ -122,6 +129,16 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
         _EST.grosor  = _ESQ.val(CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO);
         return _EST;
     };
+    
+    _EST.replicar = () => {
+        let _estilo = {};
+        _estilo.color   = _EST.color;
+        _estilo.trazo   = _EST.trazo;
+        _estilo.grandor = _EST.grandor;
+        _estilo.grosor  = _EST.grosor;
+        return _estilo;
+    };
+    
     
     return _inicializar(color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo);
 }

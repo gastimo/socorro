@@ -27,7 +27,7 @@ import Esquema from './esquema';
  */
 function Escena(S) {
     const _ESQ = Esquema(S, CONFIG.SOS_ESCENA);
-    const _ESC = S.O.S.revelar({}, _funcionActuaria(), _ESQ);
+    const _ESC = _ESQ.extender(_funcionActuaria());
     
     // Objeto "Contenedor" para gestionar el elemento HTML donde se alojará el "canvas"
     let _contenedor;
@@ -49,10 +49,12 @@ function Escena(S) {
     
     /**
      * _inicializar
-     * Función privada de inicialización de la "Escena"
+     * Función privada de inicialización de las propiedades públicas de la
+     * "Escena". Estas propiedades son accesibles como variables públicas del
+     * objeto y almacenan los valores evaluados de los atributos del "Esquema".
      */
     function _inicializar() {
-        // Inicialización de las propiedades públicas de la "Escena"
+        _ESC.estilo          = undefined;
         _ESC.escalable       = undefined;
         _ESC.representador   = undefined;
         _ESC.interpretarGLSL = undefined;
@@ -78,11 +80,20 @@ function Escena(S) {
         return _ESC;
     };
 
+    
     /**
      * defEstilo
-     * Define los atributos para la representación visual por defecto para los "Actores" de
-     * la "Escena". El argumento recibido puede ser un objeto de tipo "Estilo" u otro objeto 
-     * Javascript que contenga su definición.
+     * Define los atributos básicos para la representación visual por defecto para los
+     * "Actores" de la "Escena". El argumento recibido puede ser un objeto de tipo "Estilo"
+     * u otro objeto Javascript que contenga su definición. Se trata de una función 
+     * utilitaria que permite definir el valor del atributo "estilo" de forma simplificada
+     * (lo mismo podría realizarse mediante la invocación al método "def"). Por ejemplo,
+     * las cuatro siguientes instrucciones hacen todas exactamente lo mismo:
+     * 
+     *    defEstilo({color: 'rgb(255, 255, 255)', color$alfa: 127, grandor: 12, color$trazo: 100});
+     *    defEstilo(S.O.S.Estilo('rgb(255, 255, 255)', 127, 12, 100));
+     *    def({estilo: {color: 'rgb(255, 255, 255)', color$alfa: 127, grandor: 12, color$trazo: 100}});
+     *    def({estilo: S.O.S.Estilo('rgb(255, 255, 255)', 127, 12, 100)});
      */
     _ESC.defEstilo = (estilo) => {
         const _definicion = {};
@@ -90,12 +101,18 @@ function Escena(S) {
         _ESQ.def(_definicion);
         return _ESC;
     };
+    
 
     /**
      * defRepresentador
-     * Función que permite definir el "Representador" por defecto para mostror a los "Actores".
-     * Este método hace exactamente lo mismo que la siguiente invocación:
-     *     def({representador: <nombre-representador});
+     * Función que permite definir el "representador" por defecto para dibujar a los 
+     * los "Actores" de la "Escena". Se trata de una función utilitaria que permite 
+     * definir el valor del atributo "representador" de una manera simplificada (lo 
+     * mismo podría ser llevado a cabo mediante la función "def" del "Esquema"). 
+     * Las siguientes dos instrucciones hacen exactamente lo mismo:
+     * 
+     *     defRepresentador(<nombre-representador>);
+     *     def({representador: <nombre-representador>);
      */
     _ESC.defRepresentador = (representador) => {
         const _definicion = {};
@@ -103,11 +120,18 @@ function Escena(S) {
         _ESQ.def(_definicion);
         return _ESC;
     };
+
     
     /**
      * defEscalable
-     * Función para determinar si el contenido de la "Escena" es escalable (o no) ante
-     * cualquier cambio cambio de tamaño del lienzo HTML.
+     * Función para determinar si el contenido de la "Escena" debe ser escalado cuando
+     * ocurre cualquier cambio de tamaño del lienzo HTML. Se trata de una función 
+     * utilitaria que permite definir el valor del atributo "escalable" de una forma
+     * simplificada (lo mismo podría realizarse mediante el método "def" del "Esquema").
+     * Las siguientes dos instrucciones hacen exactamente lo mismo:
+     * 
+     *     defEscalable(true);
+     *     def({escalable: true});
      */
     _ESC.defEscalable = (esEscalable) => {
         const _definicion = {};
@@ -115,11 +139,18 @@ function Escena(S) {
         _ESQ.def(_definicion);
         return _ESC;
     };
-        
+
+    
     /**
      * defInterpretarGLSL
      * Función que permite determinar si al representar la "Escena" se debe incluir 
-     * también la reproducción de los programas GLSL que hayan sido definidos ("shaders"). 
+     * también la reproducción de los programas GLSL que hayan sido definidos ("shaders").
+     * Se trata de una función utilitaria que permite definir el valor del atributo
+     * "interpretarGLSL" (lo mismo podría realizarse mediante el método "def" del 
+     * "Esquema"). Las siguientes dos instrucciones hacen exactamente lo mismo:
+     * 
+     *     defInterpretarGLSL(true);
+     *     def({interpretarGLSL: true});
      */
     _ESC.defInterpretarGLSL = (mostrarShader) => {
         const _definicion = {};
@@ -127,10 +158,13 @@ function Escena(S) {
         _ESQ.def(_definicion);
         return _ESC;
     };    
+
     
     /**
      * actualizar
-     * Recalcula el valor de los atributos dinámicos de la escena.
+     * Recalcula el valor de los atributos dinámicos de la escena y luego
+     * se ocupa de actualizar, de forma ordenada, los atributos dinámicos 
+     * de todos los "Repartos" y de todos sus "Actores".
      */
     _ESC.actualizar = () => {
         // Actualización del indicador "escalable"
@@ -147,8 +181,27 @@ function Escena(S) {
         if (_ESC.estilo) {
             _ESC.estilo.actualizar();               // Acá recién se evalúa el "Estilo"
         }
+        
+        // Actualización de los atributos de todos los "Repartos"
+        for (const [identificador, lista] of Object.entries(S.O.S.Repartos)) {
+            for (let i = 0; i < lista.length; i++) {
+                lista[i].actualizar();
+            }
+        }
+        // Actualización de los atributos de todos los "Actores"
+        for (const [identificador, lista] of Object.entries(S.O.S.Actores)) {
+            let _actoresActivos = [];
+            for (let i = 0; i < lista.length; i++) {
+                lista[i].actualizar();
+                if (!lista[i].finalizado()) {
+                    _actoresActivos.push(lista[i]);
+                }
+            }
+            S.O.S.Actores[identificador] = _actoresActivos;
+        }
     };
 
+    
     /**
      * estilar
      * Aplica los estilos básicos de la "Escena". Esto es:
@@ -227,7 +280,11 @@ function Escena(S) {
                 }
             }
             if (mostrarActores) {
-                S.O.S.Reparto.representar();
+                for (const [identificador, actores] of Object.entries(S.O.S.Actores)) {
+                    for (let i = 0; i < actores.length; i++) {
+                        actores[i].representar();
+                    }
+                }
             }
         };
         

@@ -11,18 +11,33 @@ import Esquema from "./esquema";
 
 /**
  * Actor
- * Los "Actores" son los objetos participantes de la puesta en "Escena".
- * Poseen atributos que pueden ser modificadas en tiempo de ejecución (mediante
- * "Variables") y que pueden agruparse bajo las siguientes categorías:
+ * El "Actor" es la entidad participante de la puesta en "Escena". Es la única
+ * de las "entidades del socorro" que tiene representación visual en el lienzo.
  * 
- * - POSICIÓN             : coordenadas <x,y,z> de su origen y posición actual.
- * - DESPLAZAMIENTO       : vector (<x,y,z>) de velocidad y vector de aceleración.
- * - REPRESENTACIÓN VISUAL: objeto de tipo "Estilo" con los atributos visuales.
- *
+ * Los "Actores" pueden ser incorporados a la "Escena" de forma individual o a 
+ * través de los "Repartos" (objetos que coordinan conjunto de "Actores").
+ * Como muchas de las "entidades del socorro" el "Actor" también es un "Esquema", 
+ * esto quiere decir que sus atributos pueden ser especificados/importados de forma
+ * estática o pueden ser definidos a través de objetos "Variables" para que su valor
+ * sea calculado dinámicamente en tiempo de ejecución.
+ * 
+ * Otra característica de los "Actores" es su desplazamiento. Se mueven de forma
+ * similar a los sistemas de partículas, esto es, cada "Actor" tiene una ubicación
+ * de origen en la "Escena" y su desplazamiento es definido asignando un "Vector" 
+ * de velocidad y, opcionalmente, otro "Vector" de aceleración.
+ * 
+ * Finalmente, otro rasgo clave de los "Actores" es que, algunos de sus atributos
+ * pueden ser heredados en el momento de ser evaluados. Esto quiere decir que si
+ * el valor del atributo no está definido para el "Actor", se busca el valor de
+ * dicho atributo en la entidad inmediata superior, por ejemplo, en el "Reparto"
+ * al que pertenece o, en última instancia, en la "Escena". Los atributos que
+ * admiten esta lógica de herencia son aquellos vinculados con la reprsentación
+ * visual del "Actor" (el "Estilo" y el "Representador"), así también como los
+ * atributos que definen su vigencia (duración y recorrido máximo).
  */
 function Actor(S, origen, velocidad, estilo) {
     const _ESQ = Esquema(S, CONFIG.SOS_ACTOR);
-    const _ACT = S.O.S.revelar({}, _ESQ);
+    const _ACT = _ESQ.extender();
     
     // Variables internas del "Actor"
     const _originado = S.O.S.tiempo();
@@ -35,8 +50,11 @@ function Actor(S, origen, velocidad, estilo) {
      */
     function _inicializar(origen, velocidad, estilo) {
         
-        // Definición de las entidades subordinadas (Vectores, Estilos, etc)
-        const _definicion = {};
+        // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESQUEMA")
+        // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
+        // los atributos del "Actor", recibidas como argumento.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        let _definicion = {};
         if (origen)
             _definicion[CONFIG.ACT_ORIGEN] = origen;
         if (velocidad)
@@ -44,18 +62,25 @@ function Actor(S, origen, velocidad, estilo) {
         if (estilo)
             _definicion[CONFIG.ACT_ESTILO] = estilo;
         _ESQ.def(_definicion);
-
-        // Inicialización de las propiedades públicas del "Actor"
-        _ACT.origen         = undefined;
-        _ACT.posicion       = undefined;
-        _ACT.velocidad      = undefined;
-        _ACT.aceleracion    = undefined;
-        _ACT.estilo         = undefined;
-        _ACT.representador  = undefined; 
-        _ACT.maxDuracion    = undefined;
-        _ACT.maxRecorrido   = undefined;
-        _ACT.distancia      = 0;
-        _ACT.recorrido      = 0;
+        
+        // 2. INICIALIZACIÓN DE PROPIEDADES PÚBLICAS (DEL "ACTOR")
+        // Las propiedades públicas son las variables del "Actor" donde 
+        // se colocan los valores evaluados de los atributos dinámicos.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        for (let i = 0; i < CONFIG.Actor.length; i++) {
+            _ACT[CONFIG.Actor[i]] = undefined;
+        }        
+        
+        // 3. INICIALIZACIÓN DE PROPIEDADES ADICIONALES 
+        // Estas propiedades no forman parte de la definición de los atributos
+        // dinámicos del "Esquema". Son propiedades públocas, accesibles a 
+        // través de variables del "Actor" y calculadas dinámicamente.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        _ACT.numero     = 0;         // Actualizado por el "Reparto" (si aplica)
+        _ACT.orden      = 0;         // Actualizado por el "Reparto" (si aplica)
+        _ACT.distancia  = 0;         // Distancia actual del "Actor" a su posición de origen
+        _ACT.recorrido  = 0;         // Cantidad de píxeles recorridos desde el inicio de su desplazamiento
+        _ACT.posicion   = undefined; // Coordenadas <x,y,z> de su posición actual en el lienzo
         
         return _ACT;
     }
@@ -70,11 +95,34 @@ function Actor(S, origen, velocidad, estilo) {
         _ESQ.def(atributos);
         return _ACT;
     };
+    
+    /**
+     * metaDef
+     * Registro del "Actor" en la "Escena". Esta función sólo es invocada
+     * para aquellos "Actores" que hayan sido utilizados en la definición
+     * de un atributo de algún "Esquema". Por ejemplo, al definir un 
+     * "Actor" como un atributo de una "Escena" o de un "Reparto".
+     */
+    _ACT.metaDef = () => {
+        if (!S.O.S.Actores.hasOwnProperty(_ESQ.superior.identificador)) {
+            S.O.S.Actores[_ESQ.superior.identificador] = [];
+        }
+        S.O.S.Actores[_ESQ.superior.identificador].push(_ACT);
+    };
 
     /**
      * defOrigen
      * Define las coordenadas del origen del "Actor". El argumento recibido
      * puede ser un vector o un objeto conteniendo su definición (<x,y,z>).
+     * Se trata de una función utilitaria que permite definir el valor del atributo
+     * "origen" de forma simplificada (lo mismo podria realizarse mediante el
+     * método "def" del "Esquema"). Por ejemplo, las siguientes cuatro instrucciones
+     * hacen todas exactamente lo mismo:
+     * 
+     *    defOrigen({x: 0, y: 0, z: 0});
+     *    defOrigen(S.O.S.Vector(0, 0, 0));
+     *    def({origen: {x: 0, y: 0, z: 0}});
+     *    def({origen: S.O.S.Vector(0, 0, 0)}); 
      */
     _ACT.defOrigen = (origen) => {
         const _definicion = {};
@@ -87,6 +135,15 @@ function Actor(S, origen, velocidad, estilo) {
      * defVelocidad
      * Define los componentes del vector de velocidad del "Actor". El argumento
      * recibido puede ser un vector o un objeto conteniendo su definición (<x,y,z>).
+     * Se trata de una función utilitaria que permite definir el valor del atributo
+     * "velocidad" de forma simplificada (lo mismo podria realizarse mediante el
+     * método "def" del "Esquema"). Por ejemplo, las siguientes cuatro instrucciones
+     * hacen todas exactamente lo mismo:
+     * 
+     *    defVelocidad({x: 3, y: -0.41});
+     *    defVelocidad(S.O.S.Vector(3, -0.41));
+     *    def({velocidad: {x: 3, y: -0.41}});
+     *    def({velocidad: S.O.S.Vector(3, -0.41)}); 
      */
     _ACT.defVelocidad = (velocidad) => {
         const _definicion = {};
@@ -99,6 +156,15 @@ function Actor(S, origen, velocidad, estilo) {
      * defAceleracion
      * Define los componentes del vector de aceleración del "Actor". El argumento
      * recibido puede ser un vector o un objeto conteniendo su definición (<x,y,z>).
+     * Se trata de una función utilitaria que permite definir el valor del atributo
+     * "aceleracion" de forma simplificada (lo mismo podria realizarse mediante el
+     * método "def" del "Esquema"). Por ejemplo, las siguientes cuatro instrucciones
+     * hacen todas exactamente lo mismo:
+     * 
+     *    defAceleracion({x: -1, y: -1.2, z: 0});
+     *    defAceleracion(S.O.S.Vector(-1, 1.2, 0));
+     *    def({aceleracion: {x: -1, y: 1.2, z: 0}});
+     *    def({aceleracion: S.O.S.Vector(-1, 1.2, 0)}); 
      */
     _ACT.defAceleracion = (aceleracion) => {
         const _definicion = {};
@@ -106,12 +172,20 @@ function Actor(S, origen, velocidad, estilo) {
         _ESQ.def(_definicion);
         return _ACT;
     };
-
+ 
     /**
      * defEstilo
-     * Define los atributos para la representación visual del "Actor" (su "Estilo").
-     * El argumento recibido puede ser un objeto de tipo "Estilo" u otro objeto Javascript
-     * que contenga su definición.
+     * Define los atributos básicos para la representación visual del "Actor" en la
+     * "Escena". El argumento recibido puede ser un objeto de tipo "Estilo" u otro
+     * objeto Javascript que contenga su definición. Se trata de una función utilitaria
+     * que permite definir el valor del atributo "estilo" de forma simplificada (lo
+     * mismo podría realizarse mediante la invocación al método "def"). Por ejemplo,
+     * las cuatro siguientes instrucciones hacen todas exactamente lo mismo:
+     * 
+     *    defEstilo({color: 'rgb(255, 255, 255)', color$alfa: 127, grandor: 12, color$trazo: 100});
+     *    defEstilo(S.O.S.Estilo('rgb(255, 255, 255)', 127, 12, 100));
+     *    def({estilo: {color: 'rgb(255, 255, 255)', color$alfa: 127, grandor: 12, color$trazo: 100}});
+     *    def({estilo: S.O.S.Estilo('rgb(255, 255, 255)', 127, 12, 100)});
      */
     _ACT.defEstilo = (estilo) => {
         const _definicion = {};
@@ -122,9 +196,14 @@ function Actor(S, origen, velocidad, estilo) {
 
     /**
      * defRepresentador
-     * Función que permite definir el "Representador" por defecto asociado al "Actor".
-     * Este método hace exactamente lo mismo que la siguiente invocación:
-     *     def({representador: <nombre-representador});
+     * Función que permite definir el "representador" por defecto para dibujar  
+     * al "Actor". Se trata de una función utilitaria que permite definir el  
+     * valor del atributo "representador" de una manera simplificada (lo mismo 
+     * podría ser llevado a cabo mediante la función "def" del "Esquema"). 
+     * Las siguientes dos instrucciones hacen exactamente lo mismo:
+     * 
+     *     defRepresentador(<nombre-representador>);
+     *     def({representador: <nombre-representador>);
      */
     _ACT.defRepresentador = (representador) => {
         const _definicion = {};
@@ -135,10 +214,15 @@ function Actor(S, origen, velocidad, estilo) {
     
     /**
      * defMaxDuracion
-     * Función que permite definir el tiempo máximo de duración de la participación del
-     * "Actor" en la "Escena" (en milisegundos). 
-     * Por ejemplo:
-     *    defMaxDuracion(20000);  // El "Actor" culmina su participación en 20 segundos
+     * Función que permite definir el tiempo máximo para la participación del 
+     * "Actores" en la "Escena" (en milisegundos). Se trata de una función
+     * utilitaria que permite definir el valor del atributo "duracionMaxima"
+     * de manera simplificada (lo mismo puede realizarse con la función "def").
+     * Por ejemplo, ambas instrucciones hacen exactamente lo mismo, es decir,
+     * el "Actor" culminará su participacion luego de 20 segundos.
+     * 
+     *    defMaxDuracion(20000); 
+     *    def({duracionMaxima: 20000});
      */
     _ACT.defMaxDuracion = (tiempoMaximo) => {
         const _definicion = {};
@@ -149,10 +233,15 @@ function Actor(S, origen, velocidad, estilo) {
     
     /**
      * defMaxRecorrido
-     * Función que permite definir el recorrido máximo que el "Actor" puede realizar
-     * dentro de la "Escena" (en píxeles). 
-     * Por ejemplo:
-     *    defMaxRecorrido(50000);  // El "Actor" termina después de recorrer una distancia de 50.000 píxeles
+     * Función que permite definir el recorrido máximo que el "Actor" puede
+     * realizar dentro de la "Escena" (en píxeles). Se trata de una función
+     * utilitaria que permite definir el valor del atributo "recorridoMaximo"
+     * de manera simplificada (lo mismo puede realizarse con la función "def").
+     * Por ejemplo, ambas instrucciones hacen exactamente lo mismo, es decir,
+     * el "Actor" terminan su actuación luego de recorrer 50.000 píxeles.
+     * 
+     *    defMaxRecorrido(50000);
+     *    def({recorridoMaximo: 50000});
      */
     _ACT.defMaxRecorrido = (distanciaMaxima) => {
         const _definicion = {};
@@ -161,12 +250,14 @@ function Actor(S, origen, velocidad, estilo) {
         return _ACT;
     };
 
-
     /**
      * actualizar
      * Actualiza todas las variables dinámicas del "Actor". Esta función debe invocarse
-     * una vez por cada iteración del ciclo de reproducción de la "Escena", antes de
-     * hacer uso de los valores del "Actor".
+     * una vez por cada iteración del ciclo de reproducción de la "Escena" (antes de
+     * intentar hacer los atributs del "Actor"). 
+     * La actualización invoca al método "val" del esquema para calcular el valor 
+     * dinámico de sus atributos. En caso de no encontrar los valores se recurre a la
+     * herencia, es decir, buscar el valor del atributo en la jerarquía del "Esquema"
      */
     _ACT.actualizar = () => {
         
@@ -178,9 +269,34 @@ function Actor(S, origen, velocidad, estilo) {
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             S.O.S.ACTOR = _ACT;
             
-            // 2. Actualización del "Representador" específico del "Actor"
-            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-            _ACT.representador = _ESQ.val(CONFIG.ACT_REPRESENTADOR) ?? _ACT.representador;
+            // 2. ACTUALIZACIÓN DE LAS VARIABLES PÚBLICAS DEL ACTOR
+            // En cada iteración del ciclo de ejecución se obtienen los valores
+            // actualizados (evaluados) de las variables públicas del "Actor".
+            // Los atributos vinculados al desplazamiento ("origen" y "velocidad")
+            // no se actualizan en este punto, sólo son calculados la primera vez.
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            for (let i = 0; i < CONFIG.Actor.length; i++) {
+                if (CONFIG.Actor[i] != CONFIG.ACT_ORIGEN && CONFIG.Actor[i] != CONFIG.ACT_VELOCIDAD) {
+                    let _valor = _ESQ.val(CONFIG.Actor[i]) ?? (_ESQ.heredar(CONFIG.Actor[i], CONFIG.Actor[i] !== CONFIG.ACT_ESTILO) ?? _ACT[CONFIG.Actor[i]]);
+                    
+                    // En caso de tratarse del "estilo", luego de realizar el cálculo dinámico,
+                    // en necesario hacer una copia de los valores obtenidos. De lo contrario,
+                    // en caso de haber sido heredado, la "actualización" estaría actualizando 
+                    // el mismo objeto "estilo" para todos los "Actores" que lo comparten.
+                    if (CONFIG.Actor[i] == CONFIG.ACT_ESTILO) {
+                        _ACT[CONFIG.ACT_ESTILO] = _valor ? _valor.actualizar().replicar() : CONFIG.EstiloBase;
+                    }
+                    else {
+                        _ACT[CONFIG.Actor[i]] = _valor;
+                    }
+                    
+                    // En caso de no haber podido encontrar (ni heredar) el "representador",
+                    // se utiliza el "representador" por defecto definido para la "Escena".
+                    if (CONFIG.Actor[i] == CONFIG.ACT_REPRESENTADOR && !_valor) {
+                        _ACT[CONFIG.ACT_REPRESENTADOR] = S.O.S.representador;
+                    }
+                }
+            }            
 
             // 3. ACTUALIZACIÓN DEL DESPLAZAMIENTO
             // Actualización de la posición y velocidad del "Actor" en la "Escena".
@@ -195,7 +311,7 @@ function Actor(S, origen, velocidad, estilo) {
                 _ACT.velocidad = _ESQ.val(CONFIG.ACT_VELOCIDAD);
             }
             if (_ACT.aceleracion === undefined) {
-                _ACT.aceleracion = _ESQ.val(CONFIG.ACT_ACELERACION) ?? S.O.S.Vector(0, 0, 0);
+                _ACT.aceleracion = S.O.S.Vector(0, 0, 0);
             }
             if (_ACT.velocidad) {
                 _ACT.recorrido += _ACT.velocidad.mag() ?? 0;
@@ -209,19 +325,11 @@ function Actor(S, origen, velocidad, estilo) {
             // sea porque sobrepasó la duración máxima permitida (tiempo de vida) o 
             // porque su recorrido superó la distancia máxima establecida.
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-            _ACT.maxDuracion  = _ESQ.val(CONFIG.ACT_MAX_DURACION)  ?? _ACT.maxDuracion;
-            _ACT.maxRecorrido = _ESQ.val(CONFIG.ACT_MAX_RECORRIDO) ?? _ACT.maxRecorrido;
-            if (_ACT.recorrido > _ACT.maxRecorrido || S.O.S.tiempo() - _originado > _ACT.maxDuracion) {
+            let _maxDuracion  = _ACT[CONFIG.ACT_MAX_DURACION];
+            let _maxRecorrido = _ACT[CONFIG.ACT_MAX_RECORRIDO];
+            if ((_maxRecorrido !== null && _maxRecorrido !== undefined && _ACT.recorrido > _maxRecorrido) || 
+                (_maxDuracion  !== null && _maxDuracion  !== undefined && S.O.S.tiempo() - _originado > _maxDuracion)) {
                 _ACT.finalizar();
-            }
-            else {
-                // 5. ACTUALIZACIÓN DE LOS ATRIBUTOS VISUALES
-                // Actualización del "Estilo" del "Actor".
-                // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-                _ACT.estilo = _ESQ.val(CONFIG.ACT_ESTILO);  // Devuelve el "Estilo" sin evaluar
-                if (_ACT.estilo) {
-                    _ACT.estilo.actualizar();               // Acá recién se evalúa el "Estilo"
-                }
             }
 
             // 6. REESTABLECIMIENTO DEL CONTEXTO
@@ -237,15 +345,14 @@ function Actor(S, origen, velocidad, estilo) {
      * representar
      * Función que se ocupa de la representación visual del objeto "Actor" en la "Escena".
      * Para la representación es necesario que previamente se haya invocado a la función
-     * "actualizar" del "Actor" que recalcula todas sus variables dinámicas. Esto es 
-     * realizado desde el "Orquestador" mediante el método "preACTO#3".
-     * La representación visual en sí del "Actor", o sea, el dibujo en el "canvas") es 
-     * realizada por la función del "Representador", configurada en el "Actor" o, en su
-     * defecto, por la configurada a nivel de la "Escena".
+     * "actualizar" del "Actor" que recalcula todas sus variables dinámicas (ver método
+     * "actualizar" de la "Escena"). En caso que el "Actor" no tenga ningún "representador"
+     * asociado, el mecanismo de herencia aplicado durante la actualización se encarga de
+     * buscar un "representador" por defecto en el "Reparto" o, en todo caso, en la "Escena".
      */
     _ACT.representar = () => {
         if (!_finalizado) {
-            S.O.S.REP[_ACT.representador ?? S.O.S.representador](_ACT);
+            S.O.S.REP[_ACT[CONFIG.ACT_REPRESENTADOR]](_ACT);
         }
     };
     
@@ -264,7 +371,7 @@ function Actor(S, origen, velocidad, estilo) {
     _ACT.finalizado = () => {
       return _finalizado; 
     };
-    
+
     
     return _inicializar(origen, velocidad, estilo);
 }

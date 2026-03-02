@@ -20,8 +20,8 @@ import Color from './color';
  *   S.O.S.COLOR : Repertorio de "Gradientes" de colores
  * 
  * No obstante, cualquiera de estos repertorios puede ser redefinido mediante la función S.O.S.Repertorio.
- *   S.O.S.Repertorio.def('REP',   <enumeracionDeRepresentadores>);
- *   S.O.S.Repertorio.def('COREO', <enumeracionDeCoreografias>);
+ *   S.O.S.Repertorio.def('REP',    <enumeracionDeRepresentadores>);
+ *   S.O.S.Repertorio.def('COREO',  <enumeracionDeCoreografias>);
  *   S.O.S.Repertorio.def('COLOR',  <enumeracionDeGradientesDeColores>);
  */
 function Repertorio(S) {
@@ -45,7 +45,7 @@ function Repertorio(S) {
                };  
     };
     
-    _REPE.revelar = () => {
+    _REPE.publicar = () => {
         return _REPES;  
     };
     

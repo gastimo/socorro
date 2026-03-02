@@ -19,7 +19,7 @@ import CONFIG from './config';
  * sólo los métodos que son necesarios.
  */
 function Variador(S, valorDesde, valorHasta, modulador) {
-    const _VAR = S.O.S.Variable(S, CONFIG.EVAL_RUIDO, valorDesde, valorHasta, modulador);
+    const _VAR = S.O.S.Variable(CONFIG.EVAL_RUIDO, valorDesde, valorHasta, modulador);
     const _VRD = {};
     _VRD.nombre = CONFIG.SOS_VARIADOR;
     _VRD.clave  = S.O.S.obtenerClave(_VRD.nombre);
@@ -48,11 +48,10 @@ function Variador(S, valorDesde, valorHasta, modulador) {
     };
     
     /**
-     * deffal
-     * Redefinición del método "defval" del objeto "Variable"
+     * metaDef
+     * Redefinición del método "metaDef" del objeto "Variable"
      */
-    _VRD.defval = () => {
-        return _VAR.defval();  
+    _VRD.metaDef = (esquemaSuperior, nombreAtributo, nombreArreglo) => {
     };
     
     /**

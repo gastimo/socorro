@@ -40,7 +40,8 @@ import Esquema from './esquema';
  */
 function Variable(S, ...parametros) {
     const _ESQ = Esquema(S, CONFIG.SOS_VARIABLE);
-    const _VAR = S.O.S.revelar({}, _ESQ);
+    const _VAR = _ESQ.extender();
+
     let _calculadora = null;
     _inicializar();
 
@@ -659,10 +660,12 @@ EVAL[CONFIG.EVAL_RUIDO].met = (S) => {return S.O.S.VAR.perlin();};
 //  OTROS MÉTODOS DE EVALUACIÓN
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 EVAL[CONFIG.EVAL_ORDEN].mod = 1;
-EVAL[CONFIG.EVAL_ORDEN].met = (S) => {return null;};
+EVAL[CONFIG.EVAL_ORDEN].met = (S) => {return S.O.S.ACTOR.orden * S.O.S.VAR.mod;};
 
 EVAL[CONFIG.EVAL_DISTANCIA].mod = 1;
-EVAL[CONFIG.EVAL_DISTANCIA].met = (S) => {return S.O.S.ACTOR.distancia * S.O.S.VAR.mod;};
+EVAL[CONFIG.EVAL_DISTANCIA].met = (S) => {
+    return S.O.S.ACTOR.distancia * S.O.S.VAR.mod;
+};
 
 EVAL[CONFIG.EVAL_RECORRIDO].mod = 1;
 EVAL[CONFIG.EVAL_RECORRIDO].met = (S) => {return S.O.S.ACTOR.recorrido * S.O.S.VAR.mod;};

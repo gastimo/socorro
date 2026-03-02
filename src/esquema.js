@@ -18,25 +18,26 @@ import CONFIG from './config';
  * de ejecución permitiendo, de esta manera, la implementación de lógica generativa.
  * 
  * ESQUEMAS PROTAGONISTAS DE LA OBRA:
- * La "entidades del socorro" (esquemas) esenciales para la representación de la "Obra" son:
+ * La "entidades del socorro" (esquemas) protagonistas en la representación de la "Obra" son:
  * 
  *  - La "Escena"  : representación de contenidos visuales en el espacio (el lienzo HTML) 
  *                   y en en el tiempo. Una "Obra" puede incluir múltiples "Escenas". 
- *  - El "Actor"   : es la única entidad que verdaderamente es representada en la "Escena".
- *                   Es una entidad con comportamiento, que se desplaza en la "Escena" y
- *                   que tiene representación visual (se dibuja en el lienzo).
+ *  - El "Actor"   : es la única entidad con representación visual en el lienzo de la 
+ *                   "Escena" (en otras palabras, se dibuja). Puede pertenecer a un 
+ *                   "Reparto" o actuar independientemente. Posee atributos que definen
+ *                   su desplazamiento en la "Escena" (ej, posición, velocidad, etc). 
  *  - El "Reparto" : definición de conjuntos de actores con posiciones y desplazamientos 
  *                   predeterminados dentro de la "Escena". El "Reparto" dirige a los
  *                   "Actores", determina sus posiciones en la "Escena", controla sus
  *                   entradas y salidas del cuadro y, también, puede coreografiar a otros
- *                   "Repartos" (siubrepartos) dentro de éste. 
+ *                   "Repartos" (subrepartos) dentro de éste. 
  * 
  * ESQUEMAS PARA DEFINICIONES DINÁMICAS:
  * Una de las funciones principales del "Esquema" es la definición de los atributos de las
  * "entidades del socorro", pero su relevancia radica en el hecho de que, en lugar de definir
  * valores estáticos para los atributos, posibilita definir la manera en que sus valores serán
  * calculados (evaluados) dinámicamente durante la representación de la "Escena".
- * Las "entidades del socorro" que contribuyen a este fin son (que también "Esquemas"):
+ * Las "entidades del socorro" que contribuyen a este fin —y que también esquemas— son:
  * 
  * - La "Variable" : representación de un método de cálculo dinámico de un atributo del
  *                   "Esquema". En general, definen un mapeo entre un rango de valores 
@@ -53,7 +54,7 @@ import CONFIG from './config';
  * ESQUEMAS PARA REPRESENTACIÓN VISUAL:
  * La única "entidad del socorro" que tiene representación visual en la "Escena" es el "Actor". 
  * Para esto, existe un tipo de entidad que posibilita la definición de sus atributos visuales
- * mediante "Variables" para el cálculo dinámico. Esta entidad (también un "Esquema") es:
+ * mediante "Variables" para el cálculo dinámico. Esta entidad —también un esquema— es:
  * 
  * - El "Estilo"   : colección de defniciones de atributos vinculados con la representación
  *                   visual de un "Actor". Básicamente, el "Estilo" reúne dos triadas de
@@ -77,17 +78,17 @@ import CONFIG from './config';
  *                     lugar del "Vector" para evaluar sus componentes dinámicamente.
  * 
  * MÉTODOS PRINCIPALES DEL ESQUEMA:
- * El esquema sólo tiene cinco métodos públicos:
+ * El esquema sólo tiene seis métodos públicos:
  *  - def         : define los atributos del esquema con sus valores. En realidad, define 
  *                  manera en que los valores de dichos atributos son calculados.
- *  - defval      : devuelve un objeto con todas las definiciones de atributos y valores
- *                  del "Esquema".
  *  - val         : Devuelve el valor de un atributo del "Esquema". Dependiendo cómo haya sido
  *                  definido el "Esquema", esta función puede retornar un valor simple, otra
  *                  "entidad del socorro", o un "subesquema". Cuando el valor del atributo
  *                  fue definido a través de las entidades de cálculo dinámico ("Variable" o 
  *                  "Variador"), esta función es la encargada de llevar a cabo la evaluación
  *                  dinámica en tiempo de ejecuión (motor de la lógica generativa).
+ *  - heredar     : Retorna el valor de un atributo del "Esquema" buscando hacia arriba en la jerarquía.
+ *  - extender    : Devuelve un objeto vacío, extendiendo del "Esquema" para ser usado por una "entidad".
  *  - exportar    : exporta el contenido del esquema (definición de atributos en formato JSON.
  *  - config      : deinir la configuración (o guion) del "Esquema", por ejemplo, para la
  *                  construcción de una GUI ("Interfaz Gráfica de Usuario"). El uso de esta
@@ -103,7 +104,13 @@ function Esquema(S, nombreEsquema) {
     _ESQ.clave  = S.O.S.obtenerClave(_ESQ.nombre);
     _ESQ.identificador = _ESQ.nombre + CONFIG.ATR_SEPARADOR + _ESQ.clave;
     _ESQ.visible = true;
-        
+    
+    // Variables para almacenar información relacional del esquema
+    _ESQ.entidad    = undefined;  // Entidad del socorro que extiende y hace uso del "Esquema" actual
+    _ESQ.superior   = undefined;  // Esquema superior o maestro. Por ejemplo, la "Escena" o el "Reparto" para un "Actor"
+    _ESQ.contenedor = undefined;  // Subesquema del esquema maestro donde se encuentra alojado este esquema
+    _ESQ.agrupacion = undefined;  // Nombre del arreglo —dentro del esquema maestro— al cual pertenece este esquema
+    _ESQ.alias      = undefined;  // Nombre —del atributo— bajo el cual este esquema está definido en el esquema maestro
     
     
     /**
@@ -152,26 +159,12 @@ function Esquema(S, nombreEsquema) {
     };    
 
     
-    
-    /**
-     * defval
-     * Retorna la definición completa de los atributos del "Esquema" con sus valores,
-     * es decir, retorna un objeto JavaScript con la estructura jerárquica del esquema
-     * y subesquemas, detatallando los atributos y sus definiciones. Vale aclarar que
-     * esta función no "evalúa" los valores, simplemente retorna sus definiciones.
-     */
-    _ESQ.defval = () => {
-        return _ESQ.val();    
-    };
-    
-    
-    
     /**
      * val
      * Función para obtener el valor de un atributo del "Esquema". Esta función es la
      * responsable de la "Evaluación Dinámica" de aquellos atributos definidos a través
      * de "Variables" o "Variadores", es decir, cuyo valor no es estático y se calcula
-     * en tiempo de ejeución mediante la invocación de funciones (ver la definición de
+     * en tiempo de ejecuión mediante la invocación de funciones (ver la definición de
      * los objetos "Variable" y "Variador").
      * 
      * La función puede recibir un único argumento (el nombre del atributo del "Esquema"
@@ -187,19 +180,19 @@ function Esquema(S, nombreEsquema) {
      * 
      * EVALUACIÓN DINÁMICA
      * Como se mencionó arriba, esta función se ocupa de la evaluación de los valores de
-     * los atributos, pero sólo si estos fueron definidos mediante "Variables" o "Variadores".
-     * En cualquier otro caso, se retorna el objeto o "entidad del socorro" sin evaluar.
+     * los atributos, pero sólo si estos fueron definidos mediante "Variables" o "Variadores"
+     * (sino, se retorna el objeto o "entidad del socorro" almacenado pero sin evaluar).
      * Por ejemplo, el código a continuación muestra dos formas diferentes de definir un mismo
      * "Actor" cuyo "Estilo" utiliza "Variables" para la definición de sus atributos:
      * 
-     *  DEFINICIÓN MEDIANTE UN OBJETO JSON
+     *  DEFINICIÓN DE UN "ACTOR" (CON SU ESTILO) MEDIANTE JSON
      *   esc.def({actor: {velocidad: {x:2, y:2},
      *                    estilo   : {color     : {metodo:'ciclo',  valor:'tizado'},
      *                                color$alfa: {metodo:'perlin', valorDesde: 0, valorHasta: 1}},
      *                   }  
      *           });
      * 
-     *  DEFINICIÓN MEDIANTE ENTIDADES DEL SOCORRO
+     *  DEFINICIÓN DE UN "ACTOR" (CON SU ESTILO) USANDO ENTIDADES DEL SOCORRO
      *   esc.def({actor: S.O.S.Actor(null, S.O.S.Vector(2, 2),
      *                               S.O.S.Estilo(S.O.S.Variable('ciclo', 'tizado'), 
      *                                            S.O.S.Variable('perlin', 0, 1)))
@@ -264,7 +257,34 @@ function Esquema(S, nombreEsquema) {
     };
   
     
+    /**
+     * heredar
+     * Busca el valor del atributo con el nombre
+     * indicado en la jerarquía de "Esquemas".
+     */
+    _ESQ.heredar = (nombreAtr, incluirEscena = true) => {
+        if (!_ESQ.superior) {
+            return undefined;
+        }
+        else if (!incluirEscena && _ESQ.superior.identificador === S.O.S.identificador) {
+            return undefined;
+        }
+        let _sup = _ESQ.superior.entidad ?? _ESQ.superior;
+        return _sup.hasOwnProperty(nombreAtr) ? (_sup[nombreAtr] ?? _ESQ.superior.heredar(nombreAtr, incluirEscena)) : undefined; 
+    };
+    
 
+    /**
+     * extender
+     * Devuelve un nuevo objeto (vacío) que extiende del "Esquema"
+     * actual para ser utilizado como "entidad del socorro".
+     */
+    _ESQ.extender = (subentidad) => {
+        _ESQ.entidad = subentidad ? S.O.S.revelar({}, subentidad, _ESQ) : S.O.S.revelar({}, _ESQ);
+        return _ESQ.entidad;
+    };
+    
+    
     /**
      * exportar
      * Devuelve una cadena de caracteres con el contenido del esquema
@@ -273,7 +293,6 @@ function Esquema(S, nombreEsquema) {
     _ESQ.exportar = (indentacion = "") => {
       return _convertirATexto(_VAL, indentacion);
     };
-    
     
     
     /**
@@ -400,6 +419,7 @@ function Esquema(S, nombreEsquema) {
      */
     function _defEsquema(subesquema, subatributos, arreglo) {
         for (const [atrNombre, atrValor] of Object.entries(subatributos)) {
+            
             // --------------------------------------------
             // DEFINCIÓN DE VALORES DEL OBJETO SUBESQUEMA
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -408,15 +428,19 @@ function Esquema(S, nombreEsquema) {
               // ejemplo: un "Vector", una "Variable", un "Variador", un "Estilo", un "Actor", etc.
               let _entidadSocorrista = S.O.S.entidad(atrValor);
               if (_entidadSocorrista !== undefined) {
-                  subesquema[atrNombre] = _entidadSocorrista().def(atrValor);
-                  S.O.S.Reparto.fichar(_ESQ.identificador, subesquema[atrNombre], subesquema, atrNombre, arreglo);
+                  let _entidad = _entidadSocorrista().def(atrValor); // Se crea la "entidad del socorro"
+                  if (atrNombre !== CONFIG.ATR_NOMBRE_DINAMICO) 
+                      subesquema[atrNombre] = _entidad;              // Se almacena sólo si no es una entidad dinámica
+                  _metaDef(_entidad, _ESQ, subesquema, atrNombre, arreglo);
                   continue;
               }
               else if (S.O.S.esUnVector(atrValor)   || S.O.S.esUnVectorVar(atrValor) || S.O.S.esUnaVariable(atrValor) || 
                        S.O.S.esUnVariador(atrValor) || S.O.S.esUnEstilo(atrValor)    || S.O.S.esUnActor(atrValor) || 
                        S.O.S.esUnReparto(atrValor)) {
-                  subesquema[atrNombre] = atrValor;
-                  S.O.S.Reparto.fichar(_ESQ.identificador, subesquema[atrNombre], subesquema, atrNombre, arreglo);
+                  let _entidad = atrValor;                   // La "entidad del socorro" vino ya creada en la definición
+                  if (atrNombre !== CONFIG.ATR_NOMBRE_DINAMICO) 
+                    subesquema[atrNombre] = _entidad;        // Se almacena sólo si no es una entidad dinámica
+                  _metaDef(_entidad, _ESQ, subesquema, atrNombre, arreglo);
                   continue;
               }
               // Si el nombre del "subesquema" no está definido actualmente o ya existe pero
@@ -441,7 +465,8 @@ function Esquema(S, nombreEsquema) {
             // DEFINICIÓN DE VALORES SIMPLES (ÚLTIMO NIVEL)
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             else {
-              subesquema[atrNombre] = atrValor;
+                if (atrNombre !== CONFIG.ATR_NOMBRE_DINAMICO) 
+                    subesquema[atrNombre] = atrValor;
             }
         }
     }
@@ -461,7 +486,7 @@ function Esquema(S, nombreEsquema) {
      * - COLOR: Si el valor obtenido es un "color" (de p5js), entonces verifica si 
      *   existe el atributo asociado que defina su opacidad. De ser así, lo calcula y
      *   lo aplica (los atributos asociados son atributos "vecinos" en el esquema a
-     *   los que se les añade un sufijo, ejemplo: "$alfa" para indicar "opacidad").
+     *   los que se les añade un sufijo —ejemplo: "$alfa" para indicar "opacidad").
      * 
      * - OTROS: Si no se trata de una "Variable", ni de un "Variador", ni de un color, 
      *   se retorna el valor sin ningún tipo de procesamiento. Por ejemplo, los "Vectores",
@@ -485,8 +510,32 @@ function Esquema(S, nombreEsquema) {
         }
       }
       return _valor;
-    }      
+    }    
 
+    /**
+     * _metaDef
+     * Función de uso interno que permite completar la definición de un atributo del "Esquema"
+     * añadiendo información relacional o complementaria. Esta función sólo es invocada cuando
+     * una "entidad del socorro" es utilizada como valor de un atributo del "Esquema" durante
+     * su definición (con el método "def"). Por ejemplo, desde esta función se indica cuál es
+     * el esquema superior (maestro) o bajo qué nombre de atributo la entidad se está almacenando
+     * en el esquema maestro.
+     */
+    function _metaDef(esquema, esquemaSuperior, subesquemaContenedor, nombreAtributo, nombreArreglo) {
+        let _esquemaBase = S.O.S.esquema(esquema);
+        
+        // Se completa la información relacional en el esquema base del objeto recibido
+        if (_esquemaBase) {
+            _esquemaBase.superior   = esquemaSuperior;
+            _esquemaBase.contenedor = subesquemaContenedor;
+            _esquemaBase.agrupacion = nombreArreglo;
+            _esquemaBase.alias      = nombreAtributo;
+            
+            // Se invoca a la función pública equivalente para la "entidad del socorro" final
+            // de forma tal que ésta pueda terminar de completar la "meta definición" necesaria.
+            esquema.metaDef?.(esquemaSuperior, nombreAtributo, nombreArreglo);
+        }
+    }
     
     /**
      * _convertirATexto
@@ -496,7 +545,7 @@ function Esquema(S, nombreEsquema) {
      */
     function _convertirATexto(atributos, indentacion = "") {
       let esUnObjeto = true;
-      if (atributos && Object.keys(atributos).length === 1 && Object.keys(atributos)[0] === CONFIG.ATR_ELEMENTO)
+      if (atributos && Object.keys(atributos).length === 1 && Object.keys(atributos)[0] === CONFIG.ATR_ARRAY_CLAVE_AUX)
           esUnObjeto = false;
       let salida = esUnObjeto ? "{\n" : "\n";
       let existenValores = false;
@@ -520,7 +569,7 @@ function Esquema(S, nombreEsquema) {
             salida += indentacion + "\t\"" + atrNombre + "\"\t:\t[";
             for (let j = 0; j < atrValor.length; j++) {
                 let elementoArray = {};
-                elementoArray[CONFIG.ATR_ELEMENTO] = atrValor[j];
+                elementoArray[CONFIG.ATR_ARRAY_CLAVE_AUX] = atrValor[j];
                 salida += _convertirATexto(elementoArray, indentacion + "\t") + (j < atrValor.length - 1 ? "," : "");              
             }
             salida += "\n" + indentacion + "\t],\n";

@@ -18,16 +18,12 @@ const Config = (() => {
     const _PARAM = {
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-    // > LISTADO DE ENTIDADES DEL SOCORRO Y CÓDIGOS
+    // > LISTADO DE LAS "ENTIDADES DEL SOCORRO"
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
         // Singleton del Obsequioso Socorro (S.O.S)
         SOS                     : '_SOS',   
 
-        // Entidades generales de administración del módulo
-        SOS_GUION               : '_GUI',   // Conjunto de descripciones de las entidades actuantes de la "Escena"
-        SOS_DESGLOSE            : '_DES',   // Conjunto de fichas donde se desglosan los participantes de la "Escena"
-        
         // Entidades que internamente son "Esquema"
         SOS_ESQUEMA             : '_ESQ',   // Estructura de definición atributos/valores de las entidades del "socorro"
         SOS_ESCENA              : '_ESC',   // Entidad principal para las representaciones de la "Obra"
@@ -45,6 +41,9 @@ const Config = (() => {
         SOS_COREOGRAFIA         : 'COREO',
         SOS_COLOR               : 'COLOR',
         SOS_METODO_EVALUACION   : 'EVAL',
+        
+        // Entidades generales de administración del módulo
+        SOS_GUION               : '_GUI',   // Conjunto de descripciones de las entidades actuantes de la "Escena"
         
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
@@ -67,13 +66,14 @@ const Config = (() => {
     // > NOMBRES DE ATRIBUTOS DE ESQUEMAS (SEGÚN ENTIDAD)
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         
-        // Constantes para "Atributos" de "Esquemas"
+        // Constantes usadas para la nomenclatura los "Atributos" de un "Esquema"
         ATR_SEPARADOR           : "$",
-        ATR_ELEMENTO            : '$elemento$',
-        ATR_VARIABLE_ALFA       : "$alfa",       // Sufijo para cálculo dinámico (ej. 'color$alfa')
-        ATR_VARIABLE_TRAZO      : "$trazo",      // Sufijo para cálculo dinámico (ej. 'color$trazo')
+        ATR_VARIABLE_ALFA       : "$alfa",           // Sufijo para cálculo dinámico (ej. 'color$alfa')
+        ATR_VARIABLE_TRAZO      : "$trazo",          // Sufijo para cálculo dinámico (ej. 'color$trazo')
+        ATR_NOMBRE_DINAMICO     : "$claveDinamica$", // Clave para nombres de atributos dinámicos (no se almacenan)
+        ATR_ARRAY_CLAVE_AUX     : '$claveAuxiliar$', // Clave interna usada durante la conversión a texto de un "Esquema"
 
-        // Nombres de los atributos de las "Variables"
+        // Nombres de los atributos de la entidad "Variable"
         VAR_METODO              : 'metodo',
         VAR_VALOR               : 'valor',
         VAR_VALOR_DESDE         : 'valorDesde',   // Usado también por el "Variador"
@@ -83,13 +83,24 @@ const Config = (() => {
         VAR_ORIGEN_HASTA        : 'origenHasta',
         VAR_RUIDO_VELOCIDAD     : 'ruidoVelocidad',
         VAR_RUIDO_ESCALA        : 'ruidoEscala',
-
-        // Nombres de los atributos básicos del "Estilo"
-        // Sólo hay 2. Los restantes se forman añadiendo los sufijos "$alfa" y "$trazo"
+        
+        // Nombres de los atributos básicos de la entidad "Esquema"
+        ESQ_NOMBRE              : 'nombre',
+        ESQ_CLAVE               : 'clave',
+        ESQ_IDENTIFICADOR       : 'identificador',
+        ESQ_SUPERIOR            : 'superior',
+        ESQ_CONTENEDOR          : 'contenedor',
+        ESQ_AGRUPACION          : 'agrupacion',
+        ESQ_ALIAS               : 'alias',
+        
+        // Nombres de los atributos de la entidad "Estilo"
+        // Sólo hay dos, los restantes se forman añadiendo los sufijos "$alfa" y "$trazo"
         EST_COLOR               : 'color',
         EST_GRANDOR             : 'grandor',
-    
-        // Nombres de los atributos básicos de la "Escena" (ACTUANTE PRINCIPAL)
+        EST_TRAZO               : 'trazo',
+        EST_GROSOR              : 'grosor',
+            
+        // Nombres de los atributos de la entidad "Escena"
         ESC_ANCHO               : 'ancho',
         ESC_ALTO                : 'alto',
         ESC_ESCALABLE           : 'escalable',
@@ -98,28 +109,29 @@ const Config = (() => {
         ESC_GUARDAR_PROPORCION  : 'guardarProporciones',
         ESC_INTERPRETAR_GLSL    : 'interpretarGLSL',
 
-        // Nombres de los atributos básicos del "Reparto"
+        // Nombres de los atributos de la entidad "Reparto"
         RPT_COREOGRAFIA         : 'coreografia', 
         RPT_CANTIDAD            : 'cantidad', 
         RPT_PUESTOS             : 'puestos',
         RPT_INTERVALO           : 'intervalo', 
-        RPT_VELOCIDAD           : 'velocidad',
-        RPT_DESVIO              : 'desvío',
+        RPT_INTENSIDAD          : 'intensidad',
+        RPT_DESVIO              : 'desvio',
         RPT_SEPARACION          : 'separacion',
         RPT_ESTILO              : 'estilo',
         RPT_REPRESENTADOR       : 'representador',
         RPT_DESPLAZAMIENTO      : 'desplazamiento',
-        RPT_MAX_DURACION        : 'duracion',
-        RPT_MAX_RECORRIDO       : 'recorrido',
+        RPT_ROTACION            : 'rotacion',
+        RPT_MAX_DURACION        : 'duracionMaxima',
+        RPT_MAX_RECORRIDO       : 'recorridoMaximo',
         
-        // Nombres de los atributos básicos del "Actor"
+        // Nombres de los atributos de la entidad "Actor"
         ACT_ORIGEN              : 'origen',
         ACT_VELOCIDAD           : 'velocidad',
         ACT_ACELERACION         : 'aceleracion',
         ACT_ESTILO              : 'estilo',
         ACT_REPRESENTADOR       : 'representador',
-        ACT_MAX_DURACION        : 'duracion',
-        ACT_MAX_RECORRIDO       : 'recorrido',
+        ACT_MAX_DURACION        : 'duracionMaxima',
+        ACT_MAX_RECORRIDO       : 'recorridoMaximo',
 
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
@@ -173,6 +185,86 @@ const Config = (() => {
     return _PARAM;
     
 })();
+
+// --------------------------------------------------------------------
+// 
+// LISTADO DE ATRIBUTOS DINÁMICOS DE "ENTIDADES DEL SOCORRO"
+// Enumeraciones de nombres de atributos para la definición de los
+// "Esquemas" de cada una de las "entidades del socorro".
+// 
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+Config.Esquema  = [Config.ESQ_NOMBRE,
+                   Config.ESQ_CLAVE,
+                   Config.ESQ_IDENTIFICADOR,
+                   Config.ESQ_SUPERIOR,
+                   Config.ESQ_CONTENEDOR,
+                   Config.ESQ_AGRUPACION,
+                   Config.ESQ_ALIAS];
+
+Config.Escena   = [Config.ESC_ANCHO,
+                   Config.ESC_ALTO,
+                   Config.ESC_ESCALABLE,
+                   Config.ESC_ESTILO,
+                   Config.ESC_REPRESENTADOR,
+                   Config.ESC_GUARDAR_PROPORCION,
+                   Config.ESC_INTERPRETAR_GLSL];
+
+Config.Estilo   = [Config.EST_COLOR,
+                   Config.EST_GRANDOR, 
+                   Config.EST_TRAZO,
+                   Config.EST_GROSOR];
+
+Config.DesgloseEstilo = 
+                  [Config.EST_COLOR,                                                           // Color de la forma
+                   Config.EST_GRANDOR,                                                         // Tamaño de la forma
+                   Config.EST_COLOR   + Config.ATR_VARIABLE_TRAZO,                             // Color del trazo
+                   Config.EST_GRANDOR + Config.ATR_VARIABLE_TRAZO,                             // Grosor del trazo
+                   Config.EST_COLOR   + Config.ATR_VARIABLE_ALFA,                              // Opacidad de la forma
+                   Config.EST_COLOR   + Config.ATR_VARIABLE_TRAZO + Config.ATR_VARIABLE_ALFA]; // Opacidad del trazo
+
+Config.Actor    = [Config.ACT_ORIGEN, 
+                   Config.ACT_VELOCIDAD, 
+                   Config.ACT_ACELERACION, 
+                   Config.ACT_ESTILO,
+                   Config.ACT_REPRESENTADOR,
+                   Config.ACT_MAX_DURACION,
+                   Config.ACT_MAX_RECORRIDO];
+
+Config.Reparto   = [Config.RPT_COREOGRAFIA, 
+                    Config.RPT_CANTIDAD, 
+                    Config.RPT_PUESTOS,
+                    Config.RPT_INTERVALO, 
+                    Config.RPT_INTENSIDAD,
+                    Config.RPT_DESVIO,
+                    Config.RPT_SEPARACION,
+                    Config.RPT_ESTILO,
+                    Config.RPT_REPRESENTADOR,
+                    Config.RPT_DESPLAZAMIENTO,
+                    Config.RPT_ROTACION,
+                    Config.RPT_MAX_DURACION,
+                    Config.RPT_MAX_RECORRIDO];
+
+Config.Variable  = [Config.VAR_METODO,
+                    Config.VAR_VALOR,
+                    Config.VAR_VALOR_DESDE,
+                    Config.VAR_VALOR_HASTA,
+                    Config.VAR_MODULADOR,
+                    Config.VAR_ORIGEN_DESDE,
+                    Config.VAR_ORIGEN_HASTA,
+                    Config.VAR_RUIDO_VELOCIDAD,
+                    Config.VAR_RUIDO_ESCALA];
+
+Config.Variador  = [Config.VAR_VALOR_DESDE, 
+                    Config.VAR_VALOR_HASTA,
+                    Config.VAR_MODULADOR];
+
+Config.Vector    = ['x', 'y', 'z'];
+
+Config.EstiloBase = {};
+Config.EstiloBase[Config.EST_COLOR]   = 0;
+Config.EstiloBase[Config.EST_GRANDOR] = 2; 
+Config.EstiloBase[Config.EST_TRAZO]   = 0;
+Config.EstiloBase[Config.EST_GROSOR]  = 1;
 
 
 // --------------------------------------------------------------------

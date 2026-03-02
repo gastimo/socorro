@@ -76,23 +76,28 @@ const Auxiliadora = (S, utilizaP5) => {
         mapear: (valor, ini1, fin1, ini2, fin2) => {
             return (valor - ini1) / (fin1 - ini1) * (fin2 - ini2) + ini2;
         },
-
+        
         /**
-         * repetidor
-         * Método que retorna una función "repetidora" que, aunque sea invocada
-         * en cada iteración del bucle de la "Obra", sólo ejecutará la función
-         * indicada como argumento, una vez por cada intervalo indicado.
+         * accionador
+         * Método que retorna una función "accionadora" que reúne las
+         * siguientes características:
+         *  - La función "accionadora" se ocupa de invocar a la función "acción"
+         *  - La función "accionadora" recibe un único argumento el que, a su vez
+         *    será pasado en cada invocación de la función "acción"
+         *  - La función "accionadora" está diseñada para ser invocada de manera iterativa
+         *    (en cada repetición del ciclo de ejeución), pero sólo invocará a la función
+         *     "acción" una vez por cada intervalo indicado.
          */
-         repetidor: (entidad, intervaloEspera) => {
-            let c = 0;
-            let f = (funcionRepeticion) => {
-              if (c <= 0) {
-                c = intervaloEspera ?? 1;
-                funcionRepeticion(entidad);
-              }
-              c--;
+        accionador: (intervaloEspera, accion) => {
+            let _intervalo = 0;
+            const _f = (argumentoFuncion) => {
+                if (_intervalo <= 0) {
+                    _intervalo = intervaloEspera ?? 1;
+                    accion(argumentoFuncion);
+                }
+                _intervalo--;
             };
-            return f;
+            return _f;
         },
 
         /**
@@ -162,7 +167,6 @@ const Auxiliadora = (S, utilizaP5) => {
         },
         
         
-        
     // --------------------------------------------------------------------------------
     // 
     //  VERIFICADOR DE TIPOS DE ENTIDADES DEL "SOCORRO"
@@ -170,6 +174,7 @@ const Auxiliadora = (S, utilizaP5) => {
     //  corresponden a la definición de alguna de las entidades del "socorro".
     // 
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+        
         
         /**
          * entidad
@@ -191,37 +196,32 @@ const Auxiliadora = (S, utilizaP5) => {
               // --------------------------------------
               // Se verifica si es un "VECTOR"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, 'x', 'y', 'z')) {
+              else if (_cumplimentaDef(objeto, ...CONFIG.Vector)) {
                 return S.O.S.Vector;
               }
               // --------------------------------------
               // Se verifica si es un "VARIADOR"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, CONFIG.VAR_VALOR_DESDE, CONFIG.VAR_VALOR_HASTA, CONFIG.VAR_MODULADOR)) {
+              else if (_cumplimentaDef(objeto, ...CONFIG.Variador)) {
                 return S.O.S.Variador;
               }
               // --------------------------------------
               // Se verifica si es un "ESTILO"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, CONFIG.EST_COLOR, CONFIG.EST_GRANDOR, 
-                                               CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO, CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO,
-                                               CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_ALFA, CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO + CONFIG.ATR_VARIABLE_ALFA)) {
+              else if (_cumplimentaDef(objeto, ...CONFIG.DesgloseEstilo)) {
                   return S.O.S.Estilo;
               }
               // --------------------------------------
               // Se verifica si es un "ACTOR"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, CONFIG.ACT_ORIGEN, CONFIG.ACT_VELOCIDAD, CONFIG.ACT_ACELERACION, CONFIG.ACT_ESTILO,
-                                               CONFIG.ACT_REPRESENTADOR, CONFIG.ACT_MAX_DURACION, CONFIG.ACT_MAX_RECORRIDO)) {
+              else if (_cumplimentaDef(objeto, ...CONFIG.Actor)) {
                   return S.O.S.Actor;
               }
                 
               // --------------------------------------
               // Se verifica si es un "REPARTO"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, CONFIG.RPT_COREOGRAFIA, CONFIG.RPT_CANTIDAD, CONFIG.RPT_PUESTOS, CONFIG.RPT_INTERVALO, 
-                                               CONFIG.RPT_VELOCIDAD, CONFIG.RPT_DESVIO, CONFIG.RPT_SEPARACION, CONFIG.RPT_RECORRIDO,
-                                               CONFIG.RPT_DURACION, CONFIG.RPT_ESTILO, CONFIG.RPT_REPRESENTADOR, CONFIG.RPT_DESPLAZAMIENTO)) {
+              else if (_cumplimentaDef(objeto, ...CONFIG.Reparto)) {
                   return S.O.S.Reparto;
               }
 
@@ -230,8 +230,31 @@ const Auxiliadora = (S, utilizaP5) => {
           // Si no corresponde a ningún objeto, se retorna "undefined"
           return undefined;
         },
-
         
+        /**
+         * esquema
+         * Retorna el "Esquema Base" del cual extiende la "entidad del socorro"
+         * recibida como argumento.
+         */
+        esquema: (entidad) => {
+            if (entidad) {
+                let _esUnEsquema = true;
+                for (let i = 0; i < CONFIG.Esquema.length; i++) {
+                    if (!entidad.hasOwnProperty(CONFIG.Esquema[i])) {
+                        _esUnEsquema = false;
+                        break;
+                    }
+                }
+                if (_esUnEsquema)
+                    return entidad;
+                else
+                    return _AUX.esquema(Object.getPrototypeOf(entidad)) ?? undefined;
+            }
+            else {
+                return undefined;
+            }
+        },
+
         /**
          * esUnColor
          * Retorna "true" o "false" indicando si el argumento recibido es un
@@ -305,11 +328,11 @@ const Auxiliadora = (S, utilizaP5) => {
         },
         
         /**
-         * esUnEsquema
-         * Función para indicar si el objeto recibido como argumento es un "Esquema"
-         * (o es cualquier objeto que extiende del objeto "Esquema").
+         * esUnaEntidadDelSocorro
+         * Función para indicar si el objeto recibido como argumento es una
+         * de las "entidades del socorro" que extienden del objeto "Esquema".
          */
-        esUnEsquema: (objeto) => {
+        esUnaEntidadDelSocorro: (objeto) => {
             let _aux = objeto ? objeto?.nombre : undefined;
             return _aux !== undefined && 
                   (_aux == CONFIG.SOS_ESQUEMA  || _aux == CONFIG.SOS_ESCENA   ||
@@ -348,8 +371,8 @@ const Auxiliadora = (S, utilizaP5) => {
             return ActorInterno(S, origen, velocidad, estilo);  
         },
           
-        Reparto: (coreografia, cantidad, puestos, intervalo, velocidad, desvío, separacion) => {
-            return RepartoInterno(S, coreografia, cantidad, puestos, intervalo, velocidad, desvío, separacion);  
+        Reparto: (coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion) => {
+            return RepartoInterno(S, coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion);  
         },
 
         Transicionador: (valorIni, valorFin, cuadrosDuracion, cuadrosRetardo) => {
