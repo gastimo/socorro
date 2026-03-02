@@ -277,7 +277,7 @@ function Actor(S, origen, velocidad, estilo) {
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             for (let i = 0; i < CONFIG.Actor.length; i++) {
                 if (CONFIG.Actor[i] != CONFIG.ACT_ORIGEN && CONFIG.Actor[i] != CONFIG.ACT_VELOCIDAD) {
-                    let _valor = _ESQ.val(CONFIG.Actor[i]) ?? (_ESQ.heredar(CONFIG.Actor[i], CONFIG.Actor[i] !== CONFIG.ACT_ESTILO) ?? _ACT[CONFIG.Actor[i]]);
+                    let _valor = _ESQ.val(CONFIG.Actor[i]) ?? _ESQ.heredar(CONFIG.Actor[i], CONFIG.Actor[i] !== CONFIG.ACT_ESTILO);
                     
                     // En caso de tratarse del "estilo", luego de realizar el cálculo dinámico,
                     // en necesario hacer una copia de los valores obtenidos. De lo contrario,

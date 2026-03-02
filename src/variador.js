@@ -48,13 +48,6 @@ function Variador(S, valorDesde, valorHasta, modulador) {
     };
     
     /**
-     * metaDef
-     * Redefinición del método "metaDef" del objeto "Variable"
-     */
-    _VRD.metaDef = (esquemaSuperior, nombreAtributo, nombreArreglo) => {
-    };
-    
-    /**
      * val
      * Redefinición del método "val" del objeto "Variable".
      */
