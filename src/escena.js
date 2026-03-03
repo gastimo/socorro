@@ -183,11 +183,10 @@ function Escena(S) {
         }
         
         // Actualización de los atributos de todos los "Repartos"
-        for (const [identificador, lista] of Object.entries(S.O.S.Repartos)) {
-            for (let i = 0; i < lista.length; i++) {
-                lista[i].actualizar();
-            }
+        for (const [identificador, reparto] of Object.entries(S.O.S.Repartos)) {
+            reparto.actualizar();
         }
+        
         // Actualización de los atributos de todos los "Actores"
         for (const [identificador, lista] of Object.entries(S.O.S.Actores)) {
             let _actoresActivos = [];
@@ -281,9 +280,16 @@ function Escena(S) {
             }
             if (mostrarActores) {
                 for (const [identificador, actores] of Object.entries(S.O.S.Actores)) {
+                    S.O.S.P5.push();
+                    if (actores.length >= 1) {
+                        let _reparto = actores[0].superior.entidad;
+                        if (S.O.S.esUnReparto(_reparto))
+                            _reparto.representar();
+                    }
                     for (let i = 0; i < actores.length; i++) {
                         actores[i].representar();
                     }
+                    S.O.S.P5.pop();
                 }
             }
         };

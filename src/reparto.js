@@ -18,7 +18,8 @@ import Esquema from './esquema';
  * 
  * LOS RECORRIDOS EN LA ESCENA
  * Cada "Reparto" tiene un único punto de inicio en la "Escena" (coordenada <x,y,z>), que
- * puede ser desplazado en cualquier dirección a través del vector de desplazamiento.
+ * puede ser desplazado en cualquier dirección (a través del vector de desplazamiento) y,
+ * adicionalmente, puede ser girado según el ángulo especificado en "rotación".
  * El primer argumento del "Reparto" es la función "coreografía", que determina no sólo
  * las posiciones iniciales (o puestos) de los "Actores", sino también las direcciones
  * en las que cada uno de ellos se moverá. Los "Actores" pueden moverse de forma individual e 
@@ -64,8 +65,6 @@ import Esquema from './esquema';
  *  - intensidad  : Valor escalar indicando la intensidad del desplazamiento (la dirección la indica la coreografía).
  *  - desvío      : Valor escalar indicando un ángulo de desvío respecto de la dirección indicada por la coreografía).
  *  - separación  : Valor escalar que especifica la distancia de cada puesto respecto del origen del "Reparto".
- *  - recorrido   : distancia máxima (en píxeles) del recorrido de cada "Actor" (una vez alcanzada, finaliza).
- *  - tiempo      : tiempo máximo (en milisegundos) de participación de cada "Actor" (una vez alcanzado finaliza).
  * 
  * Adicionalmente, el "Reparto" dispone de otros métodos que permiten definir atributos opcionales:
  *  - defEstilo          : define el "Estilo" por defecto a aplicar a cada "Actor" del "Reparto".
@@ -73,6 +72,7 @@ import Esquema from './esquema';
  *                         La lista de métodos "Representadores" está disponible en S.O.S.REP.
  *  - defDesplazamiento  : define un vector <x,y,z> indicando el desplazamiento en el lienzo del punto de origen
  *                         del "Reparto" en sí. Por defecto, todos los repartos parten del centro.
+ *  - defRotacion        : define el ángulo (en radianes) a tener en cuenta para girar al reparto completo.
  *  - defMaxDuracion     : define la duración máxima para la participación de los "Actores" en "Escena".
  *  - defMaxRecorrido    : define el recorrido máximo que cada "Actor" del "Reparto" tiene permitido realizar.
  *
@@ -167,9 +167,8 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
                 // completa de "Actores" en la iteración actual. En caso contrario
                 // se van generando espaciadamente, de acuerdo a lo indicado en el
                 // parámetro "intervalo" (que especifica cantidad de fotogramas).
-                if (_intervalo) {
+                if (_intervalo)
                     break;
-                }
                 else {
                     _RPT.actualizar(CONFIG.RPT_PUESTOS);
                     _RPT.actualizar(CONFIG.RPT_INTENSIDAD);
@@ -212,10 +211,7 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
      * como un atributo de una "Escena" o de algún otro "Reparto".
      */
     _RPT.metaDef = () => {
-        if (!S.O.S.Repartos.hasOwnProperty(_ESQ.superior.identificador)) {
-            S.O.S.Repartos[_ESQ.superior.identificador] = [];
-        }
-        S.O.S.Repartos[_ESQ.superior.identificador].push(_RPT);
+        S.O.S.Repartos[_ESQ.identificador] = _RPT;
     };
     
     /**
@@ -348,7 +344,14 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
         for (let i = 0; i < CONFIG.Reparto.length; i++) {
             if (!nombreAtr || nombreAtr == CONFIG.Reparto[i]) {
                 let _valor = _ESQ.val(CONFIG.Reparto[i]) ?? _ESQ.heredar(CONFIG.Reparto[i], CONFIG.Reparto[i] !== CONFIG.RPT_ESTILO);
-                _RPT[CONFIG.Reparto[i]] = _valor;                
+            
+                // En caso de tratarse del vector de "desplazamiento", debe actualizarse primero
+                if (CONFIG.Reparto[i] == CONFIG.RPT_DESPLAZAMIENTO) {
+                    _RPT[CONFIG.RPT_DESPLAZAMIENTO] = _valor ? _valor.val() : _RPT[CONFIG.RPT_DESPLAZAMIENTO];
+                }
+                else {
+                    _RPT[CONFIG.Reparto[i]] = _valor;                
+                }                
             }
         }
         
@@ -359,6 +362,25 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         if (!nombreAtr)
             _rutinaIniciadora(_RPT);
+    };
+    
+    
+    /**
+     * representar
+     * Si bien el "Reparto" en sí no tiene representación visual (sólo los "Actores"
+     * la tienen), esta función realiza las tareas de preparación para la representación
+     * posterior de los "Actores" que conforman el "Reparto". Por ejemplo, esta función
+     * se ocupa de ubicar las coordenadas de origen del "Reparto" en el lienzo.
+     */
+    _RPT.representar = () => {
+        if (_RPT.desplazamiento) {
+            S.O.S.P5.translate((_RPT.desplazamiento.x ?? 0) * S.O.S.ancho() / 2, 
+                               (_RPT.desplazamiento.y ?? 0) * S.O.S.alto()  / 2, 
+                               (_RPT.desplazamiento.z ?? 0) * (S.O.S.ancho() + S.O.S.alto()) / 4) ;
+        }
+        if (_RPT.rotacion) {
+            S.O.S.P5.rotate(_RPT.rotacion);
+        }
     };
     
     

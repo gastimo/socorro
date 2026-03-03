@@ -19,7 +19,8 @@ import Esquema from './esquema';
  * (ej. "sumar", "mult", "mag", "dist", etc).
  */
 function Vector(S, a, b, c) {
-    if (S.O.S.esUnaVariable(a) || S.O.S.esUnaVariable(b) || S.O.S.esUnaVariable(c))
+    if (S.O.S.esUnaVariable(a) || S.O.S.esUnaVariable(b) || S.O.S.esUnaVariable(c) ||
+        S.O.S.esUnVariador(a)  || S.O.S.esUnVariador(b)  || S.O.S.esUnVariador(c))
         return VectorVar(S, a, b, c);
 
     const _VEC = {};
@@ -57,17 +58,18 @@ function Vector(S, a, b, c) {
             let _defX, _defY, _defZ;
             if (atributos.hasOwnProperty('x')) {
                 _defX = S.O.S.entidad(atributos.x);
-                _VEC.x = _defX == S.O.S.Variable ? _VEC.x : atributos.x;
+                _VEC.x = _defX == S.O.S.Variable || _defX == S.O.S.Variador ? _VEC.x : atributos.x;
             }
             if (atributos.hasOwnProperty('y')) {
                 _defY = S.O.S.entidad(atributos.y);
-                _VEC.y = _defY == S.O.S.Variable ? _VEC.y : atributos.y;
+                _VEC.y = _defY == S.O.S.Variable || _defY == S.O.S.Variador ? _VEC.y : atributos.y;
             }
             if (atributos.hasOwnProperty('z')) {
                 _defZ = S.O.S.entidad(atributos.z);
-                _VEC.z = _defZ == S.O.S.Variable ? _VEC.z : atributos.z;
+                _VEC.z = _defZ == S.O.S.Variable || _defZ == S.O.S.Variador ? _VEC.z : atributos.z;
             }
-            if (_defX == S.O.S.Variable || _defY == S.O.S.Variable || _defZ == S.O.S.Variable) {
+            if (_defX == S.O.S.Variable || _defY == S.O.S.Variable || _defZ == S.O.S.Variable ||
+                _defX == S.O.S.Variador || _defY == S.O.S.Variador || _defZ == S.O.S.Variador) {
                 return VectorVar(S).def(atributos);   
             }
         }        
