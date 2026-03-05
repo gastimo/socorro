@@ -31,7 +31,7 @@ const Coreografia = (S) => {
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 radial : (actor, cantidad, puestos, intensidad, desvio, separacion) => {
     // Se calcula el ángulo en función de la cantidad de puestos
-    const angulo = (puestos <= 1 ? 0 : 2 * Math.PI / puestos * actor.orden) + desvio;
+    const angulo = (puestos <= 1 ? 0 : 2 * Math.PI / puestos * actor.puesto) + desvio;
     
     // A partir del ángulo (dirección), se calcula el vector de separación
     const corrimiento = S.O.S.Vector(separacion, 0, 0);

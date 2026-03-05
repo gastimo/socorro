@@ -76,23 +76,6 @@ import CONFIG from './config';
  *                     siempre se crean "Vectores". Si el módulo detecta el uso de "Variables"
  *                     en la definición del "Vector" automáticamente crea un "VectorVar" en
  *                     lugar del "Vector" para evaluar sus componentes dinámicamente.
- * 
- * MÉTODOS PRINCIPALES DEL ESQUEMA:
- * El esquema sólo tiene seis métodos públicos:
- *  - def         : define los atributos del esquema con sus valores. En realidad, define 
- *                  manera en que los valores de dichos atributos son calculados.
- *  - val         : Devuelve el valor de un atributo del "Esquema". Dependiendo cómo haya sido
- *                  definido el "Esquema", esta función puede retornar un valor simple, otra
- *                  "entidad del socorro", o un "subesquema". Cuando el valor del atributo
- *                  fue definido a través de las entidades de cálculo dinámico ("Variable" o 
- *                  "Variador"), esta función es la encargada de llevar a cabo la evaluación
- *                  dinámica en tiempo de ejecuión (motor de la lógica generativa).
- *  - heredar     : Retorna el valor de un atributo del "Esquema" buscando hacia arriba en la jerarquía.
- *  - extender    : Devuelve un objeto vacío, extendiendo del "Esquema" para ser usado por una "entidad".
- *  - exportar    : exporta el contenido del esquema (definición de atributos en formato JSON.
- *  - config      : deinir la configuración (o guion) del "Esquema", por ejemplo, para la
- *                  construcción de una GUI ("Interfaz Gráfica de Usuario"). El uso de esta
- *                  función no es un requisito para el utilizar las restantes funciones.
  */
 function Esquema(S, nombreEsquema) {
     const _ESQ = {};   // Esquema corriente (funciones y propiedades del "Esquema" en sí).
@@ -158,6 +141,29 @@ function Esquema(S, nombreEsquema) {
         return _ESQ;
     };    
 
+    /**
+     * defval
+     * Retorna la definición completa de los atributos del "Esquema" con sus valores,
+     * es decir, retorna un objeto JavaScript con la estructura jerárquica del esquema
+     * y subesquemas, detatallando los atributos y sus definiciones. Vale aclarar que
+     * esta función no "evalúa" los valores, simplemente retorna sus definiciones.
+     */
+    _ESQ.defval = () => {
+        return _VAL;    
+    };
+    
+    /**
+     * replicarDef
+     * Copia las definiciones del "Esquema" recibido como argumento en el "Esquema"
+     * actual. Vale aclarar que sólo realiza una copia supeficial, es decir,
+     * copia los punteros a los mismos objetos del "Esquema" recibido.
+     */
+    _ESQ.replicarDef = (esquema) => {
+        let _defEsquema = esquema.defval();
+        for (const [atrNombre, atrValor] of Object.entries(_defEsquema)) {
+            _VAL[atrNombre] = atrValor;
+        }
+    };
     
     /**
      * val
@@ -262,7 +268,7 @@ function Esquema(S, nombreEsquema) {
      * Busca el valor del atributo con el nombre
      * indicado en la jerarquía de "Esquemas".
      */
-    _ESQ.heredar = (nombreAtr, incluirEscena = true) => {
+    _ESQ.heredar = (nombreAtr, incluirEscena = false) => {
         if (!_ESQ.superior) {
             return undefined;
         }
@@ -424,8 +430,9 @@ function Esquema(S, nombreEsquema) {
             // DEFINCIÓN DE VALORES DEL OBJETO SUBESQUEMA
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (atrValor !== null && atrValor !== undefined && typeof atrValor === 'object' && !Array.isArray(atrValor)) {
-              // Se verifica si el valor se corresponde a una DEFINICIÓN de algún objeto socorrista, por
-              // ejemplo: un "Vector", una "Variable", un "Variador", un "Estilo", un "Actor", etc.
+                
+              // Se verifica si el valor se corresponde a una DEFINICIÓN de algún objeto socorrista, es 
+              // decir, "Estilo", "Actor", "Reparto", "Variable", "Variador", "Vector" o "VectorVar" 
               let _entidadSocorrista = S.O.S.entidad(atrValor);
               if (_entidadSocorrista !== undefined) {
                   let _entidad = _entidadSocorrista().def(atrValor); // Se crea la "entidad del socorro"
@@ -531,9 +538,8 @@ function Esquema(S, nombreEsquema) {
             _esquemaBase.agrupacion = nombreArreglo;
             _esquemaBase.alias      = nombreAtributo;
             
-            // Se invoca a la función pública equivalente para la "entidad del socorro" final
-            // de forma tal que ésta pueda terminar de completar la "meta definición" necesaria.
-            esquema.metaDef?.(esquemaSuperior, nombreAtributo, nombreArreglo);
+            // Finalmente, se registra al esquema en la "Escena"
+            S.O.S.registrar(esquema);
         }
     }
     

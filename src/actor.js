@@ -45,47 +45,6 @@ function Actor(S, origen, velocidad, estilo) {
 
     
     /**
-     * _inicializar
-     * Función privada de inicialización del "Actor"
-     */
-    function _inicializar(origen, velocidad, estilo) {
-        
-        // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESQUEMA")
-        // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
-        // los atributos del "Actor", recibidas como argumento.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        let _definicion = {};
-        if (origen)
-            _definicion[CONFIG.ACT_ORIGEN] = origen;
-        if (velocidad)
-            _definicion[CONFIG.ACT_VELOCIDAD] = velocidad;
-        if (estilo)
-            _definicion[CONFIG.ACT_ESTILO] = estilo;
-        _ESQ.def(_definicion);
-        
-        // 2. INICIALIZACIÓN DE PROPIEDADES PÚBLICAS (DEL "ACTOR")
-        // Las propiedades públicas son las variables del "Actor" donde 
-        // se colocan los valores evaluados de los atributos dinámicos.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        for (let i = 0; i < CONFIG.Actor.length; i++) {
-            _ACT[CONFIG.Actor[i]] = undefined;
-        }        
-        
-        // 3. INICIALIZACIÓN DE PROPIEDADES ADICIONALES 
-        // Estas propiedades no forman parte de la definición de los atributos
-        // dinámicos del "Esquema". Son propiedades públocas, accesibles a 
-        // través de variables del "Actor" y calculadas dinámicamente.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        _ACT.numero     = 0;         // Actualizado por el "Reparto" (si aplica)
-        _ACT.orden      = 0;         // Actualizado por el "Reparto" (si aplica)
-        _ACT.distancia  = 0;         // Distancia actual del "Actor" a su posición de origen
-        _ACT.recorrido  = 0;         // Cantidad de píxeles recorridos desde el inicio de su desplazamiento
-        _ACT.posicion   = undefined; // Coordenadas <x,y,z> de su posición actual en el lienzo
-        
-        return _ACT;
-    }
-
-    /**
      * def
      * Esta función es la misma que la del objeto "Esquema" de quien el
      * "Actor" extiende. Se redefine simplemente para retornar, al final,
@@ -94,20 +53,6 @@ function Actor(S, origen, velocidad, estilo) {
     _ACT.def = (atributos) => {
         _ESQ.def(atributos);
         return _ACT;
-    };
-    
-    /**
-     * metaDef
-     * Registro del "Actor" en la "Escena". Esta función sólo es invocada
-     * para aquellos "Actores" que hayan sido utilizados en la definición
-     * de un atributo de algún "Esquema". Por ejemplo, al definir un 
-     * "Actor" como un atributo de una "Escena" o de un "Reparto".
-     */
-    _ACT.metaDef = () => {
-        if (!S.O.S.Actores.hasOwnProperty(_ESQ.superior.identificador)) {
-            S.O.S.Actores[_ESQ.superior.identificador] = [];
-        }
-        S.O.S.Actores[_ESQ.superior.identificador].push(_ACT);
     };
 
     /**
@@ -277,14 +222,14 @@ function Actor(S, origen, velocidad, estilo) {
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             for (let i = 0; i < CONFIG.Actor.length; i++) {
                 if (CONFIG.Actor[i] != CONFIG.ACT_ORIGEN && CONFIG.Actor[i] != CONFIG.ACT_VELOCIDAD) {
-                    let _valor = _ESQ.val(CONFIG.Actor[i]) ?? _ESQ.heredar(CONFIG.Actor[i], CONFIG.Actor[i] !== CONFIG.ACT_ESTILO);
+                    let _valor = _ESQ.val(CONFIG.Actor[i]) ?? _ESQ.heredar(CONFIG.Actor[i]);
                     
                     // En caso de tratarse del "estilo", luego de realizar el cálculo dinámico,
                     // en necesario hacer una copia de los valores obtenidos. De lo contrario,
-                    // en caso de haber sido heredado, la "actualización" estaría actualizando 
+                    // en caso de haber sido heredado, la "actualización" estaría modificando 
                     // el mismo objeto "estilo" para todos los "Actores" que lo comparten.
                     if (CONFIG.Actor[i] == CONFIG.ACT_ESTILO) {
-                        _ACT[CONFIG.ACT_ESTILO] = _valor ? _valor.actualizar().replicar() : CONFIG.EstiloBase;
+                        _ACT[CONFIG.ACT_ESTILO] = _valor ? (S.O.S.esUnEstilo(_valor) ? _valor.actualizar().replicar() : _valor) : CONFIG.EstiloBase;
                     }
                     else {
                         _ACT[CONFIG.Actor[i]] = _valor;
@@ -331,7 +276,16 @@ function Actor(S, origen, velocidad, estilo) {
                 (_maxDuracion  !== null && _maxDuracion  !== undefined && S.O.S.tiempo() - _originado > _maxDuracion)) {
                 _ACT.finalizar();
             }
-
+            
+            // 5. BLANQUEO DE LA SECUENCIA DE ACTORES
+            // Se blanquean las variables que apuntan al "Actor" previo 
+            // y al "Actor" siguiente. Éstas son completadas automáticamente
+            // al procesar cada uno de los "Actores" activos del "Reparto".
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            _ACT.prev = undefined;
+            _ACT.sig  = undefined;
+            
+            
             // 6. REESTABLECIMIENTO DEL CONTEXTO
             // Se remueve el "Actor" actual del contexto de ejecución.
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -366,11 +320,62 @@ function Actor(S, origen, velocidad, estilo) {
 
     /**
      * finalizado
-     * Indica si al "Actor" ha finalizado se participación en la "Escena"
+     * Indica si al "Actor" ha finalizado su participación en la "Escena"
      */
     _ACT.finalizado = () => {
       return _finalizado; 
     };
+
+    
+// --------------------------------------------------------------------------------------------------
+//
+//   F U N C I O N E S     P R I V A D A S
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    
+    /**
+     * _inicializar
+     * Función privada de inicialización del "Actor"
+     */
+    function _inicializar(origen, velocidad, estilo) {
+        
+        // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESQUEMA")
+        // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
+        // los atributos del "Actor", recibidas como argumento.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        let _definicion = {};
+        if (origen)
+            _definicion[CONFIG.ACT_ORIGEN] = origen;
+        if (velocidad)
+            _definicion[CONFIG.ACT_VELOCIDAD] = velocidad;
+        if (estilo)
+            _definicion[CONFIG.ACT_ESTILO] = estilo;
+        _ESQ.def(_definicion);
+        
+        // 2. INICIALIZACIÓN DE PROPIEDADES PÚBLICAS (DEL "ACTOR")
+        // Las propiedades públicas son las variables del "Actor" donde 
+        // se colocan los valores evaluados de los atributos dinámicos.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        for (let i = 0; i < CONFIG.Actor.length; i++) {
+            _ACT[CONFIG.Actor[i]] = undefined;
+        }        
+        
+        // 3. INICIALIZACIÓN DE PROPIEDADES ADICIONALES 
+        // Estas propiedades no forman parte de la definición de los atributos
+        // dinámicos del "Esquema". Son propiedades públicas, accesibles a 
+        // través de variables del "Actor" y actualizadas dinámicamente.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        _ACT.numero     = 0;         // Actualizado por el "Reparto" (si aplica)
+        _ACT.orden      = 0;         // Actualizado por el "Reparto" (si aplica)
+        _ACT.puesto     = 0;         // Actualizado por el "Reparto" (si aplica)
+        _ACT.distancia  = 0;         // Distancia actual del "Actor" a su posición de origen
+        _ACT.recorrido  = 0;         // Cantidad de píxeles recorridos desde el inicio de su desplazamiento
+        _ACT.posicion   = undefined; // Coordenadas <x,y,z> de su posición actual en el lienzo
+        _ACT.prev       = undefined; // Actor previo (actualizado por el "Reparto")
+        _ACT.sig        = undefined; // Actor siguiente (actualizado por el "Reparto")
+        
+        return _ACT;
+    }
 
     
     return _inicializar(origen, velocidad, estilo);

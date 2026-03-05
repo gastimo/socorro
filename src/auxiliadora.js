@@ -28,29 +28,43 @@ const Auxiliadora = (S, utilizaP5) => {
     /**
      * _cumplimentaDef
      * Retorna "true" o "false" indicando si el objeto recibido como primer argumento 
-     * cumplimenta con los atributos indicados por la lista del segundo argumento. 
+     * cumplimenta con los atributos indicados en el "array" del segundo argumento. 
      * Es decir, cualquier atributo del objeto debe estar definido en la lista de atributos
      * indicada. No debe necesariamente incluirlos todos, pero no puede tampoco tener 
      * atributos que no estén indicados en dicha lista.
+     * Si se indican "subdefiniciones" (arreglos de atributos), cada vez que un atributo
+     * no sea encontrado, se verifica si corresponde a alguna de las "subdefiniciones"
+     * (por ejemplo, un "Reparto" puede incluir "Actores" u otros "Repartos").
      */
-    function _cumplimentaDef(objeto, ...atributos) {
+    function _cumplimentaDef(objeto, definicion, ...subdefiniciones) {
       const _claves = Object.keys(objeto);
       let _verifica = true;
       for (let i = 0; i < _claves.length; i++) {
         let _claveEncontrada = false;
-        for (let j = 0; j < atributos.length; j++) {
-          if (_claves[i] == atributos[j]) {
+        for (let j = 0; j < definicion.length; j++) {
+          if (_claves[i] == definicion[j]) {
             _claveEncontrada = true;
             break;
           }
         }
         if (!_claveEncontrada) {
-          _verifica = false;
-          break;
+          if (typeof objeto[_claves[i]] === 'object' && !Array.isArray(objeto[_claves[i]])) {
+            for (let k = 0; k < subdefiniciones.length; k++) {
+              if (_cumplimentaDef(objeto[_claves[i]], subdefiniciones[k], ...subdefiniciones)) {
+                _claveEncontrada = true;
+                break;
+              }
+            }
+          }
+          if (!_claveEncontrada) {
+            _verifica = false;
+            break;
+          }
         }
       }
-      return _verifica && _claves.length >= 1 && _claves.length <= atributos.length;
-    }        
+      return _verifica && _claves.length >= 1;
+    }          
+    
 
     const _AUX = {
     
@@ -196,32 +210,32 @@ const Auxiliadora = (S, utilizaP5) => {
               // --------------------------------------
               // Se verifica si es un "VECTOR"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, ...CONFIG.Vector)) {
+              else if (_cumplimentaDef(objeto, CONFIG.Vector)) {
                 return S.O.S.Vector;
               }
               // --------------------------------------
               // Se verifica si es un "VARIADOR"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, ...CONFIG.Variador)) {
+              else if (_cumplimentaDef(objeto, CONFIG.Variador)) {
                 return S.O.S.Variador;
               }
               // --------------------------------------
               // Se verifica si es un "ESTILO"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, ...CONFIG.DesgloseEstilo)) {
+              else if (_cumplimentaDef(objeto, CONFIG.DesgloseEstilo)) {
                   return S.O.S.Estilo;
               }
               // --------------------------------------
               // Se verifica si es un "ACTOR"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, ...CONFIG.Actor)) {
+              else if (_cumplimentaDef(objeto, CONFIG.Actor)) {
                   return S.O.S.Actor;
               }
                 
               // --------------------------------------
               // Se verifica si es un "REPARTO"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, ...CONFIG.Reparto)) {
+              else if (_cumplimentaDef(objeto, CONFIG.Reparto, CONFIG.Reparto, CONFIG.Actor)) {
                   return S.O.S.Reparto;
               }
 

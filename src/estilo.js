@@ -130,6 +130,11 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
         return _EST;
     };
     
+    /**
+     * replicar
+     * Retorna un objeto con los atributos públicos del "Estilo"
+     * con sus valores ya evaluads.
+     */
     _EST.replicar = () => {
         let _estilo = {};
         _estilo.color   = _EST.color;

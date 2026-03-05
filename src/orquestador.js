@@ -198,14 +198,10 @@ function Orquestador(sos, contenedor) {
      * vincular
      * Mediante esta función se actualiza la estructra del socorrista designado por el "Orquestador" para 
      * vincularlo con la "Escena" que debe orquestar, es decir, a través del mecanismo de "herencia por 
-     * prototipos" de JS, toda la información y métodos de la "Escena" pueden accederse directamente desde 
+     * prototipos" de JS, toda la información y métodos de la "Escena" queda accesible directamente desde 
      * el propio socorrista. En otras palabras, el socorrista designado se convierte en la propia "Escena".
      * 
-     * Además, se inicializan las listas para llevar el registro de los "Actores" y "Repartos":
-     *  - S.O.S.Actores  : Objeto conteniendo los actores agrupados jerárquicamente
-     *  - S.O.S.Repartos : Objeto conteniendo los repartos agrupados jerárquicamente
-     *  
-     * También se ponen a disponibilidad del usuario los "Repertorios" necesarios:
+     * También se ponen a disposición del usuario los "Repertorios" necesarios:
      * - S.O.S.REP       : Colección de "Representadores" (funciones para representación de "Actores")
      * - S.O.S.COREO     : Colección de "Coreografías" (disposición y desplazamiento de "Actores" de un "Reparto")
      * - S.O.S.COLOR     : Listado de gradientes de colores preestablecidos 
@@ -217,8 +213,6 @@ function Orquestador(sos, contenedor) {
     function vincular(escena) {
         _escena = escena;
         const _repertorios = Repertorio(S);
-        asociar('Actores',    {});
-        asociar('Repartos',   {});
         asociar('Repertorio', _repertorios.funciones());   // Para la personalización de repertorios
         S.O.S.revelar(S.O.S, _repertorios.publicar(), Auxiliadora(S, _utilizaP5), Cargador(), escena);
     }  

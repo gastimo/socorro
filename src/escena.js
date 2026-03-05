@@ -47,6 +47,11 @@ function Escena(S) {
     let rendererTHREE;
     let rendererP5;
     
+    // Registro general de la "Escena"
+    let _REG = {};
+
+
+    
     /**
      * _inicializar
      * Función privada de inicialización de las propiedades públicas de la
@@ -54,10 +59,20 @@ function Escena(S) {
      * objeto y almacenan los valores evaluados de los atributos del "Esquema".
      */
     function _inicializar() {
+        // Inicialización de las PROPIEDADES PÚBLICAS DE LA ESCENA
         _ESC.estilo          = undefined;
         _ESC.escalable       = undefined;
         _ESC.representador   = undefined;
         _ESC.interpretarGLSL = undefined;
+        
+        // Inicialización de los REGISTROS ("Actores", "Repartos" y "Metarepartos")
+        _REG.actores      = {};
+        _REG.repartos     = {};
+        _REG.metarepartos = {};
+        
+        _REG.actoresFinalizados = [];
+        _REG.repartosFinalizados = [];
+        
         return _ESC;
     }
     
@@ -65,7 +80,7 @@ function Escena(S) {
 
 // =====================================================================
 // 
-//  DEFINICIÓN & ACTUALIZACIÓN DE ATRIBUTOS DE LA ESCENA
+//  DEFINICIÓN DE ATRIBUTOS DE LA ESCENA
 //  
 // =====================================================================
 
@@ -159,73 +174,8 @@ function Escena(S) {
         return _ESC;
     };    
 
-    
-    /**
-     * actualizar
-     * Recalcula el valor de los atributos dinámicos de la escena y luego
-     * se ocupa de actualizar, de forma ordenada, los atributos dinámicos 
-     * de todos los "Repartos" y de todos sus "Actores".
-     */
-    _ESC.actualizar = () => {
-        // Actualización del indicador "escalable"
-        _ESC.escalable = _ESQ.val(CONFIG.ESC_ESCALABLE) ?? _ESC.escalable;
-
-        // Actualización del "Representador" por defecto para la "Escena"
-        _ESC.representador = _ESQ.val(CONFIG.ESC_REPRESENTADOR) ?? _ESC.representador;
-        
-        // Actualizar la variable que indica si se debe interpretar el código GLSL
-        _ESC.interpretarGLSL = _ESQ.val(CONFIG.ESC_INTERPRETAR_GLSL) ?? _ESC.interpretarGLSL;
-
-        // Actualización del "Estilo" por defecto
-        _ESC.estilo = _ESQ.val(CONFIG.ESC_ESTILO);  // Devuelve el "Estilo" sin evaluar
-        if (_ESC.estilo) {
-            _ESC.estilo.actualizar();               // Acá recién se evalúa el "Estilo"
-        }
-        
-        // Actualización de los atributos de todos los "Repartos"
-        for (const [identificador, reparto] of Object.entries(S.O.S.Repartos)) {
-            reparto.actualizar();
-        }
-        
-        // Actualización de los atributos de todos los "Actores"
-        for (const [identificador, lista] of Object.entries(S.O.S.Actores)) {
-            let _actoresActivos = [];
-            for (let i = 0; i < lista.length; i++) {
-                lista[i].actualizar();
-                if (!lista[i].finalizado()) {
-                    _actoresActivos.push(lista[i]);
-                }
-            }
-            S.O.S.Actores[identificador] = _actoresActivos;
-        }
-    };
 
     
-    /**
-     * estilar
-     * Aplica los estilos básicos de la "Escena". Esto es:
-     *  - color   : color de fondo de la escena
-     *  - grandor : n/a
-     *  - trazo   : color del trazo alrededor de la escena
-     *  - grosor  : grosor del trazo alrededor de la escena
-     */
-    _ESC.estilar = () => {
-        if (_ESC.estilo) {
-            if (_ESC.estilo.color !== undefined && _ESC.estilo.color !== null) {
-                S.O.S.P5.background(_ESC.estilo.color);
-            }
-            if (_ESC.estilo.trazo  !== undefined && _ESC.estilo.trazo  !== null &&
-                _ESC.estilo.grosor !== undefined && _ESC.estilo.grosor !== null) {
-                S.O.S.P5.noFill();
-                S.O.S.P5.stroke(_ESC.estilo.trazo);
-                S.O.S.P5.strokeWeight(_ESC.escalar(_ESC.estilo.grosor));
-                S.O.S.P5.rect(-_ESC.ancho() / 2, -_ESC.alto() / 2, _ESC.ancho(), _ESC.alto());
-            }
-        }
-        return _ESC;
-    };
-
-
 // =====================================================================
 // 
 //  DEFINICIÓN DE LA "FUNCION ACTUARIA" (LOS TRES ACTOS DE LA ESCENA)
@@ -264,6 +214,9 @@ function Escena(S) {
          * y se encarga de representar la escena (cuadro a cuadro).
          */
         _FUNCION[CONFIG.ACTO_EJECUCION] = (mostrarActores = true) => {
+            // -------------------------------------
+            //  Representación de los SHADERS
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (_ESC.interpretarGLSL) {
                 if (rendererTHREE) {
                     rendererTHREE.render(scene, camera);
@@ -278,25 +231,386 @@ function Escena(S) {
                     }
                 }
             }
+
+            // -------------------------------------
+            //  Representación de los ACTORES
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (mostrarActores) {
-                for (const [identificador, actores] of Object.entries(S.O.S.Actores)) {
-                    S.O.S.P5.push();
-                    if (actores.length >= 1) {
-                        let _reparto = actores[0].superior.entidad;
-                        if (S.O.S.esUnReparto(_reparto))
-                            _reparto.representar();
-                    }
-                    for (let i = 0; i < actores.length; i++) {
-                        actores[i].representar();
-                    }
-                    S.O.S.P5.pop();
-                }
+                _representarActores(_ESC.identificador);
+                _representarRepartos(_ESC.identificador);
             }
         };
         
         return _FUNCION;
     }
 
+    
+
+// =====================================================================
+// 
+//  RUTINAS DE ACTUALIZACIÓN & REPRESENTACIÓN DE LA ESCENA
+//  
+// =====================================================================
+    
+    /**
+     * actualizar
+     * Recalcula el valor de los atributos dinámicos de la escena y luego
+     * se ocupa de actualizar, de forma ordenada, los atributos dinámicos 
+     * de todos los "Repartos" y de todos sus "Actores".
+     */
+    _ESC.actualizar = () => {
+        // Actualización del indicador "escalable"
+        _ESC.escalable = _ESQ.val(CONFIG.ESC_ESCALABLE) ?? _ESC.escalable;
+
+        // Actualización del "Representador" por defecto para la "Escena"
+        _ESC.representador = _ESQ.val(CONFIG.ESC_REPRESENTADOR) ?? _ESC.representador;
+        
+        // Actualizar la variable que indica si se debe interpretar el código GLSL
+        _ESC.interpretarGLSL = _ESQ.val(CONFIG.ESC_INTERPRETAR_GLSL) ?? _ESC.interpretarGLSL;
+
+        // Actualización del "Estilo" por defecto
+        _ESC.estilo = _ESQ.val(CONFIG.ESC_ESTILO);  // Devuelve el "Estilo" sin evaluar
+        if (_ESC.estilo) {
+            _ESC.estilo.actualizar(); // Recién acá se evalúa. Se aplica luego con el método "estilar"
+        }
+        
+        // -------------------------------------------------------------------------
+        // ACTUALIZACIÓN DE LOS REPARTOS
+        // La "Escena" mantiene un registro actualizado de todos sus "Repartos"
+        // estructurado de forma jerárquica. En este punto, se recorre el registro
+        // y se invoca a sus respectivas funciones de actualización.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        for (const [identificador, repartos] of Object.entries(_REG.repartos)) {
+            for (let i = 0; i < repartos.length; i++) {
+                if (!repartos[i].finalizado()) {
+                    repartos[i].actualizar();
+                }
+            }
+        }
+        
+        // -----------------------------------------------------------------------------------
+        // ACTUALIZACIÓN DE LOS ACTORES
+        // La "Escena", además, lleva un registro interno actualizado de todos sus "Actores"
+        // organizado, también, de forma jerárquica. En este punto, se recorre el registro
+        // y se invoca a sus respectivas funciones de actualización. Como resultado de este
+        // proceso, algunos "Actores" pueden finalizar su participación en la "Escena", por
+        // eso, es necesario que, luego de la actualización, se haga una depuración de todos
+        // aquellos "Actores" finalizados, incluyendo los "Subrepartos" que éstos encabecen. 
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        for (const [identificador, actores] of Object.entries(_REG.actores)) {
+            let _actorPrevio, _reparto;
+            let _actoresActivosDelReparto = [];
+            for (let i = 0; i < actores.length; i++) {
+                if (!actores[i].finalizado()) {
+                    // Se actualizan los atributos del "Actor". Si, como resultado,
+                    // el "Actor" no fue finalizado, se lo vincula con su predecesor
+                    // y con su sucesor y se lo vuelve a incorporar al registro.
+                    actores[i].actualizar();
+                    if (!actores[i].finalizado()) {
+                        actores[i].prev = _actorPrevio;
+                        if (_actorPrevio) 
+                            _actorPrevio.sig = actores[i];
+                        _actorPrevio = actores[i]; 
+                        _actoresActivosDelReparto.push(actores[i]);
+                    }
+                    // En caso contrario, se elimina todo registro del "Actor"
+                    else {
+                        _REG.actoresFinalizados.push(actores[i].identificador);
+                        _finalizarSubrepartosDelActor(actores[i]);
+                    }
+                }
+            }
+            _REG.actores[identificador] = _actoresActivosDelReparto;
+        }
+        
+        // Depuración del registro para eliminar "finalizados"
+        _depurarRegistro();
+    };
+    
+    /**
+     * estilar
+     * Aplica los estilos básicos de la "Escena". Este método es ejecutado
+     * por el "Orquestador" inmediatamente después de actualizar la "Escena".
+     * Los atributos del "Estilo" usados para la "Escena" son:
+     *  - color   : color de fondo de la escena
+     *  - grandor : n/a
+     *  - trazo   : color del trazo alrededor de la escena
+     *  - grosor  : grosor del trazo alrededor de la escena
+     * El más importante de ellos es "color" dado que estblece el color de 
+     * fondo. En caso de no definirse, la "Escena" se sobredibujará sobre
+     * sí misma en cada iteración del ciclo de representación.
+     */
+    _ESC.estilar = () => {
+        if (_ESC.estilo) {
+            if (_ESC.estilo.color !== undefined && _ESC.estilo.color !== null) {
+                S.O.S.P5.background(_ESC.estilo.color);
+            }
+            if (_ESC.estilo.trazo  !== undefined && _ESC.estilo.trazo  !== null &&
+                _ESC.estilo.grosor !== undefined && _ESC.estilo.grosor !== null) {
+                S.O.S.P5.noFill();
+                S.O.S.P5.stroke(_ESC.estilo.trazo);
+                S.O.S.P5.strokeWeight(_ESC.escalar(_ESC.estilo.grosor));
+                S.O.S.P5.rect(-_ESC.ancho() / 2, -_ESC.alto() / 2, _ESC.ancho(), _ESC.alto());
+            }
+        }
+        return _ESC;
+    };
+
+    
+        
+// =====================================================================
+// 
+//  MÉTODOS PARA EL MANTENIMIENTO DEL REGISTRO INTERNO
+//  
+// ===================================================================== 
+    
+    /**
+     * registrar
+     * Actualiza el registro interno de la "Escena" para incorporar al "Actor", 
+     * "Reparto" o "Metareparto" recibido como argumento. El registro almacena 
+     * automáticamente todas aquellas entidades que hayan sido añadidas a la 
+     * "Escena" (o algún "Reparto") a través del método "def" (del "Esquema"). 
+     * Cualquier "Actor" o "Reparto" independiente no queda registrado.
+     * Este registro es, luego, utilizado para la actualización automática de
+     * los "Actores"/"Repartos" de la "Escena" y para su representación.
+     */
+    _ESC.registrar = (entidad) => {
+        
+        // ------------------------------------------------------------
+        //  REGISTRO DE ACTORES
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        if (S.O.S.esUnActor(entidad)) {
+            if (entidad.superior) {
+                let identificador = entidad.superior.identificador;
+                if (!_REG.actores.hasOwnProperty(identificador)) {
+                    _REG.actores[identificador] = [];
+                }
+                _REG.actores[identificador].push(entidad);
+            }
+        }
+
+        // ------------------------------------------------------------
+        //  REGISTRO DE REPARTOS Y METAREPARTOS
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
+        else if (S.O.S.esUnReparto(entidad)) {
+            if (entidad.superior) {
+                let identificador = entidad.superior.identificador;
+
+                // Se identifican aquellos "Repartos" que forman parte de la definición de
+                // algún otro "Reparto". Estos se marcan como "Metarepartos" dado que su
+                // instanciación tiene lugar, posteriormente, por cada "Actor" del "Reparto"
+                // superor. Luego, se registra el "Reparto" o el "Metareparto" en la "Escena".
+                if (S.O.S.esUnReparto(entidad.superior.entidad)) { 
+                    entidad.metareparto = true;
+                   if (!_REG.metarepartos.hasOwnProperty(identificador))
+                        _REG.metarepartos[identificador] = [];
+                    _REG.metarepartos[identificador].push(entidad);
+                }
+                else {
+                   if (!_REG.repartos.hasOwnProperty(identificador))
+                        _REG.repartos[identificador] = [];
+                    _REG.repartos[identificador].push(entidad);
+                }
+            }
+        }
+    };
+    
+    /**
+     * actores
+     * Retorna la lista de "Actores" registrados bajo el identificador recibido
+     * como argumento (puede ser el identificador de la "Escena", de un "Reparto"
+     * o, incluso, de un "Actor"). En caso de no encontrarlo, retorna "undefined".
+     * Si no se indica identificador, se devuelve el registro completo de "Actores".
+     */
+    _ESC.actores = (identificador) => {
+        if (identificador) {
+            if (_REG.actores.hasOwnProperty(identificador))
+                return _REG.actores[identificador];
+            else
+                return undefined;
+        }
+        else 
+            return _REG.actores;
+    };
+    
+    /**
+     * repartos
+     * Retorna la lista de "Repartos" registrados bajo el identificador recibido
+     * como argumento (puede ser el identificador de la "Escena", de un "Reparto"
+     * o, incluso, de un "Actor"). En caso de no encontrarlo, retorna "undefined".
+     * Si no se indica identificador, se devuelve el registro completo de "Repartos".
+     */
+    _ESC.repartos = (identificador) => {
+        if (identificador) {
+            if (_REG.repartos.hasOwnProperty(identificador))
+                return _REG.repartos[identificador];
+            else
+                return undefined;
+        }
+        else 
+            return _REG.repartos;
+    };
+    
+
+    /**
+     * metarepartos
+     * Retorna la lista de "Metaepartos" registrados bajo el identificador recibido
+     * como argumento (puede ser el identificador de la "Escena", de un "Reparto"
+     * o, incluso, de un "Actor"). En caso de no encontrarlo, retorna "undefined".
+     * Si no se indica identificador, se devuelven todos los "Metarepartos".
+     */
+    _ESC.metarepartos = (identificador) => {
+        if (identificador) {
+            if (_REG.metarepartos.hasOwnProperty(identificador))
+                return _REG.metarepartos[identificador];
+            else
+                return undefined;
+        }
+        else 
+            return _REG.metarepartos;
+    };
+    
+    
+// =====================================================================
+//  RUTINAS PRIVADAS DEL REGISTRO INTERNO
+// =====================================================================    
+    
+    /**
+     * _representarActores
+     * Función privada que, a través del registro, identifica a todos los "Actores"
+     * vinculados al identificador recibido como argumento para representarlos.
+     * 
+     * REGISTRO DE ACTORES:
+     * En este registro, los "Actores" pueden estar estar vinculados con:
+     * - UNA ESCENA : actores independientes creados directamente en la "Escena"
+     * - UN REPARTO : actores que forman parte de un "Reparto" o ("Subreparto")
+     * - OTRO ACTOR : actores dirigidos por otro "Actor"
+     */
+    function _representarActores(identificador) {        
+        if (_REG.actores.hasOwnProperty(identificador)) {
+            S.O.S.P5.push();
+            let _actores = _REG.actores[identificador];
+            if (_actores.length > 0) {
+                // El "Actor" podría depender directamente de la "Escena", de otro 
+                // "Actor" o formar parte de un "Reparto". Si se trata de este último
+                // caso, es necesario posicionar al "Reparto" (desplazarlo y/o rotarlo)
+                let _superior = _actores[0].superior.entidad;
+                if (S.O.S.esUnReparto(_superior)) {
+                    _superior.posicionar();
+                }
+                
+                // Luego, se lleva a cabo la representación de los "Actores" y, de forma
+                // recursiva, de cualquier otro "Actor" dependiente o "Subreparto"
+                for (let i = 0; i < _actores.length; i++) {
+                    _actores[i].representar();
+                    _representarActores(_actores[i].identificador);  // Actores dirigidos por el "Actor" 
+                    _representarRepartos(_actores[i].identificador); // Subrepartos encabezados por el "Actor"
+                }
+            }            
+            S.O.S.P5.pop();
+        }        
+    }
+    
+    /**
+     * _representarRepartos
+     * Dado el identificador de la "Escena" o de un "Actor", la función
+     * identifica a todos los "Repartos" asociados para invocar, de forma
+     * recursiva, a la función para representar a sus "Actores".
+     * 
+     * REGISTRO DE REPARTOS:
+     * En este registro, los "Repartos" pueden estar vinculados con:
+     * - UNA ESCENA : son los repartos principales creados directamente en la "Escena"
+     * - UN ACTOR   : son los repartos creados, ya sea como parte de la definición de
+     *                un "Actor" como la de algún otro "Reparto".
+     * 
+     * Nunca podría haber un "Reparto" debajo de otro "Reparto". En los casos en que
+     * un "Reparto" contenga "Subrepartos" en su definición, éstos últimos cuentan
+     * como "metarepartos", ya que las instancias de dichos "Subrepartos" se crearán
+     * por cada "Actor" del "Reparto" principal y en la medida en que éstos vayan siendo
+     * introducidos. El "metareparto", entonces, funciona como la plantilla para crear
+     * las instancias de los "Subrepartos" encabezados por cada "Actor".
+     */
+    function _representarRepartos(identificador) {
+        if (_REG.repartos.hasOwnProperty(identificador)) {
+            let _repartos = _REG.repartos[identificador];
+            for (let i = 0; i < _repartos.length; i++) {
+                _representarActores(_repartos[i].identificador);
+            }
+        }
+    }
+
+    /**
+     * _finalizarSubrepartosDelActor
+     * Si el "Actor" recibido como argumento encabeza "Subrepartos", entonces
+     * se los finaliza y se invoca a la función para finalizar, recursivamente,
+     * a todos los "Actores" de dichos "Subrepartos". Se trata de un borrado 
+     * lógico (sólo se les coloca la marca de "finalizado").
+     */
+    function _finalizarSubrepartosDelActor(actor) {
+        for (const [identificadorRep, repartos] of Object.entries(_REG.repartos)) {
+            if (identificadorRep == actor.identificador) {
+                for (let r = 0; r < repartos.length; r++) {
+                    repartos[r].finalizar();
+                    _REG.repartosFinalizados.push(repartos[r].identificador);
+                    _finalizarActoresDelReparto(repartos[r]);
+                }
+            }
+        }
+    }
+
+    /**
+     * _finalizarActoresDelReparto
+     * Si el "Reparto" recibido como argumento contiene "Actores", entonces se
+     * los finaliza y se invoca a la función para finalizar, recursivamente, a
+     * todos sus posibles "Subrepartos". Se trata de un borrado lógico (sólo se) 
+     * les coloca la marca de "finalizado").
+     */
+    function _finalizarActoresDelReparto(reparto) {
+        for (const [identificadorAct, actores] of Object.entries(_REG.actores)) {
+            if (identificadorAct == reparto.identificador) {
+                for (let a = 0; a < actores.length; a++) {
+                    actores[a].finalizar();
+                    _REG.actoresFinalizados.push(actores[a].identificador);
+                    _finalizarSubrepartosDelActor(actores[a]);
+                }
+            }
+        }
+    }
+    
+    /**
+     * _depurarRegistro
+     * Functión interna que se encarga efectivamente del borrado real de los
+     * registos (de "Actores" o "Repartos") que hayan sido finalizados durante
+     * el proceso de actualización.
+     */
+    function _depurarRegistro() {
+        // Depuración de los actores identificados como "finalizados"
+        let _regActores = Object.entries(_REG.actores);
+        let _registroActoresActivos = {};
+        for (const [identificador, actores] of _regActores) {
+            if (!_REG.repartosFinalizados.includes(identificador) &&
+                !_REG.actoresFinalizados.includes(identificador)) {
+                _registroActoresActivos[identificador] = actores;
+            }
+        }
+        _REG.actores = _registroActoresActivos;
+        
+        // Depuración de los repartos identificados como "finalizados"
+        let _regRepartos = Object.entries(_REG.repartos);
+        let _registroRepartosActivos = {};
+        for (const [identificador, repartos] of _regRepartos) {
+            if (!_REG.repartosFinalizados.includes(identificador) &&
+                !_REG.actoresFinalizados.includes(identificador)) {
+                _registroRepartosActivos[identificador] = repartos;
+            }
+        }
+        _REG.repartos = _registroRepartosActivos;
+        
+        // Reinicialización del registro de "finalizados"
+        _REG.actoresFinalizados = [];
+        _REG.repartosFinalizados = [];
+    }    
+    
     
     
 // =====================================================================

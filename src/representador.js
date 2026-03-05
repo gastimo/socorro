@@ -93,7 +93,17 @@ romboide : (actor) => {
 //  rectas, sin dibujar ninguna otra figura.
 //
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-lineal : (actor) => {
+linea : (actor) => {
+    S.O.S.P5.noFill();
+    if (actor.estilo.trazo  !== undefined && actor.estilo.trazo  !== null &&
+        actor.estilo.grosor !== undefined && actor.estilo.grosor !== null) {
+        S.O.S.P5.stroke(actor.estilo.trazo);
+        S.O.S.P5.strokeWeight(S.O.S.escalar(actor.estilo.grosor));
+        if (actor.sig) {
+            S.O.S.P5.line(actor.posicion.x, actor.posicion.y, actor.posicion.z, 
+                          actor.sig.posicion.x, actor.sig.posicion.y, actor.sig.posicion.z);
+        }
+    }
 },
         
 

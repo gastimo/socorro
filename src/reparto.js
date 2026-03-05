@@ -82,104 +82,9 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
     const _RPT = _ESQ.extender();
     let   _rutinaIniciadora;
     let   _actoresIntroducidos = 0;
-    
-        
-    /**
-     * _inicializar
-     * Método privado de inicialización de las propiedades del "Reparto".
-     */
-    function _inicializar(coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion) {
-        
-        // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESQUEMA")
-        // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
-        // los atributos del "Reparto", recibidas como argumento.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        let _definicion = {};        
-        if (coreografia !== undefined && coreografia !== null)
-            _definicion[CONFIG.RPT_COREOGRAFIA] = coreografia;
-        if (cantidad !== undefined && cantidad !== null)
-            _definicion[CONFIG.RPT_CANTIDAD] = cantidad;
-        if (puestos !== undefined && puestos !== null)
-            _definicion[CONFIG.RPT_PUESTOS] = puestos;
-        if (intervalo !== undefined && intervalo !== null)
-            _definicion[CONFIG.RPT_INTERVALO] = intervalo;
-        if (intensidad !== undefined && intensidad !== null)
-            _definicion[CONFIG.RPT_INTENSIDAD] = intensidad;
-        if (desvío !== undefined && desvío !== null)
-            _definicion[CONFIG.RPT_DESVIO] = desvío;
-        if (separacion !== undefined && separacion !== null)
-            _definicion[CONFIG.RPT_SEPARACION] = separacion;
-        _ESQ.def(_definicion);
-        
-        // 2. INICIALIZACIÓN DE PROPIEDADES PÚBLICAS (DEL "REPARTO")
-        // Las propiedades públicas son las variables del "Reparto" donde 
-        // se colocan los valores evaluados de los atributos dinámicos.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        for (let i = 0; i < CONFIG.Reparto.length; i++) {
-            _RPT[CONFIG.Reparto[i]] = undefined;
-        }        
-        
-        // 3. INICIALIZACIÓN DE RUTINA INICIADORA
-        // Se crea la "Rutina Iniciadora", encargada de la introducción
-        // de los "Actores" del "Reparto" en la "Escena".
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        _iniciadorDelReparto();
-        
-        return _RPT;
-    }
-    
-    /**
-     * _iniciadorDelReparto
-     * Función interna que define la "Rutina Iniciadora", es decir, el método que se 
-     * ocupa de darle la entrada a "Escena" a los "Actores" en el momento que les 
-     * corresponde (según lo indicado por el argumento "intervalo").
-     */
-    function _iniciadorDelReparto() {
-        let _intervalo = _ESQ.val(CONFIG.RPT_INTERVALO);
-        _rutinaIniciadora = S.O.S.accionador(_intervalo, () => {
-            let _nroActores = S.O.S.Actores.hasOwnProperty(_ESQ.identificador) ? S.O.S.Actores[_ESQ.identificador].length : 0;
-            let _cantidad = _RPT[CONFIG.RPT_CANTIDAD] ?? 1;
+    let   _finalizado = false;
+
             
-            for (let i = _nroActores; i < _cantidad; i++) {
-                let _nuevoActor = S.O.S.Actor();
-                _nuevoActor.numero = _actoresIntroducidos;
-                _nuevoActor.orden  = _actoresIntroducidos % _cantidad;
-                _actoresIntroducidos++;
-                
-                // Se coreografía el movimiento del "Actor" en la "Escena"
-                S.O.S.COREO[_RPT[CONFIG.RPT_COREOGRAFIA] ?? 'radial']
-                                (_nuevoActor,
-                                 _cantidad,                         // Cantidad máxima de actores en "Escena"
-                                 _RPT[CONFIG.RPT_PUESTOS]    ?? 1,  // Cantidad total de posiciones de partida
-                                 _RPT[CONFIG.RPT_INTENSIDAD] ?? 0,  // Intensidad (magnitud para la velocidad)
-                                 _RPT[CONFIG.RPT_DESVIO]     ?? 0,  // Desvío (angulo en radianes)
-                                 _RPT[CONFIG.RPT_SEPARACION] ?? 0); // Separación (desde el punto de origen)
-
-                // Finalmente, se incorpora el "Actor" al "Reparto". Al añadirlo
-                // bajo un "nombre de atributo de dinámico", el "Esquema" no lo
-                // almacena internamente (y por lo tanto, tampoco se incluye en
-                // futuras exportaciones), pero sí se incorpora al "Reparto" general.
-                const _definicionActor = {};
-                _definicionActor[CONFIG.ATR_NOMBRE_DINAMICO] = _nuevoActor;
-                _ESQ.def(_definicionActor);
-                
-                // Cuando el intervalo no está definido, se genera la cantidad
-                // completa de "Actores" en la iteración actual. En caso contrario
-                // se van generando espaciadamente, de acuerdo a lo indicado en el
-                // parámetro "intervalo" (que especifica cantidad de fotogramas).
-                if (_intervalo)
-                    break;
-                else {
-                    _RPT.actualizar(CONFIG.RPT_PUESTOS);
-                    _RPT.actualizar(CONFIG.RPT_INTENSIDAD);
-                    _RPT.actualizar(CONFIG.RPT_DESVIO);
-                    _RPT.actualizar(CONFIG.RPT_SEPARACION);                
-
-                }
-            }
-        });
-    }
-        
     /**
      * def
      * Esta función es la misma que la del objeto "Esquema" de quien el "Reparto"
@@ -191,9 +96,7 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
             // Actualización de la definición de los atributos
             const _definicion = {};
             for (const [atrNombre, atrValor] of Object.entries(atributos)) {
-                if (CONFIG.Reparto.includes(atrNombre)) {
-                    _definicion[atrNombre] = atrValor;
-                }
+                _definicion[atrNombre] = atrValor;
             }
             _ESQ.def(_definicion);
             
@@ -201,17 +104,6 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
             _iniciadorDelReparto();
         }
         return _RPT;
-    };
-
-    /**
-     * metaDef
-     * Registro del "Reparto" en la "Escena". Esta función sólo es invocada
-     * para aquellos "Repartos" que hayan sido utilizados en la definición
-     * de un atributo de algún "Esquema". Por ejemplo, al definir un "Reparto" 
-     * como un atributo de una "Escena" o de algún otro "Reparto".
-     */
-    _RPT.metaDef = () => {
-        S.O.S.Repartos[_ESQ.identificador] = _RPT;
     };
     
     /**
@@ -336,43 +228,52 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
      * Luego, se ocupa de actualizar a cada uno de los "Actores" del "Reparto".
      */
     _RPT.actualizar = (nombreAtr) => {
-        
-        // 1. ACTUALIZACIÓN DE LAS VARIABLES PÚBLICAS DEL REPARTO
-        // En cada iteración del ciclo de ejecución se obtienen los valores
-        // actualizados (evaluados) de las variables públicas del "Reparto".
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        for (let i = 0; i < CONFIG.Reparto.length; i++) {
-            if (!nombreAtr || nombreAtr == CONFIG.Reparto[i]) {
-                let _valor = _ESQ.val(CONFIG.Reparto[i]) ?? _ESQ.heredar(CONFIG.Reparto[i], CONFIG.Reparto[i] !== CONFIG.RPT_ESTILO);
+        if (!_finalizado && !_RPT.metareparto) {
             
-                // En caso de tratarse del vector de "desplazamiento", debe actualizarse primero
-                if (CONFIG.Reparto[i] == CONFIG.RPT_DESPLAZAMIENTO) {
-                    _RPT[CONFIG.RPT_DESPLAZAMIENTO] = _valor ? _valor.val() : _RPT[CONFIG.RPT_DESPLAZAMIENTO];
+            // 1. ACTUALIZACIÓN DE LAS VARIABLES PÚBLICAS DEL REPARTO
+            // En cada iteración del ciclo de ejecución se obtienen los valores
+            // actualizados (evaluados) de las variables públicas del "Reparto".
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            for (let i = 0; i < CONFIG.Reparto.length; i++) {
+                if (!nombreAtr || nombreAtr == CONFIG.Reparto[i]) {
+                    let _valor = _ESQ.val(CONFIG.Reparto[i]) ?? _ESQ.heredar(CONFIG.Reparto[i]);
+
+                    // En caso de tratarse del vector de "desplazamiento", debe
+                    // actualizarse primero para calcular sus coordenadas <x,y,z>
+                    if (CONFIG.Reparto[i] == CONFIG.RPT_DESPLAZAMIENTO)
+                        _RPT[CONFIG.RPT_DESPLAZAMIENTO] = _valor ? _valor.val() : _RPT[CONFIG.RPT_DESPLAZAMIENTO];
+                    else 
+                        _RPT[CONFIG.Reparto[i]] = _valor;                
+
+                    // ----------------------------------------------------------------------
+                    //  NOTA: Si bien el "Estilo" (si es que fue definido en el "Reparto")
+                    //  se obtiene en este punto, no es actualizado. La actualización del
+                    //  "Estilo" siempre la hace el "Actor", ya que puede requerir atributos
+                    //  de éste durante su evaluación (ej. orden, puesto, distancia, etc).
+                    // ----------------------------------------------------------------------
                 }
-                else {
-                    _RPT[CONFIG.Reparto[i]] = _valor;                
-                }                
             }
+
+            // 2. ENTRADA DE ACTORES A ESCENA
+            // Se invoca a la "Rutina Iniciadora" para dar entrada a los "Actores" a 
+            // la "Escena". Esta rutina es un método configurado para sumar un nuevo
+            // "Actor" cada vez que transcurra el intervalo de espera indicado.
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            if (!nombreAtr)
+                _rutinaIniciadora(_RPT);
         }
-        
-        // 2. ENTRADA DE ACTORES A ESCENA
-        // Se invoca a la "Rutina Iniciadora" para dar entrada a los "Actores" a 
-        // la "Escena". Esta rutina es un método configurado para sumar un nuevo
-        // "Actor" cada vez que transcurra el intervalo de espera indicado.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        if (!nombreAtr)
-            _rutinaIniciadora(_RPT);
     };
     
-    
     /**
-     * representar
+     * posicionar
+     * Esta función se invoca justo antes de la representación de los "Actores" del
+     * "Reparto" en la Escena". 
      * Si bien el "Reparto" en sí no tiene representación visual (sólo los "Actores"
      * la tienen), esta función realiza las tareas de preparación para la representación
      * posterior de los "Actores" que conforman el "Reparto". Por ejemplo, esta función
      * se ocupa de ubicar las coordenadas de origen del "Reparto" en el lienzo.
      */
-    _RPT.representar = () => {
+    _RPT.posicionar = () => {
         if (_RPT.desplazamiento) {
             S.O.S.P5.translate((_RPT.desplazamiento.x ?? 0) * S.O.S.ancho() / 2, 
                                (_RPT.desplazamiento.y ?? 0) * S.O.S.alto()  / 2, 
@@ -383,6 +284,169 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
         }
     };
     
+    /**
+     * subreparto
+     * Crea un nuevo "Reparto" como una copia del "Reparto" actual.
+     */
+    _RPT.subreparto = () => {
+        const _sr = Reparto(S);
+        _sr.replicarDef(_ESQ);
+        _sr.metadef = _RPT;
+        return _sr;
+    };
+    
+
+    /**
+     * finalizar
+     * Marca al "Reparto" corriente como finalizado
+     */
+    _RPT.finalizar = () => {
+      _finalizado = true; 
+    };
+
+    /**
+     * finalizado
+     * Indica si al "Reparto" ha finalizado su participación en la "Escena"
+     */
+    _RPT.finalizado = () => {
+      return _finalizado; 
+    };
+    
+    
+// --------------------------------------------------------------------------------------------------
+//
+//   F U N C I O N E S     P R I V A D A S
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    
+    /**
+     * _inicializar
+     * Método privado de inicialización de las propiedades del "Reparto".
+     */
+    function _inicializar(coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion) {
+        
+        // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESQUEMA")
+        // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
+        // los atributos del "Reparto", recibidas como argumento.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        let _definicion = {};        
+        if (coreografia !== undefined && coreografia !== null)
+            _definicion[CONFIG.RPT_COREOGRAFIA] = coreografia;
+        if (cantidad !== undefined && cantidad !== null)
+            _definicion[CONFIG.RPT_CANTIDAD] = cantidad;
+        if (puestos !== undefined && puestos !== null)
+            _definicion[CONFIG.RPT_PUESTOS] = puestos;
+        if (intervalo !== undefined && intervalo !== null)
+            _definicion[CONFIG.RPT_INTERVALO] = intervalo;
+        if (intensidad !== undefined && intensidad !== null)
+            _definicion[CONFIG.RPT_INTENSIDAD] = intensidad;
+        if (desvío !== undefined && desvío !== null)
+            _definicion[CONFIG.RPT_DESVIO] = desvío;
+        if (separacion !== undefined && separacion !== null)
+            _definicion[CONFIG.RPT_SEPARACION] = separacion;
+        _ESQ.def(_definicion);
+        
+        // 2. INICIALIZACIÓN DE PROPIEDADES PÚBLICAS (DEL "REPARTO")
+        // Las propiedades públicas son las variables del "Reparto" donde 
+        // se colocan los valores evaluados de los atributos dinámicos.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        for (let i = 0; i < CONFIG.Reparto.length; i++) {
+            _RPT[CONFIG.Reparto[i]] = undefined;
+        }        
+        
+        // 3. INICIALIZACIÓN DE PROPIEDADES ADICIONALES 
+        // Estas propiedades no forman parte de la definición de los atributos
+        // dinámicos del "Esquema". Son propiedades públicas, accesibles a 
+        // través de variables del "Reparto" y actualizadas dinámicamente.
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        _RPT.metareparto = false;  // Definición de un "Reparto" dentro de otro "Reparto"
+        _RPT.metadef = undefined;  // Puntero al metareparto con la definición del "Subreparto" actual
+        
+        // 4. INICIALIZACIÓN DE RUTINA INICIADORA
+        // Se crea la "Rutina Iniciadora", encargada de la introducción
+        // de los "Actores" del "Reparto" en la "Escena".
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        _iniciadorDelReparto();
+        
+        return _RPT;
+    }
+    
+    /**
+     * _iniciadorDelReparto
+     * Función interna que define la "Rutina Iniciadora", es decir, el método que se 
+     * ocupa de darle la entrada a "Escena" a los "Actores" en el momento que les 
+     * corresponde (según lo indicado por el argumento "intervalo").
+     */
+    function _iniciadorDelReparto() {
+        let _intervalo = _ESQ.val(CONFIG.RPT_INTERVALO);
+        _rutinaIniciadora = S.O.S.accionador(_intervalo, () => {
+            let _nroActores = S.O.S.actores(_ESQ.identificador)?.length ?? 0;
+            let _cantidad = _RPT[CONFIG.RPT_CANTIDAD] ?? 1;
+            let _puestos  = _RPT[CONFIG.RPT_PUESTOS] ? (_RPT[CONFIG.RPT_PUESTOS] > 1 ? _RPT[CONFIG.RPT_PUESTOS] : 1) : 1;
+            
+            for (let i = _nroActores; i < _cantidad; i++) {
+                let _nuevoActor = S.O.S.Actor();
+                _nuevoActor.numero = _actoresIntroducidos;
+                _nuevoActor.orden  = _actoresIntroducidos % _cantidad;
+                _nuevoActor.puesto = _actoresIntroducidos % _puestos;
+                _actoresIntroducidos++;
+                
+                // Se coreografía el movimiento del "Actor" en la "Escena"
+                S.O.S.COREO[_RPT[CONFIG.RPT_COREOGRAFIA] ?? 'radial']
+                                (_nuevoActor,
+                                 _cantidad,                         // Cantidad máxima de actores en "Escena"
+                                 _puestos,                          // Cantidad total de posiciones de partida
+                                 _RPT[CONFIG.RPT_INTENSIDAD] ?? 0,  // Intensidad (magnitud para la velocidad)
+                                 _RPT[CONFIG.RPT_DESVIO]     ?? 0,  // Desvío (angulo en radianes)
+                                 _RPT[CONFIG.RPT_SEPARACION] ?? 0); // Separación (desde el punto de origen)
+
+                // Se incorpora el "Actor" al "Reparto". Al añadirlo bajo un
+                // "nombre de atributo de dinámico", el "Esquema" no lo guarda
+                // internamente (y por lo tanto, tampoco se incluye en futuras 
+                // exportaciones), pero sí se incorpora al "Reparto" general.
+                const _definicionActor = {};
+                _definicionActor[CONFIG.ATR_NOMBRE_DINAMICO] = _nuevoActor;
+                _ESQ.def(_definicionActor);
+                
+                // Si existen "Subrepartos", se crean nuevas instancias colocando
+                // a "Actor" creado como cabeza de dichos "Repartos"
+                _iniciarSubrepartos(_nuevoActor);
+                
+                // Cuando el intervalo no está definido, se genera la cantidad
+                // completa de "Actores" en la iteración actual. En caso contrario
+                // se van generando espaciadamente, de acuerdo a lo indicado en el
+                // parámetro "intervalo" (que especifica cantidad de fotogramas).
+                if (_intervalo || i >= _cantidad - 1)
+                    break;
+                else {
+                    // Se actualizan los parámetros del "Reparto" para el siguiente "Actor"
+                    _RPT.actualizar(CONFIG.RPT_PUESTOS);
+                    _RPT.actualizar(CONFIG.RPT_INTENSIDAD);
+                    _RPT.actualizar(CONFIG.RPT_DESVIO);
+                    _RPT.actualizar(CONFIG.RPT_SEPARACION);                
+                }
+            }
+        });
+    }
+    
+    /**
+     * _iniciarSubrepartos
+     * Crear e inicializa los "Subrepartos" que por cada "Actor" 
+     * del "Reparto" superior.
+     */
+    function _iniciarSubrepartos(actor) {
+        let _repartoSuperior = actor.superior.entidad.metadef ?? actor.superior.entidad; 
+        let _subrepartos = S.O.S.metarepartos(_repartoSuperior.identificador);
+        if (_subrepartos) {
+            for (let i = 0; i < _subrepartos.length; i++) {
+                let _subreparto = _subrepartos[i].subreparto();
+                const _definicionActor = {};
+                _definicionActor[CONFIG.ATR_NOMBRE_DINAMICO] = _subreparto;
+                actor.def(_definicionActor);
+            }
+        }
+    }
+
     
     return  _inicializar(coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion);
 }
