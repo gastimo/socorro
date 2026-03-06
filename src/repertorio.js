@@ -5,16 +5,19 @@
  * 
  * =============================================================================
  */
-import Representador from './representador';
-import Coreografia from './coreografia';
-import Color from './color';
+import Evaluador from './repertorios/evaluador';
+import Representador from './repertorios/representador';
+import Coreografia from './repertorios/coreografia';
+import Color from './repertorios/color';
+
 
 /**
  * Repertorio
- * Un "Repertorio" es, básicamente, una enumeración de códigos, claves o nombres que mapean
- * a algún tipo de dato o función constante y que describen el espacio de valores de una 
- * variable en particular. Cada socorrista designado ya trae consigo la colección de repertorios
- * predefinidos que se muestra a continuación:
+ * Un "Repertorio" es, básicamente, una enumeración de claves o nombres que mapean a algún
+ * tipo de dato o función constante y que describen el espacio de valores de una variable.
+ * Cada socorrista designado trae consigo la colección de repertorios predefinidos:
+ * 
+ *   S.O.S.EVAL  : Repertorio de "Métodos de evaluación" para variables dinámicas
  *   S.O.S.REP   : Repertorio de "Representadores"
  *   S.O.S.COREO : Repertorio de "Coreografías" para los "Repartos"
  *   S.O.S.COLOR : Repertorio de "Gradientes" de colores
@@ -31,6 +34,7 @@ function Repertorio(S) {
     // -------------------------------------------
     // Repertorios preestablecidos
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    _REPES.EVAL  = Evaluador(S);
     _REPES.REP   = Representador(S); 
     _REPES.COREO = Coreografia(S);
     _REPES.COLOR = S.O.S.hasOwnProperty('P5') ? Color(S).Gradientes : [];

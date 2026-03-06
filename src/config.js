@@ -42,9 +42,6 @@ const Config = (() => {
         SOS_COLOR               : 'COLOR',
         SOS_METODO_EVALUACION   : 'EVAL',
         
-        // Entidades generales de administración del módulo
-        SOS_GUION               : '_GUI',   // Conjunto de descripciones de las entidades actuantes de la "Escena"
-        
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
     // > ESCENAS
@@ -132,54 +129,7 @@ const Config = (() => {
         ACT_REPRESENTADOR       : 'representador',
         ACT_MAX_DURACION        : 'duracionMaxima',
         ACT_MAX_RECORRIDO       : 'recorridoMaximo',
-
-        
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-    // > VARIABLES DINÁMICAS
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-        // Métodos de evalaución dinámica de las "Variables"
-        EVAL_FIJO        : 'fijo',
-        EVAL_CICLO       : 'ciclo',          // TIEMPO
-        EVAL_CONTRACICLO : 'contraciclo',    // TIEMPO
-        EVAL_LAPSO       : 'lapso',          // TIEMPO
-        EVAL_AZAR        : 'azar',           // AZAR
-        EVAL_RUIDO       : 'perlin',         // AZAR
-        EVAL_ORDEN       : 'orden',          // ACTOR
-        EVAL_DISTANCIA   : 'dist',           // ACTOR
-        EVAL_RECORRIDO   : 'recorrido',      // ACTOR
-
-        
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-    // > COREOGRAFÍAS
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        COREO_RADIAL        : 'radial',
-        COREO_AXIAL         : 'axial',
-        COREO_RECTANGULAR   : 'rectangular',
-
-    
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-    // > REPRESENTADORES
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        REP_ESTANDAR        : 'estandar',
-        REP_LINEAL          : 'lineal',
-        REP_ESTRELLA        : 'estrella',
-        REP_DANDELION       : 'dandelion',
-        REP_ESPINAL         : 'espinal',
-
-        
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-    // > GUION
-    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        GUI_NOMBRE          : 'nombre',
-        GUI_VALOR_DEFECTO   : 'valorPorDefecto',
-        GUI_VALOR_MINIMO    : 'valorMinimo',
-        GUI_VALOR_MAXIMO    : 'valorMaximo',
-        GUI_INCREMENTO      : 'incremento',
-        GUI_REPERTORIO      : 'repertorio',
-        GUI_HEREDAR         : 'heredar',
-        GUI_ETIQUETA        : 'etiqueta',
-        GUI_ATRIBUTO        : 'atributo'
+                
     };
     
     return _PARAM;

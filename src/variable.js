@@ -41,7 +41,7 @@ import Esquema from './esquema';
 function Variable(S, ...parametros) {
     const _ESQ = Esquema(S, CONFIG.SOS_VARIABLE);
     const _VAR = _ESQ.extender();
-
+    
     let _calculadora = null;
     _inicializar();
 
@@ -51,7 +51,7 @@ function Variable(S, ...parametros) {
      * Método privado de inicialización de las propiedades de la "Variable".
      */
     function _inicializar() {
-        _ESQ.def({metodo         : CONFIG.METODO_EVAL_FIJO});
+        _ESQ.def({metodo         : null});
         _ESQ.def({valor          : null});
         _ESQ.def({origenDesde    : null});
         _ESQ.def({origenHasta    : null});
@@ -132,7 +132,7 @@ function Variable(S, ...parametros) {
             // ---------------------------------------------------------------------------
             // ANÁLISIS DE LOS ARGUMENTOS DE LA INVOCACIÓN (2+ ARGUMENTOS)
             if (parametros.length >= 2) {
-                if (_metodoEvaluacion == CONFIG.METODO_EVAL_FIJO) {
+                if (_metodoEvaluacion === null || S.O.S.EVAL.esEstatico(_metodoEvaluacion)) {
                     _ESQ.def({valor : parametros[1]});
                     return _VAR;
                 }                
@@ -271,7 +271,7 @@ function Variable(S, ...parametros) {
         // ejecución son múltiples. La "Calculadora" crea un contexto diferente por cada 
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         let _claveContexto = S.O.S.hasOwnProperty('ACTOR') ? S.O.S.ACTOR.identificador : _ESQ.identificador;
-        _contextoEjecucion = _calculadora.contexto(_claveContexto, _ESQ.val('modulador') ?? EVAL[_metodo]?.mod, _ESQ.val('ruidoVelocidad'));
+        _contextoEjecucion = _calculadora.contexto(_claveContexto, _ESQ.val('modulador') ?? S.O.S.EVAL[_metodo]?.mod, _ESQ.val('ruidoVelocidad'));
         let _v = _calculadora.calc(_contextoEjecucion);
         
         // 3. ADICIÓN DEL RUIDO
@@ -304,7 +304,7 @@ function Variable(S, ...parametros) {
      * a alguno de los "Métodos de Evaluación" existentes.
      */
     function _esUnMetodoDeEvaluacion(argumento) {
-        return EVAL.hasOwnProperty(argumento);
+        return S.O.S.EVAL.hasOwnProperty(argumento);
     }
         
     return _VAR;
@@ -407,16 +407,16 @@ function _Calculadora(S) {
         if (_VAL.funcionDinamica) {        
             if (!_VAL.esVector) {
                 S.O.S.VAR = ctx.PUBX;
-                return _mapear(EVAL[_VAL.funcionDinamica].met(S));
+                return _mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S));
             }
             else {
                 let _vecFinal = S.O.S.Vector();
                 S.O.S.VAR = ctx.PUBX;
-                _vecFinal.x = _mapear(EVAL[_VAL.funcionDinamica].met(S), 'x');
+                _vecFinal.x = _mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S), 'x');
                 S.O.S.VAR = ctx.PUBY;
-                _vecFinal.y = _mapear(EVAL[_VAL.funcionDinamica].met(S), 'y');
+                _vecFinal.y = _mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S), 'y');
                 S.O.S.VAR = ctx.PUBZ;
-                _vecFinal.z = _mapear(EVAL[_VAL.funcionDinamica].met(S), 'z');
+                _vecFinal.z = _mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S), 'z');
                 return _vecFinal;
             }
         }
@@ -452,16 +452,16 @@ function _Calculadora(S) {
             _pub.clave = clave;
             _pub.mod = modulador;
             let _pubX = {};
-            if (_VAL.funcionDinamica === CONFIG.EVAL_RUIDO)
+            if (S.O.S.EVAL.esPerlin(_VAL.funcionDinamica))
                 _pubX.perlin = S.O.S.ruido(0.0, 1.0, _pub.mod); 
             _contextoEjecucion.PUBX = S.O.S.revelar(_pubX, _pub);
             if (_VAL.esVector) {
                 let _pubY = {};
-                if (_VAL.funcionDinamica === CONFIG.EVAL_RUIDO)
+                if (S.O.S.EVAL.esPerlin(_VAL.funcionDinamica))
                     _pubY.perlin = S.O.S.ruido(0.0, 1.0, _pub.mod);
                 _contextoEjecucion.PUBY = S.O.S.revelar(_pubY, _pub);
                 let _pubZ = {};
-                if (_VAL.funcionDinamica === CONFIG.EVAL_RUIDO)
+                if (S.O.S.EVAL.esPerlin(_VAL.funcionDinamica))
                     _pubZ.perlin = S.O.S.ruido(0.0, 1.0, _pub.mod);
                 _contextoEjecucion.PUBZ = S.O.S.revelar(_pubZ, _pub);
             }
@@ -575,100 +575,6 @@ function _Calculadora(S) {
             
     return _VAL;
 }
-
-
-
-/*
- * =============================================================================
- * 
- *                 M É T O D O S    D E    E V A L U A C I Ó N
- * 
- * =============================================================================
- */
-
-// -----------------------------------------------
-//  Inicialización de los "Métodos de Evaluación"
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-const EVAL = {};
-    EVAL[CONFIG.EVAL_FIJO]        = {}; 
-    EVAL[CONFIG.EVAL_CICLO]       = {};
-    EVAL[CONFIG.EVAL_CONTRACICLO] = {};
-    EVAL[CONFIG.EVAL_LAPSO]       = {};
-    EVAL[CONFIG.EVAL_AZAR]        = {};
-    EVAL[CONFIG.EVAL_RUIDO]       = {};
-    EVAL[CONFIG.EVAL_ORDEN]       = {};
-    EVAL[CONFIG.EVAL_DISTANCIA]   = {};
-    EVAL[CONFIG.EVAL_RECORRIDO]   = {};
-
-
-
-// -----------------------------------------------
-//  MÉTODOS DE EVALUACIÓN: "CICLO" Y "CONTRACICLO"
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-// Estos métodos utilizan las funciones trigonométricas de "seno" y "coseno" aplicadas al tiempo
-// (la cantidad de milisegundos transcurridos) para devolver valores cíclicos entre "0" y "1".
-// El modulador es un coeficiente que permite acelerar o enlentecer los valores calculados. 
-EVAL[CONFIG.EVAL_CICLO].mod = 1800; 
-EVAL[CONFIG.EVAL_CICLO].met = (S) => { if (!S.O.S.VAR.hasOwnProperty('aux'))
-                                         S.O.S.VAR.aux = S.O.S.aleatorio(16000, 200000);
-                                       return Math.sin((S.O.S.tiempo() + S.O.S.VAR.aux) / S.O.S.VAR.mod) / 2 + 0.5;
-                                     };
-EVAL[CONFIG.EVAL_CONTRACICLO].mod = 1800; 
-EVAL[CONFIG.EVAL_CONTRACICLO].met = (S) => { if (!S.O.S.VAR.hasOwnProperty('aux'))
-                                               S.O.S.VAR.aux = S.O.S.aleatorio(16000, 200000);
-                                             return Math.cos((S.O.S.tiempo() + S.O.S.VAR.aux) / S.O.S.VAR.mod) / 2 + 0.5;
-                                           };
-
-// -----------------------------------------------
-//  MÉTODOS DE EVALUACIÓN: "LAPSO"
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-// Utiliza el operador de "módulo" sobre el tiempo (la cantidad de milisegundos transcurridos) para
-// producir ciclos repetitivos de valores entre "0" y "1" (que vuelven a iniciarse en "0" cada vez).
-// El modulador es un coeficiente que permite acelerar o enlentecer los valores calculados (el "módulo"). 
-EVAL[CONFIG.EVAL_LAPSO].mod = 777; 
-EVAL[CONFIG.EVAL_LAPSO].met = (S) => { if (!S.O.S.VAR.hasOwnProperty('aux'))
-                                         S.O.S.VAR.aux = S.O.S.aleatorio(16000, 200000);
-                                       return ((S.O.S.tiempo() + S.O.S.VAR.aux) % S.O.S.VAR.mod) / S.O.S.VAR.mod;
-                                     };
-
-
-// -----------------------------------------------
-//  MÉTODOS DE EVALUACIÓN: "AZAR"
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-// Utiliza la función "random" para generar valores entre "0" y "1". El "modulador" indica  
-// cada cuantos milisengundos se vuelve a generar un nuevo valor aleatorio.
-EVAL[CONFIG.EVAL_AZAR].mod = 1200; 
-EVAL[CONFIG.EVAL_AZAR].met = (S) => {if (!S.O.S.VAR.hasOwnProperty('aux') || S.O.S.VAR.aux + S.O.S.VAR.mod < S.O.S.tiempo()) {
-                                        S.O.S.VAR.aux = S.O.S.tiempo();
-                                        S.O.S.VAR.azar = S.O.S.aleatorio();
-                                     }
-                                     return S.O.S.VAR.azar;
-                                    };
-
-
-// -----------------------------------------------
-//  MÉTODOS DE EVALUACIÓN: "RUIDO"
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-// Genera ruido al azar con el algoritmo "perlin". El resultado es siempre un número entre "0" y "1".
-// El "modulador" indica el desplazamiento para la generación del ruido perlin, es decir, es un 
-// coeficiente para incrementar la intensidad o velocidad del desplazamiento en la generación.
-EVAL[CONFIG.EVAL_RUIDO].mod = 0.016; 
-EVAL[CONFIG.EVAL_RUIDO].met = (S) => {return S.O.S.VAR.perlin();};
-
-
-// -----------------------------------------------
-//  OTROS MÉTODOS DE EVALUACIÓN
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-EVAL[CONFIG.EVAL_ORDEN].mod = 1;
-EVAL[CONFIG.EVAL_ORDEN].met = (S) => {return S.O.S.ACTOR.orden * S.O.S.VAR.mod;};
-
-EVAL[CONFIG.EVAL_DISTANCIA].mod = 1;
-EVAL[CONFIG.EVAL_DISTANCIA].met = (S) => {
-    return S.O.S.ACTOR.distancia * S.O.S.VAR.mod;
-};
-
-EVAL[CONFIG.EVAL_RECORRIDO].mod = 1;
-EVAL[CONFIG.EVAL_RECORRIDO].met = (S) => {return S.O.S.ACTOR.recorrido * S.O.S.VAR.mod;};
 
 
 export default Variable;

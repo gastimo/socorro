@@ -282,9 +282,7 @@ function Escena(S) {
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         for (const [identificador, repartos] of Object.entries(_REG.repartos)) {
             for (let i = 0; i < repartos.length; i++) {
-                if (!repartos[i].finalizado()) {
-                    repartos[i].actualizar();
-                }
+                repartos[i].actualizar();
             }
         }
         

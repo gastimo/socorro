@@ -155,7 +155,7 @@ function Esquema(S, nombreEsquema) {
     /**
      * replicarDef
      * Copia las definiciones del "Esquema" recibido como argumento en el "Esquema"
-     * actual. Vale aclarar que sólo realiza una copia supeficial, es decir,
+     * actual. Vale aclarar que sólo realiza una copia superficial, es decir,
      * copia los punteros a los mismos objetos del "Esquema" recibido.
      */
     _ESQ.replicarDef = (esquema) => {

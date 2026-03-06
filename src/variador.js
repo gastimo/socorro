@@ -19,7 +19,7 @@ import CONFIG from './config';
  * sólo los métodos que son necesarios.
  */
 function Variador(S, valorDesde, valorHasta, modulador) {
-    const _VAR = S.O.S.Variable(CONFIG.EVAL_RUIDO, valorDesde, valorHasta, modulador);
+    const _VAR = S.O.S.Variable(S.O.S.EVAL.Perlin, valorDesde, valorHasta, modulador);
     const _VRD = {};
     _VRD.nombre = CONFIG.SOS_VARIADOR;
     _VRD.clave  = S.O.S.obtenerClave(_VRD.nombre);
@@ -57,9 +57,9 @@ function Variador(S, valorDesde, valorHasta, modulador) {
 
     /**
      * mod
-     * Redefinición del método "mod" del objeto "Variable". En este caso, el modulador
-     * sólo es utilizado para controlar la intensidad/escala del ruido "perlin" a generar.
-     * Su valor por defecto está definido en "EVAL[CONFIG.EVAL_RUIDO].mod".
+     * Redefinición del método "mod" del objeto "Variable". En este caso, 
+     * el modulador sólo es utilizado para controlar la intensidad/escala 
+     * del ruido "perlin" a generar.
      */
     _VRD.mod = (modulador) => {
         _VAR.mod(modulador);

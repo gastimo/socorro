@@ -17,14 +17,23 @@
  * Ejemplos:
  * 
  *    S.O.S.REP.estandar  : método estándar de representación de "Actores" (círculos)
- *    S.O.S.REP.lineal    : método de representación a través de lineas
+ *    S.O.S.REP.linea     : método de representación a través de lineas
  *    S.O.S.REP.romboide  : método de representación mediante rombos
  *    ...
  */
 const Representador = (S) => { 
 
-    const _REP = {
-        
+    const _REP = {};
+    
+    const ESTANDAR  = "estandar";
+    const LINEA     = "linea";
+    const ROMBOIDE  = "romboide";
+    const ESTRELLA  = "estrella";
+    const DANDELION = "dandelion";
+    const ESPINA    = "espina";
+    const PLUMA     = "pluma";
+
+    
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
 //  REPRESENTADOR: estandar
@@ -32,7 +41,7 @@ const Representador = (S) => {
 //  
 //
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-estandar : (actor) => {
+_REP[ESTANDAR] = (actor) => {
     if (actor.estilo.grandor !== undefined && actor.estilo.grandor !== null) {
         if (actor.estilo.color !== undefined && actor.estilo.color !== null)
             S.O.S.P5.fill(actor.estilo.color);
@@ -51,8 +60,30 @@ estandar : (actor) => {
                         actor.posicion.y ? S.O.S.escalar(actor.posicion.y) : 0, 
                         S.O.S.escalar(actor.estilo.grandor));
     }
-},
+};
 
+    
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//
+//  REPRESENTADOR: linea
+//  Conectar un actor con el siguiente mediante líneas
+//  rectas, sin dibujar ninguna otra figura.
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+_REP[LINEA] = (actor) => {
+    S.O.S.P5.noFill();
+    if (actor.estilo.trazo  !== undefined && actor.estilo.trazo  !== null &&
+        actor.estilo.grosor !== undefined && actor.estilo.grosor !== null) {
+        S.O.S.P5.stroke(actor.estilo.trazo);
+        S.O.S.P5.strokeWeight(S.O.S.escalar(actor.estilo.grosor));
+        if (actor.sig) {
+            S.O.S.P5.line(actor.posicion.x, actor.posicion.y, actor.posicion.z, 
+                          actor.sig.posicion.x, actor.sig.posicion.y, actor.sig.posicion.z);
+        }
+    }
+};
+    
+    
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
 //  REPRESENTADOR: romboide
@@ -60,7 +91,7 @@ estandar : (actor) => {
 //  
 //
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-romboide : (actor) => {
+_REP[ROMBOIDE] = (actor) => {
     if (actor.estilo.grandor !== undefined && actor.estilo.grandor !== null) {
         S.O.S.P5.push();
         if (actor.estilo.color !== undefined && actor.estilo.color !== null)
@@ -83,29 +114,8 @@ romboide : (actor) => {
                        _lado, _lado);
         S.O.S.P5.pop();
     }
-},
-
-        
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-//
-//  REPRESENTADOR: lineal
-//  Conectar un actor con el siguiente mediante líneas
-//  rectas, sin dibujar ninguna otra figura.
-//
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-linea : (actor) => {
-    S.O.S.P5.noFill();
-    if (actor.estilo.trazo  !== undefined && actor.estilo.trazo  !== null &&
-        actor.estilo.grosor !== undefined && actor.estilo.grosor !== null) {
-        S.O.S.P5.stroke(actor.estilo.trazo);
-        S.O.S.P5.strokeWeight(S.O.S.escalar(actor.estilo.grosor));
-        if (actor.sig) {
-            S.O.S.P5.line(actor.posicion.x, actor.posicion.y, actor.posicion.z, 
-                          actor.sig.posicion.x, actor.sig.posicion.y, actor.sig.posicion.z);
-        }
-    }
-},
-        
+};
+   
 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
@@ -114,8 +124,8 @@ linea : (actor) => {
 //  
 //  
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-estrella : (actor) => {
-},
+_REP[ESTRELLA] = (actor) => {
+};
 
         
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -125,36 +135,33 @@ estrella : (actor) => {
 //  
 //
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-dandelion : (actor) => {
-},
+_REP[DANDELION] = (actor) => {
+};
 
         
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
-//  REPRESENTADOR: espinas
+//  REPRESENTADOR: espina
 //  
 //  
 //  
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-espinas : (actor) => {
-},
+_REP[ESPINA] = (actor) => {
+};
         
         
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
-//  REPRESENTADOR: plumas
+//  REPRESENTADOR: pluma
 //  
 //  
 //  
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-plumas : (actor) => {
-},
+_REP[PLUMA] = (actor) => {
+};
 
         
-        
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-    };
     return _REP;
 };
 

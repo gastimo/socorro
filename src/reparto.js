@@ -431,8 +431,13 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
     
     /**
      * _iniciarSubrepartos
-     * Crear e inicializa los "Subrepartos" que por cada "Actor" 
-     * del "Reparto" superior.
+     * Crear e inicializa los "Subrepartos" por cada "Actor" del "Reparto" superior.
+     * NOTA: Los "Subrepartos" siempre terminan siendo registrados bajo un "Actor" y nunca
+     * bajo el "Reparto" superior. La definición de un "Subreparto" dentro de un "Reparto"
+     * principal es interpretado como un "metareparto", es decir, es una plantilla que se
+     * emplea a la hora de crear las instancias de dicho "Subreparto" por cada uno de los
+     * "Actores" introducidos en el "Reparto" principal. Existirán tantas instancias del
+     * "Subreparto" como "Actores" hayan sido introducidos en el "Reparto" superior.
      */
     function _iniciarSubrepartos(actor) {
         let _repartoSuperior = actor.superior.entidad.metadef ?? actor.superior.entidad; 

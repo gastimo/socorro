@@ -9,7 +9,10 @@
 const Color = (S) => { 
     
     const _COLOR = {  
-        // Nombres de los gradientes predefinidos
+        
+        // ----------------------------------------
+        //  Nombres de los gradientes predefinidos
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         CORALIA      : 'coralia',
         ESMERALDA    : 'esmeralda',
         UNIVERSAL    : 'universal',
@@ -17,6 +20,7 @@ const Color = (S) => {
         LUCINTI      : 'lucinti',
         FLAMINGO     : 'flamingo',
         CADETE       : 'cadete',
+
     };
 
     
