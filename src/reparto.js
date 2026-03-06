@@ -80,6 +80,7 @@ import Esquema from './esquema';
 function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion) {
     const _ESQ = Esquema(S, CONFIG.SOS_REPARTO);
     const _RPT = _ESQ.extender();
+    let   _prevIntervalo;
     let   _rutinaIniciadora;
     let   _actoresIntroducidos = 0;
     let   _finalizado = false;
@@ -99,9 +100,6 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
                 _definicion[atrNombre] = atrValor;
             }
             _ESQ.def(_definicion);
-            
-            // Reinicialización de la "Rutina Iniciadora"
-            _iniciadorDelReparto();
         }
         return _RPT;
     };
@@ -238,10 +236,17 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
                 if (!nombreAtr || nombreAtr == CONFIG.Reparto[i]) {
                     let _valor = _ESQ.val(CONFIG.Reparto[i]) ?? _ESQ.heredar(CONFIG.Reparto[i]);
 
+                    // En caso de tratarse del "intervalo", se verifica que siempre
+                    // tenga un valor. Un intervalor de cero significa que todos los 
+                    // "Actores" se generarán al mismo tiempo.
+                    if (CONFIG.Reparto[i] == CONFIG.RPT_INTERVALO) {
+                        _RPT[CONFIG.RPT_INTERVALO] = _valor ?? 0;
+                    }
                     // En caso de tratarse del vector de "desplazamiento", debe
                     // actualizarse primero para calcular sus coordenadas <x,y,z>
-                    if (CONFIG.Reparto[i] == CONFIG.RPT_DESPLAZAMIENTO)
+                    if (CONFIG.Reparto[i] == CONFIG.RPT_DESPLAZAMIENTO) {
                         _RPT[CONFIG.RPT_DESPLAZAMIENTO] = _valor ? _valor.val() : _RPT[CONFIG.RPT_DESPLAZAMIENTO];
+                    }
                     else 
                         _RPT[CONFIG.Reparto[i]] = _valor;                
 
@@ -253,8 +258,21 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
                     // ----------------------------------------------------------------------
                 }
             }
+            
+            // 2. DECLARACIÓN DE LA RUTINA INICIALIZADORA
+            // Se trata de la rutina encargada de introducir los "Actores" del "Reparto"
+            // a la "Escena". Se posterga su inicialización hasta este punto para asegurarse
+            // de contar con los valores actualizados de los atributos del "Reparto" (por 
+            // ejemplo, "intervalo", "cantidad", "puestos", "etc").
+            // La rutina debería ser reinicializada cada vez que el valor del "intervalo"
+            // haya sido modificado.
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            if (!_rutinaIniciadora || _prevIntervalo != _RPT[CONFIG.RPT_INTERVALO]) {
+                _RPT.iniciadorDelReparto();
+                _prevIntervalo = _RPT[CONFIG.RPT_INTERVALO];
+            }
 
-            // 2. ENTRADA DE ACTORES A ESCENA
+            // 3. ENTRADA DE ACTORES A ESCENA
             // Se invoca a la "Rutina Iniciadora" para dar entrada a los "Actores" a 
             // la "Escena". Esta rutina es un método configurado para sumar un nuevo
             // "Actor" cada vez que transcurra el intervalo de espera indicado.
@@ -262,6 +280,65 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
             if (!nombreAtr)
                 _rutinaIniciadora(_RPT);
         }
+    };
+    
+    
+    /**
+     * iniciadorDelReparto
+     * Función interna que define la "Rutina Iniciadora", es decir, el método que se 
+     * ocupa de darle la entrada a "Escena" a los "Actores" en el momento que les 
+     * corresponde (según lo indicado por el argumento "intervalo").
+     */
+    _RPT.iniciadorDelReparto = () => {
+        let _intervalo = _RPT[CONFIG.RPT_INTERVALO] <= 0 ? 1 : _RPT[CONFIG.RPT_INTERVALO];
+        _rutinaIniciadora = S.O.S.accionador(_intervalo, () => {
+            let _nroActores = S.O.S.actores(_ESQ.identificador)?.length ?? 0;
+            let _cantidad = _RPT[CONFIG.RPT_CANTIDAD] ?? 1;
+            let _puestos  = _RPT[CONFIG.RPT_PUESTOS] ? (_RPT[CONFIG.RPT_PUESTOS] > 1 ? _RPT[CONFIG.RPT_PUESTOS] : 1) : 1;
+            
+            for (let i = _nroActores; i < _cantidad; i++) {
+                let _nuevoActor = S.O.S.Actor();
+                _nuevoActor.numero = _actoresIntroducidos;
+                _nuevoActor.orden  = _actoresIntroducidos % _cantidad;
+                _nuevoActor.puesto = _actoresIntroducidos % _puestos;
+                _actoresIntroducidos++;
+                
+                // Se coreografía el movimiento del "Actor" en la "Escena"
+                S.O.S.COREO[_RPT[CONFIG.RPT_COREOGRAFIA] ?? S.O.S.COREO.estandar()]
+                                (_nuevoActor,
+                                 _cantidad,                         // Cantidad máxima de actores en "Escena"
+                                 _puestos,                          // Cantidad total de posiciones de partida
+                                 _RPT[CONFIG.RPT_INTENSIDAD] ?? 0,  // Intensidad (magnitud para la velocidad)
+                                 _RPT[CONFIG.RPT_DESVIO]     ?? 0,  // Desvío (angulo en radianes)
+                                 _RPT[CONFIG.RPT_SEPARACION] ?? 0); // Separación (desde el punto de origen)
+
+                // Se incorpora el "Actor" al "Reparto". Al añadirlo bajo un
+                // "nombre de atributo de dinámico", el "Esquema" no lo guarda
+                // internamente (y por lo tanto, tampoco se incluye en futuras 
+                // exportaciones), pero sí se incorpora al "Reparto" general.
+                const _definicionActor = {};
+                _definicionActor[CONFIG.ATR_NOMBRE_DINAMICO] = _nuevoActor;
+                _ESQ.def(_definicionActor);
+                
+                // Si existen "Subrepartos", se crean nuevas instancias colocando
+                // a "Actor" creado como cabeza de dichos "Repartos"
+                _iniciarSubrepartos(_nuevoActor);
+                
+                // Cuando el intervalo se define en "cero", se genera la cantidad
+                // completa de "Actores" en la iteración actual. En caso contrario
+                // se van generando espaciadamente, de acuerdo a lo indicado en el
+                // parámetro "intervalo" (que especifica cantidad de fotogramas).
+                if (_RPT[CONFIG.RPT_INTERVALO] != 0 || i >= _cantidad - 1)
+                    break;
+                else {
+                    // Se actualizan los parámetros del "Reparto" para el siguiente "Actor"
+                    _RPT.actualizar(CONFIG.RPT_PUESTOS);
+                    _RPT.actualizar(CONFIG.RPT_INTENSIDAD);
+                    _RPT.actualizar(CONFIG.RPT_DESVIO);
+                    _RPT.actualizar(CONFIG.RPT_SEPARACION);                
+                }
+            }
+        });
     };
     
     /**
@@ -362,73 +439,9 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
         _RPT.metareparto = false;  // Definición de un "Reparto" dentro de otro "Reparto"
         _RPT.metadef = undefined;  // Puntero al metareparto con la definición del "Subreparto" actual
         
-        // 4. INICIALIZACIÓN DE RUTINA INICIADORA
-        // Se crea la "Rutina Iniciadora", encargada de la introducción
-        // de los "Actores" del "Reparto" en la "Escena".
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        _iniciadorDelReparto();
-        
         return _RPT;
     }
-    
-    /**
-     * _iniciadorDelReparto
-     * Función interna que define la "Rutina Iniciadora", es decir, el método que se 
-     * ocupa de darle la entrada a "Escena" a los "Actores" en el momento que les 
-     * corresponde (según lo indicado por el argumento "intervalo").
-     */
-    function _iniciadorDelReparto() {
-        let _intervalo = _ESQ.val(CONFIG.RPT_INTERVALO);
-        _rutinaIniciadora = S.O.S.accionador(_intervalo, () => {
-            let _nroActores = S.O.S.actores(_ESQ.identificador)?.length ?? 0;
-            let _cantidad = _RPT[CONFIG.RPT_CANTIDAD] ?? 1;
-            let _puestos  = _RPT[CONFIG.RPT_PUESTOS] ? (_RPT[CONFIG.RPT_PUESTOS] > 1 ? _RPT[CONFIG.RPT_PUESTOS] : 1) : 1;
-            
-            for (let i = _nroActores; i < _cantidad; i++) {
-                let _nuevoActor = S.O.S.Actor();
-                _nuevoActor.numero = _actoresIntroducidos;
-                _nuevoActor.orden  = _actoresIntroducidos % _cantidad;
-                _nuevoActor.puesto = _actoresIntroducidos % _puestos;
-                _actoresIntroducidos++;
-                
-                // Se coreografía el movimiento del "Actor" en la "Escena"
-                S.O.S.COREO[_RPT[CONFIG.RPT_COREOGRAFIA] ?? 'radial']
-                                (_nuevoActor,
-                                 _cantidad,                         // Cantidad máxima de actores en "Escena"
-                                 _puestos,                          // Cantidad total de posiciones de partida
-                                 _RPT[CONFIG.RPT_INTENSIDAD] ?? 0,  // Intensidad (magnitud para la velocidad)
-                                 _RPT[CONFIG.RPT_DESVIO]     ?? 0,  // Desvío (angulo en radianes)
-                                 _RPT[CONFIG.RPT_SEPARACION] ?? 0); // Separación (desde el punto de origen)
-
-                // Se incorpora el "Actor" al "Reparto". Al añadirlo bajo un
-                // "nombre de atributo de dinámico", el "Esquema" no lo guarda
-                // internamente (y por lo tanto, tampoco se incluye en futuras 
-                // exportaciones), pero sí se incorpora al "Reparto" general.
-                const _definicionActor = {};
-                _definicionActor[CONFIG.ATR_NOMBRE_DINAMICO] = _nuevoActor;
-                _ESQ.def(_definicionActor);
-                
-                // Si existen "Subrepartos", se crean nuevas instancias colocando
-                // a "Actor" creado como cabeza de dichos "Repartos"
-                _iniciarSubrepartos(_nuevoActor);
-                
-                // Cuando el intervalo no está definido, se genera la cantidad
-                // completa de "Actores" en la iteración actual. En caso contrario
-                // se van generando espaciadamente, de acuerdo a lo indicado en el
-                // parámetro "intervalo" (que especifica cantidad de fotogramas).
-                if (_intervalo || i >= _cantidad - 1)
-                    break;
-                else {
-                    // Se actualizan los parámetros del "Reparto" para el siguiente "Actor"
-                    _RPT.actualizar(CONFIG.RPT_PUESTOS);
-                    _RPT.actualizar(CONFIG.RPT_INTENSIDAD);
-                    _RPT.actualizar(CONFIG.RPT_DESVIO);
-                    _RPT.actualizar(CONFIG.RPT_SEPARACION);                
-                }
-            }
-        });
-    }
-    
+        
     /**
      * _iniciarSubrepartos
      * Crear e inicializa los "Subrepartos" por cada "Actor" del "Reparto" superior.

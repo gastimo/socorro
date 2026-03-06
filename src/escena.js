@@ -311,7 +311,8 @@ function Escena(S) {
                         _actorPrevio = actores[i]; 
                         _actoresActivosDelReparto.push(actores[i]);
                     }
-                    // En caso contrario, se elimina todo registro del "Actor"
+                    // En caso contrario, se elimina todo registro del
+                    // "Actor" y de sus "Subrepartos" (si los tuviera)
                     else {
                         _REG.actoresFinalizados.push(actores[i].identificador);
                         _finalizarSubrepartosDelActor(actores[i]);
@@ -530,10 +531,18 @@ function Escena(S) {
      */
     function _representarRepartos(identificador) {
         if (_REG.repartos.hasOwnProperty(identificador)) {
+            S.O.S.P5.push();
             let _repartos = _REG.repartos[identificador];
-            for (let i = 0; i < _repartos.length; i++) {
-                _representarActores(_repartos[i].identificador);
+            if (_repartos.length > 0) {
+                let _superior = _repartos[0].superior.entidad;
+                if (S.O.S.esUnActor(_superior)) {
+                    _superior.posicionar();
+                }            
+                for (let i = 0; i < _repartos.length; i++) {
+                    _representarActores(_repartos[i].identificador);
+                }
             }
+            S.O.S.P5.pop();
         }
     }
 

@@ -311,6 +311,39 @@ function Actor(S, origen, velocidad, estilo) {
     };
     
     /**
+     * posicionar
+     * Esta función se invoca justo antes de la representación de los "Actores" de un
+     * "Subreparto", es decir, "Actores" pertenecientes a un "Reparto" encabezado por
+     * por el "Actor" actual. En estos casos, la posición de origen de dichos "Actores"
+     * es alterada por la posición actual del "Actor" que encabeza el "Subreparto".
+     * El origen del "Actor" del "Subreparto" debe coincidir con la posición actual en
+     * el lienzo del "Actor" cabeza de reparto (actor actual). De la misma forma, se 
+     * modifica su dirección o sentido para hacerlo coincidir con la dirección de la 
+     * velocidad actual del "Actor" cabeza de reparto (actor actual).
+     */
+    _ACT.posicionar = () => {
+        // Se calculan las coordenadas y dirección (de la velocidad) del "Actor"
+        // actual, para aplicar esas transformaciones sobre el lienzo.
+        let _posX = _ACT.posicion.x ?? 0;
+        let _posY = _ACT.posicion.y ?? 0;
+        let _posZ = _ACT.posicion.z ?? 0;
+        
+        let _angulo = _ACT.velocidad.ang();
+        if (_posX >= 0 && _posY >= 0) 
+            _angulo = -(Math.sign(_angulo) * Math.PI / 2 * 3) - _angulo;  // Cuadrante: INFERIOR-DERECHO
+        else if (_posX >= 0 && _posY < 0) 
+            _angulo = -(Math.sign(_angulo) * Math.PI / 2 * 3) - _angulo;  // Cuadrante: SUPERIOR-DERECHO
+        else if (_posX < 0 && _posY >= 0) 
+            _angulo = (Math.sign(_angulo) * Math.PI / 2 * 3) - _angulo;  // Cuadrante: INFERIOR-IZQUIEDO
+        else if (_posX < 0 && _posY < 0) 
+            _angulo = (Math.sign(_angulo) * Math.PI / 2 * 3) - _angulo;   // Cuadrante: SUPERIOR-IZQUIERDO
+
+        // Operaciones de desplazamiento y rotación del lienzo
+        S.O.S.P5.translate(_posX, _posY, _posZ);
+        S.O.S.P5.rotate(_angulo);
+    };
+    
+    /**
      * finalizar
      * Marca al "Actor" corriente como finalizado
      */

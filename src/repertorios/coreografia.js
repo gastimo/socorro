@@ -7,12 +7,12 @@
  */
 
 const Coreografia = (S) => { 
-
-    const _COREOS = {};
     
     const EXPELENTE   = "EXPELENTE";
     const CONCURRENTE = "CONCURRENTE";
     
+    const _COREOS = {};
+    _COREOS.estandar = () => {return EXPELENTE;};
     
         
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
