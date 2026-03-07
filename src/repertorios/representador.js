@@ -5,43 +5,74 @@
  * 
  * =============================================================================
  */
+import CONFIG from './../config';
+
 
 /**
  * Representador
- * Colección de métodos "Representadores de Actores". Se trata de un objeto JS
- * donde cada clave es el nombre de un método representador y su valor es la
- * función encargada de llevar adelante la representación visual del "Actor" o 
- * su dibujo en la "Escena". Todas funciones esperan recibir un "Actor" como 
- * único argumento. Esta colección de representadores se expone a través del
- * socorrista designado para la "Escena" bajo el nombre "REP". 
+ * Colección de métodos "Representadores de Actores". 
+ * Se trata de un objeto JavaScript donde cada clave es el nombre del "Representador"
+ * y su valor es la función que se encarga de dibujar al "Actor" en el lienzo, es
+ * decir, su representación visual. Las funciones de los "Representadores" esperan
+ * recibir un objeto "Actor" como su único argumento.
+ * 
+ * Esta colección de "Representadores" forma parte de los "Repertorios" de la "Escena"
+ * y, por lo tanto, se expone a través del socorrista designado bajo el nombre "REP". 
  * Ejemplos:
  * 
- *    S.O.S.REP.estandar  : método estándar de representación de "Actores" (círculos)
- *    S.O.S.REP.linea     : método de representación a través de lineas
- *    S.O.S.REP.romboide  : método de representación mediante rombos
+ *    S.O.S.REP.circulo  : método estándar de representación mediante círculos
+ *    S.O.S.REP.linea    : método de representación a través de lineas
+ *    S.O.S.REP.romboide : método de representación mediante rombos
  *    ...
  */
 const Representador = (S) => { 
-
-    const _REP = {};
     
-    const ESTANDAR  = "estandar";
+// ----------------------------------------------------
+//  Nombres de los "Representadores" predefinidos
+// ----------------------------------------------------
+    const NINGUNO   = "ninguno";     // Actor invisible
+    const CIRCULO   = "circulo";
     const LINEA     = "linea";
     const ROMBOIDE  = "romboide";
     const ESTRELLA  = "estrella";
     const DANDELION = "dandelion";
     const ESPINA    = "espina";
     const PLUMA     = "pluma";
+// ----------------------------------------------------
+    const _REP = {};
+// -----------------------------------------------------
+
+
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//
+//  CONFIGURACIÓN DEL REPRESENTADOR ESTÁNDAR
+//  
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+_REP[CONFIG.ESTANDAR] = (actor) => {
+    return _REP[CIRCULO](actor);
+};
 
     
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
-//  REPRESENTADOR: estandar
+//  REPRESENTADOR: ninguno
+//  No se dibuja absolutamente nada.
+//  
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+_REP[NINGUNO] = (actor) => {
+};
+
+    
+    
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//
+//  REPRESENTADOR: circulo
 //  Simplemente dibuja un círculo por cada actor.
 //  
 //
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-_REP[ESTANDAR] = (actor) => {
+_REP[CIRCULO] = (actor) => {
     if (actor.estilo.grandor !== undefined && actor.estilo.grandor !== null) {
         if (actor.estilo.color !== undefined && actor.estilo.color !== null)
             S.O.S.P5.fill(actor.estilo.color);
@@ -77,8 +108,25 @@ _REP[LINEA] = (actor) => {
         S.O.S.P5.stroke(actor.estilo.trazo);
         S.O.S.P5.strokeWeight(S.O.S.escalar(actor.estilo.grosor));
         if (actor.sig) {
-            S.O.S.P5.line(actor.posicion.x, actor.posicion.y, actor.posicion.z, 
-                          actor.sig.posicion.x, actor.sig.posicion.y, actor.sig.posicion.z);
+            S.O.S.P5.line(S.O.S.escalar(actor.posicion.x), 
+                          S.O.S.escalar(actor.posicion.y), 
+                          S.O.S.escalar(actor.posicion.z), 
+                          S.O.S.escalar(actor.sig.posicion.x),
+                          S.O.S.escalar(actor.sig.posicion.y),
+                          S.O.S.escalar(actor.sig.posicion.z));
+        }
+        else if (actor.prev) {
+            let superior = actor.superior ? actor.superior.entidad : undefined;
+            if (superior && superior.primerActor) {
+                // Se conecta el último "Actor" del "Reparto" con la posición origen
+                // del primero (el último "Actor" es el más cercano al origen)
+                S.O.S.P5.line(S.O.S.escalar(actor.posicion.x),
+                              S.O.S.escalar(actor.posicion.y),
+                              S.O.S.escalar(actor.posicion.z), 
+                              S.O.S.escalar(superior.primerActor.origen.x),
+                              S.O.S.escalar(superior.primerActor.origen.y),
+                              S.O.S.escalar(superior.primerActor.origen.z));                
+            }
         }
     }
 };

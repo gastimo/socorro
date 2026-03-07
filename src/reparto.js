@@ -304,7 +304,7 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
                 _actoresIntroducidos++;
                 
                 // Se coreografía el movimiento del "Actor" en la "Escena"
-                S.O.S.COREO[_RPT[CONFIG.RPT_COREOGRAFIA] ?? S.O.S.COREO.estandar()]
+                S.O.S.COREO[_RPT[CONFIG.RPT_COREOGRAFIA] ?? S.O.S.COREO[CONFIG.ESTANDAR]]
                                 (_nuevoActor,
                                  _cantidad,                         // Cantidad máxima de actores en "Escena"
                                  _puestos,                          // Cantidad total de posiciones de partida

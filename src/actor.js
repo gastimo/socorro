@@ -306,7 +306,7 @@ function Actor(S, origen, velocidad, estilo) {
      */
     _ACT.representar = () => {
         if (!_finalizado) {
-            S.O.S.REP[_ACT[CONFIG.ACT_REPRESENTADOR]](_ACT);
+            S.O.S.REP[_ACT[CONFIG.ACT_REPRESENTADOR] ?? CONFIG.ESTANDAR](_ACT);
         }
     };
     
@@ -339,7 +339,7 @@ function Actor(S, origen, velocidad, estilo) {
             _angulo = (Math.sign(_angulo) * Math.PI / 2 * 3) - _angulo;   // Cuadrante: SUPERIOR-IZQUIERDO
 
         // Operaciones de desplazamiento y rotación del lienzo
-        S.O.S.P5.translate(_posX, _posY, _posZ);
+        S.O.S.P5.translate(S.O.S.escalar(_posX), S.O.S.escalar(_posY), S.O.S.escalar(_posZ));
         S.O.S.P5.rotate(_angulo);
     };
     
@@ -404,8 +404,8 @@ function Actor(S, origen, velocidad, estilo) {
         _ACT.distancia  = 0;         // Distancia actual del "Actor" a su posición de origen
         _ACT.recorrido  = 0;         // Cantidad de píxeles recorridos desde el inicio de su desplazamiento
         _ACT.posicion   = undefined; // Coordenadas <x,y,z> de su posición actual en el lienzo
-        _ACT.prev       = undefined; // Actor previo (actualizado por el "Reparto")
-        _ACT.sig        = undefined; // Actor siguiente (actualizado por el "Reparto")
+        _ACT.prev       = undefined; // Actor previo dentro del "Reparto"
+        _ACT.sig        = undefined; // Actor siguiente dentro del "Reparto"
         
         return _ACT;
     }

@@ -5,16 +5,46 @@
  * 
  * =============================================================================
  */
+import CONFIG from './../config';
 
+
+/**
+ * Coreografías
+ * Colección de métodos para coreografiar el desplazamiento de "Actores" en "Escena". 
+ * Se trata de un objeto JavaScript donde cada clave es el nombre de una "Coreogragía"
+ * y su valor es la función responsable de definir la posición inicial del "Actor" en
+ * el lienzo y su velocidad de desplazamiento.
+ * 
+ * Esta colección de "Coreografías" forma parte de los "Repertorios" de la "Escena"
+ * y, por lo tanto, se expone a través del socorrista designado bajo el nombre "COREO". 
+ * Ejemplos:
+ * 
+ *    S.O.S.COREO.EXPELENTE   : los "Actores" son impulsados desde el centro del "Reparto" hacia afuera
+ *    S.O.S.COREO.CONCURRENTE : los "Actores" son atraídos desde afuera hacia el centro del "Reparto"
+ * 
+ */
 const Coreografia = (S) => { 
     
+// ----------------------------------------------------
+//  Nombres de las "Coreografías" predefinidas
+// ----------------------------------------------------
     const EXPELENTE   = "EXPELENTE";
     const CONCURRENTE = "CONCURRENTE";
-    
+// ----------------------------------------------------
     const _COREOS = {};
-    _COREOS.estandar = () => {return EXPELENTE;};
+// -----------------------------------------------------
+
     
-        
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//
+//  CONFIGURACIÓN DE LA COREOGRAFÍA ESTÁNDAR
+//  
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+ _COREOS[CONFIG.ESTANDAR] = (actor, cantidad, puestos, intensidad, desvio, separacion) => {
+     return _COREOS[EXPELENTE](actor, cantidad, puestos, intensidad, desvio, separacion);
+ };
+    
+    
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
 //  COREOGRAFÍA: "EXPELENTE"
@@ -28,7 +58,7 @@ const Coreografia = (S) => {
     const angulo = (puestos <= 1 ? 0 : 2 * Math.PI / puestos * actor.puesto) + desvio;
     
     // A partir del ángulo (dirección), se calcula el vector de separación
-    const corrimiento = S.O.S.Vector(separacion, 0, 0);
+    const corrimiento = S.O.S.Vector(S.O.S.escalar(separacion), 0, 0);
     corrimiento.ang(angulo);
     
     // Luego, con el mismo ángulo (o dirección), se define el vector de velocidad

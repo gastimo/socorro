@@ -19,14 +19,15 @@ import Esquema from './esquema';
  * puede ser utilizada para hacer variar valores de tipo "Vector".
  * 
  * Los "Métodos de Evaluación" para el cálculo dinámico del valor de la "Variable",  
- * junto con sus parámetros, se definen con la función "map" y pueder¿n agruparse bajo
+ * junto con sus parámetros, se definen con la función "map" y pueder agruparse bajo
  * las siguientes categorías (por cada una hay más de un método):
  * 
  *  1. FIJO   : Retorna un valor estático (no hay variación en tiempo de ejecución).
- *  2. MAPA   : Mapea un rango de valores de origen a un rango de valores admitidos.
- *  3. TIEMPO : Mapea intervalos (cíclicos) de tiempo con un rango de valores admitidos.
- *  4. AZAR   : Mapea un rango de valores al azar (0..1) con un rango de valores admitidos.
+ *  2. TIEMPO : Mapea intervalos (cíclicos) de tiempo con un rango de valores admitidos.
+ *  3. AZAR   : Mapea un rango de valores al azar (0..1) con un rango de valores admitidos.
+ *  4. ACTOR  : Mapea el valor de un atributo del "Actor" con un rango de valores admitidos.
  * 
+ * Para consultar los "Métodos de Evaluación" (según categogría) ver el módulo "EValuador".
  * Independientemente del método de cálculo configurado, también se le puede aplicar
  * ruido aleatorio adicional (perlin) al valor resultante calculado de la "Variable". 
  * 
@@ -37,6 +38,7 @@ import Esquema from './esquema';
  *  - mod()   - Definición del valor "modulador" utilizado en las funciones de mapeo dinámico.
  *  - ruido() - Define el ruido aleatorio a incorporar al resultado final de la evaluación.
  *  - val()   - Obtención del valor. Redefine la función heredada de "Esquema" para hacer el mapeo.
+ * 
  */
 function Variable(S, ...parametros) {
     const _ESQ = Esquema(S, CONFIG.SOS_VARIABLE);
@@ -487,7 +489,7 @@ function _Calculadora(S) {
      */
     function _mapear(pos, coord) {
         // 1. OBTENER VALOR ORIGEN NORMALIZADO
-        // En primer lugar, se ejecuta la función de mapeo dinámico (el "Método de Evalución")
+        // En primer lugar, se ejecuta la función de mapeo dinámico (el "Método de Evaluación")
         // y se lo termina convirtiendo en un valor normalizado (entre "0" y "1").
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         if (_VAL.rangoIni || _VAL.rangoFin) {

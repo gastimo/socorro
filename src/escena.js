@@ -296,28 +296,31 @@ function Escena(S) {
         // aquellos "Actores" finalizados, incluyendo los "Subrepartos" que éstos encabecen. 
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         for (const [identificador, actores] of Object.entries(_REG.actores)) {
-            let _actorPrevio, _reparto;
+            let _actorPrevio, _actorPrimero, _actorUltimo;
             let _actoresActivosDelReparto = [];
+            let _superior = actores.length > 0 ? actores[0].superior.entidad : undefined;
             for (let i = 0; i < actores.length; i++) {
                 if (!actores[i].finalizado()) {
-                    // Se actualizan los atributos del "Actor". Si, como resultado,
-                    // el "Actor" no fue finalizado, se lo vincula con su predecesor
-                    // y con su sucesor y se lo vuelve a incorporar al registro.
                     actores[i].actualizar();
                     if (!actores[i].finalizado()) {
                         actores[i].prev = _actorPrevio;
                         if (_actorPrevio) 
                             _actorPrevio.sig = actores[i];
-                        _actorPrevio = actores[i]; 
+                        if (!_actorPrimero)
+                            _actorPrimero = actores[i];
+                        _actorPrevio = actores[i];
+                        _actorUltimo = actores[i];
                         _actoresActivosDelReparto.push(actores[i]);
                     }
-                    // En caso contrario, se elimina todo registro del
-                    // "Actor" y de sus "Subrepartos" (si los tuviera)
                     else {
                         _REG.actoresFinalizados.push(actores[i].identificador);
                         _finalizarSubrepartosDelActor(actores[i]);
                     }
                 }
+            }
+            if (_superior) {
+                _superior.primerActor = _actorPrimero;
+                _superior.ultimoActor = _actorUltimo;
             }
             _REG.actores[identificador] = _actoresActivosDelReparto;
         }

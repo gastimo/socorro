@@ -6,10 +6,32 @@
  * =============================================================================
  */
 
+/**
+ * Evaluador
+ * Definición de los "Métodos de Evaluación" (cálculo dinámico) del valor de los 
+ * atributos de las "entidades del socorro" (ver la definición de "Esquemas").
+ * 
+ * Los "Métodos de Evaluación" pueden ser agrupados bajo las siguientes categorías:
+ * 
+ *  1. FIJO   : Retorna un valor estático (no hay variación en tiempo de ejecución).
+ *  2. TIEMPO : Mapea intervalos (cíclicos) de tiempo con un rango de valores admitidos.
+ *  3. AZAR   : Mapea un rango de valores al azar (0..1) con un rango de valores admitidos.
+ *  4. ACTOR  : Mapea el valor de un atributo del "Actor" con un rango de valores admitidos.
+ * 
+ * En todos los casos (excepto el método "FIJO") se realiza un mapeo entre un rango de 
+ * valores de origen y otro rango de valores de destino admitidos. Para el caso de los
+ * métodos de tipo "TIEMPO" o "AZAR" no se requiere indicar un rango de valores de origen,
+ * pero sí es obligatorio hacerlo para utilizar los métodos de la categoría "ACTOR".
+ * 
+ * La invocación a estos métodos para el cálculo de los atributos dinámicos es realizada
+ * por el objeto "Variable" (y su caso particular de "Variador").
+ * 
+ */
 const Evaluador = (S) => {
     
-    const _EVAL = {};
-    
+// -----------------------------------------------------
+//  Nombres de los "Métodos de Evaluación" predefinidos
+// -----------------------------------------------------
     const FIJO        = 'fijo';
     const CICLO       = 'ciclo';          // TIEMPO
     const CONTRACICLO = 'contraciclo';    // TIEMPO
@@ -20,7 +42,10 @@ const Evaluador = (S) => {
     const PUESTO      = 'puesto';         // ACTOR
     const DISTANCIA   = 'dist';           // ACTOR
     const RECORRIDO   = 'recorrido';      // ACTOR
-    
+// -----------------------------------------------------
+    const _EVAL = {};
+// -----------------------------------------------------
+
     // Funciones utilitarias
     _EVAL.Estatico   = FIJO;
     _EVAL.Perlin     = RUIDO;

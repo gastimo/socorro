@@ -22,7 +22,7 @@ const Config = (() => {
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
         // Singleton del Obsequioso Socorro (S.O.S)
-        SOS                     : '_SOS',   
+        SOS                     : '_SOS',
 
         // Entidades que internamente son "Esquema"
         SOS_ESQUEMA             : '_ESQ',   // Estructura de definición atributos/valores de las entidades del "socorro"
@@ -35,12 +35,8 @@ const Config = (() => {
         SOS_VECTOR              : '_VEC',   // Objeto genérico para realizar operaciones con vectores
         SOS_VECTORVAR           : '_VEV',   // Objeto "Vector" que admite "Variables" en sus componentes x, y, z.
         
-        // Entidades para definición de "Repertorios"
-        SOS_REPERTORIO          : 'REPE',
-        SOS_REPRESENTADOR       : 'REP',
-        SOS_COREOGRAFIA         : 'COREO',
-        SOS_COLOR               : 'COLOR',
-        SOS_METODO_EVALUACION   : 'EVAL',
+        // Constantes de uso general
+        ESTANDAR                : 'estandar', // Constante utilizada para acceder a "Repertorios" estándar
         
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
@@ -129,7 +125,6 @@ const Config = (() => {
         ACT_REPRESENTADOR       : 'representador',
         ACT_MAX_DURACION        : 'duracionMaxima',
         ACT_MAX_RECORRIDO       : 'recorridoMaximo',
-                
     };
     
     return _PARAM;
