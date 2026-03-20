@@ -289,7 +289,7 @@ function Escena(S) {
             let _superior = actores.length > 0 ? actores[0].superior.entidad : undefined;
             for (let i = 0; i < actores.length; i++) {
                 if (!actores[i].finalizado()) {
-                    actores[i].actualizar(_superior ? _ESC.influenciadores(_superior.superior.identificador) : undefined);
+                    actores[i].actualizar(_superior && _superior.superior ? _ESC.influenciadores(_superior.superior.identificador) : undefined);
                     if (!actores[i].finalizado()) {
                         actores[i].prev = _actorPrevio;
                         if (_actorPrevio) 
@@ -802,6 +802,19 @@ function Escena(S) {
             S.O.S.P5.resizeCanvas(ancho, alto);
             S.O.S.P5.ortho(-ancho / 2, ancho / 2, -alto / 2, alto / 2);             
         }
+    };
+    
+    /**
+     * extension
+     * Retorna un valor de referencia que se asume como la extensión o amplitud
+     * de la "Escena". En general se toma la anchura original con la que fue
+     * creada la "Escena" como este valor de referencia.
+     * Se utiliza, principalmente, cuando es necesario convertir un valor de 
+     * longitud normalizado en píxeles de la "Escena" (por ejemplo, cuando es
+     * necesario calcular el "desplazamiento" del "Reparto"). 
+     */
+    _ESC.extension = () => {
+        return _ESC.escalar(_contenedor.geometria.referencia);
     };
 
     /**

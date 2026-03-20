@@ -40,8 +40,8 @@ const Coreografia = (S) => {
 //  CONFIGURACIÓN DE LA COREOGRAFÍA ESTÁNDAR
 //  
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
- _COREOS[CONFIG.ESTANDAR] = (actor, cantidad, puestos, intensidad, desvio, separacion) => {
-     return _COREOS[EXPELENTE](actor, cantidad, puestos, intensidad, desvio, separacion);
+ _COREOS[CONFIG.ESTANDAR] = (actor, cantidad, puestos) => {
+     return _COREOS[EXPELENTE](actor, cantidad, puestos);
  };
     
     
@@ -53,16 +53,16 @@ const Coreografia = (S) => {
 //  bordes del lienzo de la "Escena".
 //
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
- _COREOS[EXPELENTE] = (actor, cantidad, puestos, intensidad, desvio, separacion) => {
+ _COREOS[EXPELENTE] = (actor, cantidad, puestos) => {
     // Se calcula el ángulo en función de la cantidad de puestos
-    const angulo = (puestos <= 1 ? 0 : 2 * Math.PI / puestos * actor.puesto) + desvio;
-    
+    const angulo = (puestos <= 1 ? 0 : 2 * Math.PI / puestos * actor.puesto) + actor.desvio;
+
     // A partir del ángulo (dirección), se calcula el vector de separación
-    const corrimiento = S.O.S.Vector(separacion, 0, 0);
+    const corrimiento = S.O.S.Vector(actor.separacion, 0, 0);
     corrimiento.ang(angulo);
     
     // Luego, con el mismo ángulo (o dirección), se define el vector de velocidad
-    const velocidad = S.O.S.Vector(intensidad, 0, 0);
+    const velocidad = S.O.S.Vector(actor.intensidad, 0, 0);
     velocidad.ang(angulo);
     
     // Finalmente, a la posición origen (centro del lienzo) se le suma la separación
@@ -83,17 +83,18 @@ const Coreografia = (S) => {
 //  central del "Reparto".
 //
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-_COREOS[CONCURRENTE] = (actor, cantidad, puestos, intensidad, desvio, separacion) => {
+_COREOS[CONCURRENTE] = (actor, cantidad, puestos) => {
     // Se calcula el ángulo en función de la cantidad de puestos
-    const angulo = (puestos <= 1 ? 0 : 2 * Math.PI / puestos * actor.puesto) + desvio;
+    const angulo = (puestos <= 1 ? 0 : 2 * Math.PI / puestos * actor.puesto) + actor.desvio;
+    actor.direccion = angulo;
     
     // A partir del ángulo (dirección), se calcula el vector de separación
-    const distancia = Math.min(S.O.S.ancho(), S.O.S.alto()) / 2;
-    const corrimiento = S.O.S.Vector(distancia + separacion, 0, 0);
+    const distancia = S.O.S.extension() / Math.PI;
+    const corrimiento = S.O.S.Vector(distancia + actor.separacion, 0, 0);
     corrimiento.ang(angulo);
     
     // Luego, con el mismo ángulo (o dirección), se define el vector de velocidad
-    const velocidad = S.O.S.Vector(intensidad, 0, 0);
+    const velocidad = S.O.S.Vector(actor.intensidad, 0, 0);
     velocidad.ang(angulo);
     
     // Finalmente, a la posición origen (centro del lienzo) se le suma la separación

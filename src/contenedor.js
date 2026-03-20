@@ -73,6 +73,7 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
         
         // Valor inicial para el coeficiente de escalamiento
         geometria.factorEscala = geometria.ancho / _ancho;
+        geometria.referencia = _ancho ?? 1024;
     }
     
     /**

@@ -234,7 +234,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv√
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             for (let i = 0; i < CONFIG.Reparto.length; i++) {
                 if (!nombreAtr || nombreAtr == CONFIG.Reparto[i]) {
-                    let _valor = _ESQ.val(CONFIG.Reparto[i]) ?? _ESQ.heredar(CONFIG.Reparto[i]);
+                    let _valor = _ESQ.val(CONFIG.Reparto[i]);
 
                     // En caso de tratarse del "intervalo", se verifica que siempre
                     // tenga un valor. Un intervalor de cero significa que todos los 
@@ -247,8 +247,10 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv√
                     if (CONFIG.Reparto[i] == CONFIG.RPT_DESPLAZAMIENTO) {
                         _RPT[CONFIG.RPT_DESPLAZAMIENTO] = _valor ? _valor.val() : _RPT[CONFIG.RPT_DESPLAZAMIENTO];
                     }
-                    else 
-                        _RPT[CONFIG.Reparto[i]] = _valor;                
+                    else {
+                        // El √∫nico atributo "heredable" del "Reparto" es el "Representador"
+                        _RPT[CONFIG.Reparto[i]] = _valor ?? (nombreAtr == CONFIG.RPT_REPRESENTADOR ? _ESQ.heredar(CONFIG.Reparto[i]) : _valor);
+                    }
 
                     // ----------------------------------------------------------------------
                     //  NOTA: Si bien el "Estilo" (si es que fue definido en el "Reparto")
@@ -305,17 +307,15 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv√
                 _nuevoActor.numero        = _actoresIntroducidos;
                 _nuevoActor.orden         = _actoresIntroducidos % _cantidad;
                 _nuevoActor.puesto        = _actoresIntroducidos % _puestos;
+                _nuevoActor.intensidad    = _RPT[CONFIG.RPT_INTENSIDAD] ?? 0;
+                _nuevoActor.desvio        = _RPT[CONFIG.RPT_DESVIO]     ?? 0;
+                _nuevoActor.separacion    = _RPT[CONFIG.RPT_SEPARACION] ?? 0;
                 _nuevoActor.influenciador = _RPT?.influenciador;
                 _actoresIntroducidos++;
                 
                 // Se coreograf√≠a el movimiento del "Actor" en la "Escena"
-                _coreografia(_nuevoActor,
-                             _cantidad,                         // Cantidad m√°xima de actores en "Escena"
-                             _puestos,                          // Cantidad total de posiciones de partida
-                             _RPT[CONFIG.RPT_INTENSIDAD] ?? 0,  // Intensidad (magnitud para la velocidad)
-                             _RPT[CONFIG.RPT_DESVIO]     ?? 0,  // Desv√≠o (angulo en radianes)
-                             _RPT[CONFIG.RPT_SEPARACION] ?? 0); // Separaci√≥n (desde el punto de origen)
-
+                _coreografia(_nuevoActor, _cantidad, _puestos);
+                
                 // Se incorpora el "Actor" al "Reparto". Al a√±adirlo bajo un
                 // "nombre de atributo de din√°mico", el "Esquema" no lo guarda
                 // internamente (y por lo tanto, tampoco se incluye en futuras 
@@ -372,9 +372,9 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv√
      */
     _RPT.vectorDesplazamiento = () => {
         if (_RPT.desplazamiento) {
-            return S.O.S.Vector((_RPT.desplazamiento.x ?? 0) * S.O.S.ancho() / 2, 
-                                (_RPT.desplazamiento.y ?? 0) * S.O.S.alto()  / 2, 
-                                (_RPT.desplazamiento.z ?? 0) * (S.O.S.ancho() + S.O.S.alto()) / 4);
+            return S.O.S.Vector((_RPT.desplazamiento.x ?? 0) * S.O.S.extension() / 2, 
+                                (_RPT.desplazamiento.y ?? 0) * S.O.S.extension() / 2, 
+                                (_RPT.desplazamiento.z ?? 0) * S.O.S.extension() / 2);
         }
         else {
             return S.O.S.Vector(0, 0, 0);

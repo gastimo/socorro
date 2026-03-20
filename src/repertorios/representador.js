@@ -30,14 +30,16 @@ const Representador = (S) => {
 // ----------------------------------------------------
 //  Nombres de los "Representadores" predefinidos
 // ----------------------------------------------------
-    const NINGUNO   = "ninguno";     // Actor invisible
-    const CIRCULO   = "circulo";
-    const LINEA     = "linea";
-    const ROMBOIDE  = "romboide";
-    const ESTRELLA  = "estrella";
-    const DANDELION = "dandelion";
-    const ESPINA    = "espina";
-    const PLUMA     = "pluma";
+    const NINGUNO    = "ninguno";     // Actor invisible
+    const CIRCULO    = "circulo";
+    const CIRCULARIA = "circularia";
+    const LINEA      = "linea";
+    const ROMBOIDE   = "romboide";
+    const INFLUJO    = "influjo";
+    const ESTRELLA   = "estrella";
+    const DANDELION  = "dandelion";
+    const ESPINA     = "espina";
+    const PLUMA      = "pluma";
 // ----------------------------------------------------
     const _REP = {};
 // -----------------------------------------------------
@@ -53,6 +55,7 @@ _REP[CONFIG.ESTANDAR] = (actor) => {
 };
 
     
+
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
 //  REPRESENTADOR: circulo
@@ -79,22 +82,60 @@ _REP[CIRCULO] = (actor) => {
                         actor.posicion.y ? S.O.S.escalar(actor.posicion.y) : 0, 
                         S.O.S.escalar(actor.estilo.grandor));
     }
-    
-    // INFLUENCIAS
-    if (actor.superior.identificador == '_RPT$2')
-        S.O.S.P5.stroke('rgb(255, 255, 0)');
-    else
-        S.O.S.P5.stroke('rgb(255, 0, 0)');
+};
 
-    S.O.S.P5.strokeWeight(1);
-    for (let i = 0; i < actor.influencias.length; i++) {
-        let _puntoI = actor.influencias[i];
-        S.O.S.P5.line(S.O.S.escalar(actor.posicion.x), 
-                      S.O.S.escalar(actor.posicion.y), 
-                      S.O.S.escalar(actor.posicion.z), 
-                      S.O.S.escalar(_puntoI.x),
-                      S.O.S.escalar(_puntoI.y),
-                      S.O.S.escalar(_puntoI.z));
+
+
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//
+//  REPRESENTADOR: circularia
+//  Dibuja un círculo por cada actor pero, además, 
+//  traza las conexiones con sus puntos de influencia.
+// 
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+_REP[CIRCULARIA] = (actor) => {
+    let _grosorDefinido = false;
+    let _trazoDefinido  = false;
+    
+    if (actor.estilo.grandor !== undefined && actor.estilo.grandor !== null) {
+        if (actor.estilo.color !== undefined && actor.estilo.color !== null)
+            S.O.S.P5.fill(actor.estilo.color);
+        else
+            S.O.S.P5.noFill();
+
+        if (actor.estilo.trazo !== undefined && actor.estilo.trazo !== null) {
+            S.O.S.P5.stroke(actor.estilo.trazo);
+            _trazoDefinido = true;
+        }
+        else
+            S.O.S.P5.noStroke();
+
+        if (actor.estilo.grosor !== undefined && actor.estilo.grosor !== null) {
+            S.O.S.P5.strokeWeight(S.O.S.escalar(actor.estilo.grosor));
+            _grosorDefinido = true;
+        }
+
+        S.O.S.P5.circle(actor.posicion.x ? S.O.S.escalar(actor.posicion.x) : 0, 
+                        actor.posicion.y ? S.O.S.escalar(actor.posicion.y) : 0, 
+                        S.O.S.escalar(actor.estilo.grandor));
+    }
+    
+    // Trazado de las líneas que conectan al actor con sus puntos de influencia
+    if (actor.superior && actor.influencias) {
+        S.O.S.P5.strokeWeight(1);
+        if (!_trazoDefinido) {
+            let _canal = actor.superior.clave * 71562373;
+            S.O.S.P5.stroke('rgb(' + (_canal % 255) + ',' + (_canal % 241) + ',' + (_canal % 207) + ')');
+        }
+        for (let i = 0; i < actor.influencias.length; i++) {
+            let _puntoI = actor.influencias[i];
+            S.O.S.P5.line(S.O.S.escalar(actor.posicion.x), 
+                          S.O.S.escalar(actor.posicion.y), 
+                          S.O.S.escalar(actor.posicion.z), 
+                          S.O.S.escalar(_puntoI.x),
+                          S.O.S.escalar(_puntoI.y),
+                          S.O.S.escalar(_puntoI.z));
+        }
     }
 };
 
@@ -169,6 +210,31 @@ _REP[ROMBOIDE] = (actor) => {
     }
 };
    
+    
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//
+//  REPRESENTADOR: influjo
+//  Grafica, a través de líneas, las conexiones entre
+//  el "Actor" y sun puntos de influencia.
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+_REP[INFLUJO] = (actor) => {
+    if (actor.estilo.trazo  !== undefined && actor.estilo.trazo  !== null &&
+        actor.estilo.grosor !== undefined && actor.estilo.grosor !== null) {
+        S.O.S.P5.noFill();
+        S.O.S.P5.stroke(actor.estilo.trazo);
+        S.O.S.P5.strokeWeight(S.O.S.escalar(actor.estilo.grosor));
+        for (let i = 0; i < actor.influencias.length; i++) {
+            let _puntoI = actor.influencias[i];
+            S.O.S.P5.line(S.O.S.escalar(actor.posicion.x), 
+                          S.O.S.escalar(actor.posicion.y), 
+                          S.O.S.escalar(actor.posicion.z), 
+                          S.O.S.escalar(_puntoI.x),
+                          S.O.S.escalar(_puntoI.y),
+                          S.O.S.escalar(_puntoI.z));
+        }
+    }
+};
 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
