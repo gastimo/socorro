@@ -20,7 +20,7 @@ import TransicionadorInterno from './transicionador';
  * Auxiliadora
  * Rutinas de asistencia general de los socorristas.
  */
-const Auxiliadora = (S, utilizaP5) => {
+const Auxiliadora = (S, utilizaP5, reloj, contador) => {
 
 // --------------------------------------------------------------------------------
 //  F U N C I O N E S    P R I V A D A S
@@ -153,7 +153,7 @@ const Auxiliadora = (S, utilizaP5) => {
          * Retorna el tiempo transcurrido en milisegundos.
          */
         tiempo: () => {
-            return utilizaP5 ? S.O.S.P5.millis() : _reloj.getElapsedTime();
+            return utilizaP5 ? S.O.S.P5.millis() : reloj.getElapsedTime();
         },
 
         /**
@@ -163,7 +163,7 @@ const Auxiliadora = (S, utilizaP5) => {
          * el inicio de la ejecución ("frameCount").
          */
         cuadros: () => {
-            return utilizaP5 ? S.O.S.P5.frameCount : _conteoDeCuadros();
+            return utilizaP5 ? S.O.S.P5.frameCount : contador.cuadros();
         },
         
         /**

@@ -47,114 +47,12 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
     const geometria = {};
-    _inicializar();
+    _CONTENEDOR$inicializar();
     
-    /**
-     * _inicializar
-     * Define los valores iniciales de la geometría del contenedor
-     * y calcula el ancho y el alto en función de las dimensiones 
-     * del elemento HTML que actúa como contenedor.
-     */
-    function _inicializar() {        
-        let _rectanguloContenedor = _contenedor.getBoundingClientRect();
-        geometria.anchoDOM = (_esPrincipal ? window.innerWidth  : _rectanguloContenedor.width);
-        geometria.altoDOM  = (_esPrincipal ? window.innerHeight : _rectanguloContenedor.height);
-        geometria.ancho    = _ancho && _ancho < geometria.anchoDOM ? _ancho : geometria.anchoDOM;
-        geometria.alto     = _alto  && _alto  < geometria.altoDOM  ? _alto  : geometria.altoDOM;
-        geometria.x        = 0;
-        geometria.y        = 0;
-        
-        // Si no se especificó ancho o alto al momento de instanciar el "Contenedor",  
-        // se asumen las dimensiones actuales del elemento DOM como valores de referencia.
-        if (!_ancho || !_alto) {
-            _ancho = geometria.ancho;
-            _alto  = geometria.alto;
-        }
-        
-        // Valor inicial para el coeficiente de escalamiento
-        geometria.factorEscala = geometria.ancho / _ancho;
-        geometria.referencia = _ancho ?? 1024;
-    }
     
-    /**
-     * _obtenerGeometriaDOM
-     * Función privada que retorna un objeto con la información
-     * acerca de la geometría (dimensión y posición) del elemento
-     * HTML contenedor en la página.
-     */
-    function _obtenerGeometriaDOM() {
-        const _geometriaActual = {};
-        if (_esPrincipal) {
-            _geometriaActual.anchoDOM = window.innerWidth;
-            _geometriaActual.altoDOM  = window.innerHeight;
-            _geometriaActual.x = 0;
-            _geometriaActual.y = 0;
-        }
-        else {
-            let _rectangulo = _contenedor.getBoundingClientRect();
-            _geometriaActual.anchoDOM = _rectangulo.width;
-            _geometriaActual.altoDOM  = _rectangulo.height;
-            _geometriaActual.x = _rectangulo.x + window.scrollX;
-            _geometriaActual.y = _rectangulo.y + window.scrollY;
-        }
-        return _geometriaActual;
-    }    
-    
-
-    
-// ==============================================================
-// 
-//  FUNCIONES PARA EL MANEJO DEL LIENZO ("CANVAS")
-//  
-// ==============================================================
-    
-    /**
-     * lienzo
-     * Establece y devuelve el lienzo ("canvas") del contenedor, donde luego se realizará 
-     * el "render" de la escena. Si el parámetro "canvas" está definido, se almacena este
-     * valor internamente en el contenedor. Se devuelse el valor actual almacenado del lienzo.
-     */
-    function lienzo(canvas) {
-        if (canvas !== undefined) {
-            _lienzo = canvas;
-            _contenedorReal.appendChild(_lienzo);
-            _actualizarPosicionLienzo();
-        }
-        return _lienzo;
-    }
-       
-    /**
-     * _actualizarPosicionLienzo
-     * Todos aquellos lienzos que no estén directamente incluidos debajo del <body> de la 
-     * página son posicionados de manera "absoluta" y, por lo tanto, deben ser reubicados 
-     * cada vez que el contenedor de referencia es reacomodado en la página por el navegador 
-     * (por ejemplo, ante el cambio de tamaño de la ventana, el "scrolling", etc).
-     */
-    function _actualizarPosicionLienzo() {
-        if (_lienzo) {
-            _lienzo.style.display = "block";
-            if (!_esPrincipal) {
-                _lienzo.style.position = "absolute";
-                _lienzo.style.left = geometria.x + "px";
-                _lienzo.style.top = geometria.y + "px";
-            } 
-        }  
-    }
-
-    
-// ==============================================================
-// 
-//  VERIFICACIÓN, ACTUALIZACIÓN Y AJUSTE
-//  La función "actualizar" verifica en cada iteración si hubo
-//  cambios en el tamaño del contenedor HTML para redimensionar
-//  el lienzo ("responsive"). La función "ajustar" fuerza nuevos
-//  valores para "ancho", "alto" y "guardarProporciones".
-//  
-// ==============================================================
-
     /**
      * actualizar
-     * Función que asegura que la "geometría" esté en sincroncía con el elemento HTML.
+     * Función que asegura que la "geometría" esté en sincronía con el elemento HTML.
      * Recalcula las dimensiones y la posición del objeto "Contenedor" actual, teniendo 
      * en cuenta las dimensiones y posición corrientes del elemento HTML real. 
      * Es decir, actualiza los valores internos del objeto "geometría" del "Contenedor" 
@@ -163,7 +61,7 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
      * final por la función es "true" o "false" indicando si hubo algún cambio.
      */
     function actualizar(forzar = false) {
-        let _g = _obtenerGeometriaDOM();   // Objeto "auxiliar" con la geometría del elemento DOM
+        let _g = _DOM$obtenerGeometria();   // Objeto "auxiliar" con la geometría del elemento DOM
         
         // Determina si se debe hacer un "redimensionamiento" o "reposicionamiento" (o ambos)
         const _redimensionar = _g.anchoDOM != geometria.anchoDOM || _g.altoDOM != geometria.altoDOM;
@@ -177,7 +75,7 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
         if (_reposicionar || forzar) {
             geometria.x = _g.x;
             geometria.y = _g.y;
-            _actualizarPosicionLienzo();
+            _LIENZO$actualizarPosicion();
         }
         
         // REDIMENSIONAMIENTO
@@ -224,13 +122,20 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
         actualizar(true);
     }
 
-
-    
-// ==============================================================
-// 
-//  FUNCIONES MISCELÁNEAS DEL CONTENEDOR
-//  
-// ==============================================================    
+    /**
+     * lienzo
+     * Establece y devuelve el lienzo ("canvas") del contenedor, donde luego se realizará 
+     * el "render" de la escena. Si el parámetro "canvas" está definido, se almacena este
+     * valor internamente en el contenedor. Se devuelse el valor actual almacenado del lienzo.
+     */
+    function lienzo(canvas) {
+        if (canvas !== undefined) {
+            _lienzo = canvas;
+            _contenedorReal.appendChild(_lienzo);
+            _LIENZO$actualizarPosicion();
+        }
+        return _lienzo;
+    }
     
     /**
      * seguimientoMouse
@@ -244,6 +149,81 @@ function Contenedor(elementoDOM, guardarProporciones = false, ancho = 0, alto = 
         }
     }    
 
+    
+// --------------------------------------------------------------------------------------------------
+//
+//   F U N C I O N E S     P R I V A D A S
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+    /**
+     * _CONTENEDOR$inicializar
+     * Define los valores iniciales de la geometría del contenedor
+     * y calcula el ancho y el alto en función de las dimensiones 
+     * del elemento HTML que actúa como contenedor.
+     */
+    function _CONTENEDOR$inicializar() {        
+        let _rectanguloContenedor = _contenedor.getBoundingClientRect();
+        geometria.anchoDOM = (_esPrincipal ? window.innerWidth  : _rectanguloContenedor.width);
+        geometria.altoDOM  = (_esPrincipal ? window.innerHeight : _rectanguloContenedor.height);
+        geometria.ancho    = _ancho && _ancho < geometria.anchoDOM ? _ancho : geometria.anchoDOM;
+        geometria.alto     = _alto  && _alto  < geometria.altoDOM  ? _alto  : geometria.altoDOM;
+        geometria.x        = 0;
+        geometria.y        = 0;
+        
+        // Si no se especificó ancho o alto al momento de instanciar el "Contenedor",  
+        // se asumen las dimensiones actuales del elemento DOM como valores de referencia.
+        if (!_ancho || !_alto) {
+            _ancho = geometria.ancho;
+            _alto  = geometria.alto;
+        }
+        
+        // Valores iniciales para el coeficiente de escalamiento y para el valor de referencia
+        geometria.factorEscala = geometria.ancho / _ancho;  // Definición de escala inicial
+        geometria.referencia = _ancho ?? 1024;              // Valor en píxeles usado como referencia de desplazamientos
+    }
+    
+    /**
+     * _DOM$obtenerGeometria
+     * Función privada que retorna un objeto con la información
+     * acerca de la geometría (dimensión y posición) del elemento
+     * HTML contenedor en la página.
+     */
+    function _DOM$obtenerGeometria() {
+        const _geometriaActual = {};
+        if (_esPrincipal) {
+            _geometriaActual.anchoDOM = window.innerWidth;
+            _geometriaActual.altoDOM  = window.innerHeight;
+            _geometriaActual.x = 0;
+            _geometriaActual.y = 0;
+        }
+        else {
+            let _rectangulo = _contenedor.getBoundingClientRect();
+            _geometriaActual.anchoDOM = _rectangulo.width;
+            _geometriaActual.altoDOM  = _rectangulo.height;
+            _geometriaActual.x = _rectangulo.x + window.scrollX;
+            _geometriaActual.y = _rectangulo.y + window.scrollY;
+        }
+        return _geometriaActual;
+    }    
+    
+    /**
+     * _LIENZO$actualizarPosicion
+     * Todos aquellos lienzos que no estén directamente incluidos debajo del <body> de la 
+     * página son posicionados de manera "absoluta" y, por lo tanto, deben ser reubicados 
+     * cada vez que el contenedor de referencia es reacomodado en la página por el navegador 
+     * (por ejemplo, ante el cambio de tamaño de la ventana, el "scrolling", etc).
+     */
+    function _LIENZO$actualizarPosicion() {
+        if (_lienzo) {
+            _lienzo.style.display = "block";
+            if (!_esPrincipal) {
+                _lienzo.style.position = "absolute";
+                _lienzo.style.left = geometria.x + "px";
+                _lienzo.style.top = geometria.y + "px";
+            } 
+        }  
+    }
     
     
     // =================================================================

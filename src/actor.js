@@ -264,7 +264,7 @@ function Actor(S, origen, velocidad, estilo) {
                     if (influenciadores[j].puntoInfluencia) {
                         // Ajustar el punto de influencia con base en el desplazamiento/rotación del "Actor"
                         let _puntoInfluencia = S.O.S.Vector(influenciadores[j].puntoInfluencia);
-                        _actualizarPuntoInfluencia(_puntoInfluencia, -1); 
+                        _PUNTO_INFLUENCIA$actualizar(_puntoInfluencia, -1); 
                         _ACT.influencias.push(_puntoInfluencia);
 
                         // Calcular la fuerza (atracción/repulsión) del "Actor" al punto de influencia
@@ -292,7 +292,7 @@ function Actor(S, origen, velocidad, estilo) {
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (_ACT.influenciador) {
                 _ACT.puntoInfluencia = S.O.S.Vector(_ACT.posicion);
-                _actualizarPuntoInfluencia(_ACT.puntoInfluencia);
+                _PUNTO_INFLUENCIA$actualizar(_ACT.puntoInfluencia);
             }
 
             // 5. ACTUALIZACIÓN DEL ALCANCE & VERIFICACIÓN DE LA VIGENCIA DEL ACTOR
@@ -365,7 +365,7 @@ function Actor(S, origen, velocidad, estilo) {
         else if (_posX >= 0 && _posY < 0) 
             _angulo = -(Math.sign(_angulo) * Math.PI / 2 * 3) - _angulo;  // Cuadrante: SUPERIOR-DERECHO
         else if (_posX < 0 && _posY >= 0) 
-            _angulo = (Math.sign(_angulo) * Math.PI / 2 * 3) - _angulo;  // Cuadrante: INFERIOR-IZQUIEDO
+            _angulo = (Math.sign(_angulo) * Math.PI / 2 * 3) - _angulo;   // Cuadrante: INFERIOR-IZQUIEDO
         else if (_posX < 0 && _posY < 0) 
             _angulo = (Math.sign(_angulo) * Math.PI / 2 * 3) - _angulo;   // Cuadrante: SUPERIOR-IZQUIERDO
 
@@ -391,6 +391,7 @@ function Actor(S, origen, velocidad, estilo) {
     };
 
     
+    
 // --------------------------------------------------------------------------------------------------
 //
 //   F U N C I O N E S     P R I V A D A S
@@ -398,28 +399,40 @@ function Actor(S, origen, velocidad, estilo) {
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     
     /**
-     * _actualizarPuntoInfluencia
+     * _PUNTO_INFLUENCIA$actualizar
      * Actualiza las coordenadas del "Punto de Influencia" (vector) recibido como argumento
      * para añadir el "desplazamiento" y la "rotación" definidos en cada uno de los "Repartos"
      * superiores del "Actor" (también recibido como parámetro). El "Punto de Influencia" es 
      * la posición del "Influenciador", pero a la que se le aplican las transformaciones
      * (desplazamientos y rotaciones) de los todos los "Repartos" de nivel superior.
      */
-    function _actualizarPuntoInfluencia(punto, signo = 1) {
+    function _PUNTO_INFLUENCIA$actualizar(punto, signo = 1) {
         for (let _superior = _ACT.superior.entidad; ; _superior = _superior.superior.entidad) {
             if (S.O.S.esUnReparto(_superior)) {
+                
+                // INFLUENCIADOR -----------------------------------------------------------
+                // Actualización del "Punto de Influencia" de un "Influenciador", es decir,
+                // se ajusta su "posición" actual aplicando las rotaciones/desplazamientos
+                // del "Repartidor" al que el "Influenciador" pertenece
+                // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
                 if (signo > 0) {
                     if (_superior.rotacion) {
                         punto.rotar((_superior.rotacion * signo) - Math.PI / 2 + ((_ACT.desvio ?? 0) * 2));
                     }
-                    punto.sumar(_superior.vectorDesplazamiento().multiplicar(signo));
+                    punto.sumar(_superior.vectorDesplazamiento().multiplicar(signo / (S.O.S.escalable ? S.O.S.escala() : 1)));
                 }
+                
+                // ACTOR CONVENCIONAL --------------------------------------------------------
+                // Actualización del "Punto de Influencia" para un "Actor" que es atraído o
+                // repelido por este punto. Se le aplican las rotaciones/desplazamientos del
+                // "Reparto" al que el "Actor" pertenece (con efecto contrario => signo=-1).
+                // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
                 else if (signo < 0) {
+                    punto.sumar(_superior.vectorDesplazamiento().multiplicar(signo / (S.O.S.escalable ? S.O.S.escala() : 1)));
                     if (_superior.rotacion) {
                         punto.rotar((Math.PI / 2) - (_superior.rotacion * signo));
                         punto.rotar(Math.PI/2);
                     }
-                    punto.sumar(_superior.vectorDesplazamiento().multiplicar(signo));
                 }
             }  
             if (!_superior.superior)
@@ -428,15 +441,15 @@ function Actor(S, origen, velocidad, estilo) {
     }
     
     /**
-     * _inicializar
+     * _ACT$inicializar
      * Función privada de inicialización del "Actor"
      */
-    function _inicializar(origen, velocidad, estilo) {
+    function _ACT$inicializar(origen, velocidad, estilo) {
         
-        // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESQUEMA")
-        // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
-        // los atributos del "Actor", recibidas como argumento.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESQUEMA")
+    // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
+    // los atributos del "Actor", recibidas como argumento.
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         let _definicion = {};
         if (origen)
             _definicion[CONFIG.ACT_ORIGEN] = origen;
@@ -446,42 +459,44 @@ function Actor(S, origen, velocidad, estilo) {
             _definicion[CONFIG.ACT_ESTILO] = estilo;
         _ESQ.def(_definicion);
         
-        // 2. INICIALIZACIÓN DE PROPIEDADES PÚBLICAS (DEL "ACTOR")
-        // Las propiedades públicas son las variables del "Actor" donde 
-        // se colocan los valores evaluados de los atributos dinámicos.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        
+    // 2. INICIALIZACIÓN DE PROPIEDADES PÚBLICAS (DEL "ACTOR")
+    // Las propiedades públicas son las variables del "Actor" donde 
+    // se colocan los valores evaluados de los atributos dinámicos.
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         for (let i = 0; i < CONFIG.Actor.length; i++) {
             _ACT[CONFIG.Actor[i]] = undefined;
-        }        
+        } 
         
-        // 3. INICIALIZACIÓN DE PROPIEDADES ADICIONALES DEL "ACTOR"
-        // Estas propiedades no forman parte de la definición de los atributos
-        // dinámicos del "Esquema". Son propiedades públicas, accesibles a 
-        // través de variables del "Actor" y actualizadas dinámicamente.
-        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        _ACT.posicion      = undefined;  // Coordenadas <x,y,z> de su posición actual en el lienzo
         
-        // 3.1. Propiedades que registran la trayectoria del "Actor"
-        // -----------------------------------------------------------
-        _ACT.distancia     = 0;          // Distancia actual del "Actor" a su posición de origen 
-        _ACT.recorrido     = 0;          // Cantidad de píxeles recorridos desde el inicio de su desplazamiento
+    // 3. INICIALIZACIÓN DE PROPIEDADES ADICIONALES DEL "ACTOR"
+    // Estas propiedades no forman parte de la definición de los atributos
+    // dinámicos del "Esquema". Son propiedades públicas, accesibles a 
+    // través de variables del "Actor" y actualizadas dinámicamente.
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         
-        // 3.2.Propiedades del "Actor" respecto al "Reparto" al que pertenece
-        // ------------------------------------------------------------------
-        _ACT.numero        = 0;          // Número de actor introducido por el reparto desde su creación
-        _ACT.orden         = 0;          // Número de orden dentro del reparto (entre 0 y cantidad-1)
-        _ACT.puesto        = 0;          // Número de puesto o posición de partida (entre 0 y puestos-1)
-        _ACT.prev          = undefined;  // Actor previo dentro del "Reparto"
-        _ACT.sig           = undefined;  // Actor siguiente dentro del "Reparto"
+        // RECORRIDO - Propiedades que registran la trayectoria del "Actor"
+        // -----------------------------------------------------------------
+        _ACT.posicion  = undefined;  // Coordenadas <x,y,z> de su posición actual en el lienzo
+        _ACT.distancia = 0;          // Distancia actual del "Actor" a su posición de origen 
+        _ACT.recorrido = 0;          // Cantidad de píxeles recorridos desde el inicio de su desplazamiento
         
-        // 3.3. Propiedades del "Reparto" al que pertenece
-        // -----------------------------------------------------------
-        _ACT.intensidad    = undefined;
-        _ACT.desvio        = undefined;
-        _ACT.separacion    = undefined;
+        // ACTOR DEL REPARTO - Propiedades del "Actor" respecto al "Reparto" al que pertenece
+        // -----------------------------------------------------------------------------------
+        _ACT.numero = 0;          // Número de actor introducido en el reparto desde su creación
+        _ACT.orden  = 0;          // Número de orden dentro del reparto (entre 0 y cantidad-1)
+        _ACT.puesto = 0;          // Número de puesto o posición de partida (entre 0 y puestos-1)
+        _ACT.prev   = undefined;  // Actor previo dentro del "Reparto"
+        _ACT.sig    = undefined;  // Actor siguiente dentro del "Reparto"
         
-        // 3.4. Propiedades vinculadas con los "Puntos de Influencia" e "Influenciadores"
-        // -----------------------------------------------------------
+        // REPARTO - Propiedades del "Reparto" al que pertenece
+        // -----------------------------------------------------
+        _ACT.intensidad = undefined;
+        _ACT.desvio     = undefined;
+        _ACT.separacion = undefined;
+        
+        // INFLUENCIAS - Propiedades vinculadas con los "Puntos de Influencia" e "Influenciadores"
+        // ----------------------------------------------------------------------------------------
         _ACT.influenciador = undefined;  // Boolean para indicar si el "Actor" influye en los demás actores del "Reparto"
         _ACT.influencia    = undefined;  // Valor dinámico de la magnitud de influencia del "Actor" ("Influenciador") 
         _ACT.influencias   = [];         // Listado de los "influenciadores" que afectan la trayectoria de este "Actor"
@@ -490,7 +505,7 @@ function Actor(S, origen, velocidad, estilo) {
     }
 
     
-    return _inicializar(origen, velocidad, estilo);
+    return _ACT$inicializar(origen, velocidad, estilo);
 }
 
 

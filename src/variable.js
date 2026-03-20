@@ -45,25 +45,9 @@ function Variable(S, ...parametros) {
     const _VAR = _ESQ.extender();
     
     let _calculadora = null;
-    _inicializar();
+    _VAR$inicializar();
 
     
-    /**
-     * _inicializar
-     * Método privado de inicialización de las propiedades de la "Variable".
-     */
-    function _inicializar() {
-        _ESQ.def({metodo         : null});
-        _ESQ.def({valor          : null});
-        _ESQ.def({origenDesde    : null});
-        _ESQ.def({origenHasta    : null});
-        _ESQ.def({valorDesde     : null});
-        _ESQ.def({valorHasta     : null});
-        _ESQ.def({modulador      : null});
-        _ESQ.def({ruidoVelocidad : null});
-        _ESQ.def({ruidoEscala    : null});
-    }
-
     /**
      * def
      * Esta función es la misma que la del objeto "Esquema" de quien la
@@ -119,11 +103,11 @@ function Variable(S, ...parametros) {
      *        (<arrayValores>). Por ejemplo, para trabajar con "Gradientes" de colores se usa esta opción.
      */
     _VAR.map = (...parametros) => {
-        _inicializar();  // Primero, se inicializan TODOS los parámetros de la "Variable" en nulo
+        _VAR$inicializar();  // Primero, se inicializan TODOS los parámetros de la "Variable" en nulo
         _calculadora = null;
         let _metodoEvaluacion = _ESQ.val('metodo');
         if (parametros.length >= 1) {
-            if (_esUnMetodoDeEvaluacion(parametros[0])) {
+            if (_EVALUADOR$perteneceAlRepertorio(parametros[0])) {
                 _metodoEvaluacion = parametros[0];
                 _ESQ.def({metodo : _metodoEvaluacion});            
             }
@@ -139,7 +123,7 @@ function Variable(S, ...parametros) {
                     return _VAR;
                 }                
                 // 2 ARGUMENTOS ---------------------------------------------------------
-                if (_esUnRangoDeValores(parametros[1])) { 
+                if (_COLOR$perteneceAlRepertorio(parametros[1])) { 
                     _ESQ.def({valor : parametros[1]});
                     if (parametros.length > 2)
                         _ESQ.def({modulador : parametros[2]});
@@ -153,7 +137,7 @@ function Variable(S, ...parametros) {
                     }
                     // 4 ARGUMENTOS ----------------------------------------------------
                     else if (parametros.length == 4) {
-                        if (_esUnRangoDeValores(parametros[3])) {
+                        if (_COLOR$perteneceAlRepertorio(parametros[3])) {
                             _ESQ.def({origenDesde : parametros[1]});
                             _ESQ.def({origenHasta : parametros[2]}); 
                             _ESQ.def({valor       : parametros[3]});
@@ -166,7 +150,7 @@ function Variable(S, ...parametros) {
                     }
                     // 5 ARGUMENTOS ----------------------------------------------------
                     else if (parametros.length == 5) {
-                        if (_esUnRangoDeValores(parametros[3])) {
+                        if (_COLOR$perteneceAlRepertorio(parametros[3])) {
                             _ESQ.def({origenDesde : parametros[1]});
                             _ESQ.def({origenHasta : parametros[2]}); 
                             _ESQ.def({valor       : parametros[3]});
@@ -203,7 +187,6 @@ function Variable(S, ...parametros) {
         _VAR.map(...parametros);
     }
 
-    
     /**
      * mod
      * Define el valor del "modulador" a aplicar durante la función de mapeo.
@@ -256,7 +239,7 @@ function Variable(S, ...parametros) {
             let _valorVar   = _ESQ.val('valor');
             let _valorDesde = _ESQ.val('valorDesde');
             let _valorHasta = _ESQ.val('valorHasta');
-            if (_esUnRangoDeValores(_valorVar)) {  // TODO: Sólo está controlando rangos de colores (GRADIENTES)
+            if (_COLOR$perteneceAlRepertorio(_valorVar)) {  // TODO: Sólo está controlando rangos de colores (GRADIENTES)
                 _calculadora.desde(_metodo, _ESQ.val('origenDesde'), _ESQ.val('origenHasta')).hasta(...S.O.S.COLOR[_valorVar]);
             }
             else if (_valorDesde || _valorHasta) {
@@ -289,23 +272,46 @@ function Variable(S, ...parametros) {
         }
         return _v;
     };
-        
+
+    
+// -------------------------------------------------------------------------------------
+//
+//   F U N C I O N E S     P R I V A D A S
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
     /**
-     * _esUnRangoDeValores
+     * _VAR$inicializar
+     * Método privado de inicialización de las propiedades de la "Variable".
+     */
+    function _VAR$inicializar() {
+        _ESQ.def({metodo         : null});
+        _ESQ.def({valor          : null});
+        _ESQ.def({origenDesde    : null});
+        _ESQ.def({origenHasta    : null});
+        _ESQ.def({valorDesde     : null});
+        _ESQ.def({valorHasta     : null});
+        _ESQ.def({modulador      : null});
+        _ESQ.def({ruidoVelocidad : null});
+        _ESQ.def({ruidoEscala    : null});
+    }
+
+    /**
+     * _COLOR$perteneceAlRepertorio
      * Retorna "true" o "false" indicando si el argumento corresponde a un 
      * rango predefinido de valores en lugar de a un valor simple. Por ejemplo,
      * todos los "Gradientes" son rangos de colores, definidos bajo un nombre.
      */
-    function _esUnRangoDeValores(argumento) {
+    function _COLOR$perteneceAlRepertorio(argumento) {
         return S.O.S.COLOR.hasOwnProperty(argumento);
     }
     
     /**
-     * _esUnMetodoDeEvaluacion
+     * _EVALUADOR$perteneceAlRepertorio
      * Retorna "true" o "false" indicado si el argumento corresponde
      * a alguno de los "Métodos de Evaluación" existentes.
      */
-    function _esUnMetodoDeEvaluacion(argumento) {
+    function _EVALUADOR$perteneceAlRepertorio(argumento) {
         return S.O.S.EVAL.hasOwnProperty(argumento);
     }
         
@@ -409,16 +415,16 @@ function _Calculadora(S) {
         if (_VAL.funcionDinamica) {        
             if (!_VAL.esVector) {
                 S.O.S.VAR = ctx.PUBX;
-                return _mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S));
+                return _CALC$mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S));
             }
             else {
                 let _vecFinal = S.O.S.Vector();
                 S.O.S.VAR = ctx.PUBX;
-                _vecFinal.x = _mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S), 'x');
+                _vecFinal.x = _CALC$mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S), 'x');
                 S.O.S.VAR = ctx.PUBY;
-                _vecFinal.y = _mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S), 'y');
+                _vecFinal.y = _CALC$mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S), 'y');
                 S.O.S.VAR = ctx.PUBZ;
-                _vecFinal.z = _mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S), 'z');
+                _vecFinal.z = _CALC$mapear(S.O.S.EVAL[_VAL.funcionDinamica].met(S), 'z');
                 return _vecFinal;
             }
         }
@@ -478,8 +484,16 @@ function _Calculadora(S) {
         return _contexto[clave];
     };
 
+
+    
+// -------------------------------------------------------------------------------------
+//
+//   F U N C I O N E S     P R I V A D A S
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
     /**
-     * _mapear
+     * _CALC$mapear
      * Función privada utilizada internamente por el método "calc" que se ocupa de
      * hacer el mapeo e interpolación de los valores configurados en la "Variable",
      * es decir, la ejecución de la función dinámica para obtener un valor normalizado
@@ -487,7 +501,7 @@ function _Calculadora(S) {
      * Esta función permite interpolar tanto valores numéricos simples, como objetos
      * de tipo "color" de p5js y, también, objetos de tipo "Vector".
      */
-    function _mapear(pos, coord) {
+    function _CALC$mapear(pos, coord) {
         // 1. OBTENER VALOR ORIGEN NORMALIZADO
         // En primer lugar, se ejecuta la función de mapeo dinámico (el "Método de Evaluación")
         // y se lo termina convirtiendo en un valor normalizado (entre "0" y "1").
@@ -502,13 +516,13 @@ function _Calculadora(S) {
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         let ini = {pos: 0.0, val: undefined};
         let fin = {pos: 1.0, val: undefined};
-        let funcionInterpolacion = _interporlarColor;
+        let funcionInterpolacion = _COLOR$interporlar;
         for (let i = _VAL.valoresEnRangos.length - 1; i >= 0; i--) {
             let _valorActual = _VAL.valoresEnRangos[i];
 
             // Definir la función de interpolación según el tipo de valor (numérico simple, color o "Vector")
             if (!S.O.S.esUnColor(_valorActual.val)) {
-              funcionInterpolacion = _interpolarNumero;
+              funcionInterpolacion = _NUMERO$interpolar;
             }
             // Se recorre el "array" de valores de destino para encontrar el valor interpolado
             if (_valorActual.pos == pos) {
@@ -540,11 +554,11 @@ function _Calculadora(S) {
     }
 
     /**
-     * _interpolarNumero
+     * _NUMERO$interpolar
      * Función privada que interpola dos valores numéricos teniendo en cuenta 
      * la posición "ponderada" de cada uno de ellos en el rango ("pos").
      */
-    function _interpolarNumero(pos, ini1, fin1, ini2, fin2) {
+    function _NUMERO$interpolar(pos, ini1, fin1, ini2, fin2) {
         if (ini1 === undefined && fin1 === undefined)
             return undefined;
         else if (ini2 === undefined && fin2 === undefined)
@@ -555,11 +569,11 @@ function _Calculadora(S) {
     }
 
     /**
-     * _interporlarColor
+     * _COLOR$interporlar
      * Función privada que interpola dos colores de un gradiente, teniendo en cuenta las
      * "paradas" o posiciones "ponderadas" de cada color dentro del gradiente ("pos").
      */
-    function _interporlarColor(pos, paradaColorIni, paradaColorFin, colorIni, colorFin) {
+    function _COLOR$interporlar(pos, paradaColorIni, paradaColorFin, colorIni, colorFin) {
         if (paradaColorIni == paradaColorFin) {
             return paradaColorIni == 1 ? colorIni : colorFin;
         }
@@ -580,5 +594,3 @@ function _Calculadora(S) {
 
 
 export default Variable;
-
-

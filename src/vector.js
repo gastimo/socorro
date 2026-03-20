@@ -249,24 +249,9 @@ function VectorVar(S, a, b, c) {
     const _ESQ = Esquema(S, CONFIG.SOS_VECTORVAR);
     const _VEV = _ESQ.extender();
     let _vectorial = S.O.S.esUnVector(a);
-    _inicializar(a, b, c);
+    _VEV$inicializar(a, b, c);
 
     
-    /**
-     * _inicializar
-     * Método privado de inicialización de las propiedades del "Vector".
-     */
-    function _inicializar(a, b, c) {
-        const _definicion = {};
-        if (a !== undefined && a !== null)
-            _definicion.x = _vectorial ? a.x : a;
-        if (b !== undefined && b !== null)
-            _definicion.y = _vectorial ? a.y : b;
-        if (c !== undefined && c !== null)
-            _definicion.z = _vectorial ? a.z : c;
-        _ESQ.def(_definicion);
-    }
-
     /**
      * def
      * Esta función es la misma que la del objeto "Esquema" de quien el
@@ -322,7 +307,7 @@ function VectorVar(S, a, b, c) {
             if (S.O.S.esUnVectorVar(v))
                 _ESQ.def(v.defincion());
             else
-                _inicializar(v?.x, v?.y, v?.z);
+                _VEV$inicializar(v?.x, v?.y, v?.z);
         }
         return _VEV;
     };
@@ -337,6 +322,21 @@ function VectorVar(S, a, b, c) {
         return _ESQ.val();  
     };
     
+    /**
+     * _VEV$inicializar
+     * Método privado de inicialización de las propiedades del "Vector".
+     */
+    function _VEV$inicializar(a, b, c) {
+        const _definicion = {};
+        if (a !== undefined && a !== null)
+            _definicion.x = _vectorial ? a.x : a;
+        if (b !== undefined && b !== null)
+            _definicion.y = _vectorial ? a.y : b;
+        if (c !== undefined && c !== null)
+            _definicion.z = _vectorial ? a.z : c;
+        _ESQ.def(_definicion);
+    }
+
     return _VEV;
 }
 

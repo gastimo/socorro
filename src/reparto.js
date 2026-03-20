@@ -384,6 +384,8 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
     /**
      * subreparto
      * Crea un nuevo "Reparto" como una copia del "Reparto" actual.
+     * En otras palabras, crea un instancia del "Subreparto" utilizando
+     * el "Reparto" actual como metadata.
      */
     _RPT.subreparto = () => {
         const _sr = Reparto(S);
@@ -417,10 +419,10 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     
     /**
-     * _inicializar
+     * _RPT$inicializar
      * Método privado de inicialización de las propiedades del "Reparto".
      */
-    function _inicializar(coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion) {
+    function _RPT$inicializar(coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion) {
         
         // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESQUEMA")
         // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
@@ -486,7 +488,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
     }
 
     
-    return  _inicializar(coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion);
+    return  _RPT$inicializar(coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion);
 }
 
 

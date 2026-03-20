@@ -89,7 +89,7 @@ _COREOS[CONCURRENTE] = (actor, cantidad, puestos) => {
     actor.direccion = angulo;
     
     // A partir del ángulo (dirección), se calcula el vector de separación
-    const distancia = S.O.S.extension() / Math.PI;
+    const distancia = S.O.S.extension() / Math.PI / 3 * 2;
     const corrimiento = S.O.S.Vector(distancia + actor.separacion, 0, 0);
     corrimiento.ang(angulo);
     

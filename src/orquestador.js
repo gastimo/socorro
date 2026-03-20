@@ -29,16 +29,17 @@ import Auxiliadora from './auxiliadora';
  */
 function Orquestador(sos, contenedor) {
     const S = sos.socorrista();
-    let   _utilizaP5 = false;
+    const CONTADOR = {};
+    CONTADOR.cuadros = 0;
 
     // Variables para la "Escena"
     let   _escena;
     let   _escenaImportada;
     let   _funcionActuaria;
     let   _contenedor = contenedor;
+    let   _utilizaP5 = false;
     
-    // Variables para el procesamiento del ciclo de representación
-    let   _cuadros = 0;
+    // Variables para el manejo del tiempo
     let   _reloj;
     
     // Variables para los actos (funciones) a ser orquestados
@@ -56,7 +57,6 @@ function Orquestador(sos, contenedor) {
     let   _valorUniformResolucion;
     let   _valorUniformMouse;
 
-    
     
 // =====================================================================
 // 
@@ -214,7 +214,7 @@ function Orquestador(sos, contenedor) {
         _escena = escena;
         const _repertorios = Repertorio(S);
         asociar('Repertorio', _repertorios.funciones());   // Para la personalización de repertorios
-        S.O.S.revelar(S.O.S, Auxiliadora(S, _utilizaP5), _repertorios.publicar(), Cargador(), escena);
+        S.O.S.revelar(S.O.S, Auxiliadora(S, _utilizaP5, _reloj, CONTADOR), _repertorios.publicar(), Cargador(), escena);
     }  
     
     /**
@@ -243,15 +243,6 @@ function Orquestador(sos, contenedor) {
      */
     function socorrista() {
         return S;
-    }
-    
-    /**
-     * _conteoDeCuadros
-     * Función privada del orquestador que devuelve el número del fotograma actual.
-     * En caso de utilizar la librería "p5js" esta tarea es realizada por "frameCount".
-     */
-    function _conteoDeCuadros() {
-        return _cuadros;
     }
 
 
@@ -312,12 +303,12 @@ function Orquestador(sos, contenedor) {
      */
     function orquestar() {
         if (_actoEjecucionIniciado && _funcionEjecucion) {
-            _orquestarACTO$3();
-            _cuadros++;
+            _ACTO3$orquestar();
+            CONTADOR.cuadros++;
         }
         else {
             if (_funcionPreparacion && !_actoPreparacionIniciado) {
-                _orquestarACTO$1();
+                _ACTO1$orquestar();
                 _actoPreparacionIniciado = true;
                 return;
             }
@@ -327,7 +318,7 @@ function Orquestador(sos, contenedor) {
             }
             if (_funcionIniciacion && !_actoIniciacionIniciado) {
                 if (!_funcionPreparacion || _actoPreparacionFinalizado) {
-                    _orquestarACTO$2();
+                    _ACTO2$orquestar();
                     _actoIniciacionIniciado = true;
                     return;
                 }
@@ -336,42 +327,15 @@ function Orquestador(sos, contenedor) {
                 if ((!_funcionPreparacion && !_funcionIniciacion) || 
                     (_funcionPreparacion && _actoPreparacionFinalizado && !_funcionIniciacion) ||
                     _actoIniciacionIniciado) {
-                    _orquestarACTO$3();
+                    _ACTO3$orquestar();
                     _actoEjecucionIniciado = true;
-                    _cuadros++;  // Se incrementa el contador de cuadros/fotogramas
+                    CONTADOR.cuadros++;  // Se incrementa el contador de cuadros/fotogramas
                     return;
                 }
             }            
         }
     }
-    
-    /**
-     * _orquestarACTO$1
-     * Función orquestadora del acto #1: "Preparación"
-     */
-    function _orquestarACTO$1() {
-        if (!_utilizaP5)
-            _funcionPreparacion();
-    }
-    
-    /**
-     * _orquestarACTO$2
-     * Función orquestadora del acto #2: "Iniciación"
-     */
-    function _orquestarACTO$2() {
-        if (!_utilizaP5)
-            _funcionIniciacion();
-    }
-    
-    /**
-     * _orquestarACTO$3
-     * Función orquestadora del acto #3: "Ejecución"
-     */
-    function _orquestarACTO$3() {
-        if (!_utilizaP5)
-            _funcionEjecucion();
-    }
-        
+            
 
     
 // -----------------------------------------------------------------
@@ -449,7 +413,7 @@ function Orquestador(sos, contenedor) {
         }
     
         // Actualizar las variables "uniform" de la resolución
-        _actualizarUniformResolucion();
+        _UNIFORM$actualizarResolucion();
 
         // Definición de la función para seguimiento del movimiento del mouse
         const _movimientoMouse = (evt) => {
@@ -476,11 +440,11 @@ function Orquestador(sos, contenedor) {
             if (_contenedor.actualizar()) {
                 // Actualización de las dimensiones de la "Escena" y las variables "uniform" de resolución
                 _escena.dimensionar(_contenedor.geometria.ancho, _contenedor.geometria.alto);
-                _actualizarUniformResolucion();
+                _UNIFORM$actualizarResolucion();
             }
 
             // Se actualiza el "uniform" para el tiempo
-            _actualizarUniformTiempo();
+            _UNIFORM$actualizarTiempo();
          
             // Actualizar la "Escena" y aplicar sus atributos de "Estilo" (si corresponde)
             _escena.actualizar();
@@ -489,21 +453,52 @@ function Orquestador(sos, contenedor) {
     }
 
     
-    
-// -----------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------
 //
+//   F U N C I O N E S     P R I V A D A S
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    
+    /**
+     * _ACTO1$orquestar
+     * Función orquestadora del acto #1: "Preparación"
+     */
+    function _ACTO1$orquestar() {
+        if (!_utilizaP5)
+            _funcionPreparacion();
+    }
+    
+    /**
+     * _ACTO2$orquestar
+     * Función orquestadora del acto #2: "Iniciación"
+     */
+    function _ACTO2$orquestar() {
+        if (!_utilizaP5)
+            _funcionIniciacion();
+    }
+    
+    /**
+     * _ACTO3$orquestar
+     * Función orquestadora del acto #3: "Ejecución"
+     */
+    function _ACTO3$orquestar() {
+        if (!_utilizaP5)
+            _funcionEjecucion();
+    }
+
+    
+// =====================================================================
 //  VARIABLES UNIFORM DE GLSL
 //  Métodos para la actualización de los valores de las variables 
 //  "uniform" (shaders), en cada iteración del ciclo de "Ejecución".
-//  
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+// =====================================================================    
         
     /**
-     * _actualizarUniformResolucion
+     * _UNIFORM$actualizarResolucion
      * Función interna que se ocupa de actualizar los valores de las variables
      * "uniform" que almacenan la resolución del lienzo.
      */
-    function _actualizarUniformResolucion() {
+    function _UNIFORM$actualizarResolucion() {
         if (_valorUniformResolucion) {
             _valorUniformResolucion[CONFIG.UNIFORM_VALOR].x = _contenedor.geometria.ancho;
             _valorUniformResolucion[CONFIG.UNIFORM_VALOR].y = _contenedor.geometria.alto;
@@ -514,10 +509,10 @@ function Orquestador(sos, contenedor) {
     }
 
     /**
-     * _actualizarUniformTiempo
+     * _UNIFORM$actualizarTiempo
      * Función interna que se ocupa de actualizar el valor del "uniform" del tiempo
      */
-    function _actualizarUniformTiempo() {
+    function _UNIFORM$actualizarTiempo() {
         if (_valorUniformTiempo) {
             _valorUniformTiempo[CONFIG.UNIFORM_VALOR] += _reloj.getDelta();
             if (_utilizaP5) {
