@@ -55,18 +55,6 @@ _REP[CONFIG.ESTANDAR] = (actor) => {
     
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
-//  REPRESENTADOR: ninguno
-//  No se dibuja absolutamente nada.
-//  
-//
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-_REP[NINGUNO] = (actor) => {
-};
-
-    
-    
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-//
 //  REPRESENTADOR: circulo
 //  Simplemente dibuja un círculo por cada actor.
 //  
@@ -90,6 +78,23 @@ _REP[CIRCULO] = (actor) => {
         S.O.S.P5.circle(actor.posicion.x ? S.O.S.escalar(actor.posicion.x) : 0, 
                         actor.posicion.y ? S.O.S.escalar(actor.posicion.y) : 0, 
                         S.O.S.escalar(actor.estilo.grandor));
+    }
+    
+    // INFLUENCIAS
+    if (actor.superior.identificador == '_RPT$2')
+        S.O.S.P5.stroke('rgb(255, 255, 0)');
+    else
+        S.O.S.P5.stroke('rgb(255, 0, 0)');
+
+    S.O.S.P5.strokeWeight(1);
+    for (let i = 0; i < actor.influencias.length; i++) {
+        let _puntoI = actor.influencias[i];
+        S.O.S.P5.line(S.O.S.escalar(actor.posicion.x), 
+                      S.O.S.escalar(actor.posicion.y), 
+                      S.O.S.escalar(actor.posicion.z), 
+                      S.O.S.escalar(_puntoI.x),
+                      S.O.S.escalar(_puntoI.y),
+                      S.O.S.escalar(_puntoI.z));
     }
 };
 
@@ -155,11 +160,11 @@ _REP[ROMBOIDE] = (actor) => {
         if (actor.estilo.grosor !== undefined && actor.estilo.grosor !== null)
             S.O.S.P5.strokeWeight(S.O.S.escalar(actor.estilo.grosor));
 
+        S.O.S.P5.translate((actor.posicion.x ? S.O.S.escalar(actor.posicion.x) : 0), 
+                           (actor.posicion.y ? S.O.S.escalar(actor.posicion.y) : 0));
         S.O.S.P5.rotate(S.O.S.P5.PI/4);
         let _lado = S.O.S.escalar(actor.estilo.grandor);
-        S.O.S.P5.rect((actor.posicion.x ? S.O.S.escalar(actor.posicion.x) : 0) - (_lado / 2), 
-                      (actor.posicion.y ? S.O.S.escalar(actor.posicion.y) : 0) - (_lado / 2), 
-                       _lado, _lado);
+        S.O.S.P5.rect(-(_lado / 2), -(_lado / 2), _lado, _lado);
         S.O.S.P5.pop();
     }
 };
@@ -207,9 +212,19 @@ _REP[ESPINA] = (actor) => {
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 _REP[PLUMA] = (actor) => {
 };
+    
+    
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//
+//  REPRESENTADOR: ninguno
+//  No se dibuja absolutamente nada.
+//  
+//
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+_REP[NINGUNO] = (actor) => {
+};
 
         
-
     return _REP;
 };
 

@@ -134,7 +134,7 @@ function Vector(S, a, b, c) {
             _VEC.z *= multiplicando;
         return _VEC;        
     };
-    
+
     /**
      * mag
      * Devuelve y/o define la magnitud del vector, o sea, su longitud o radio.
@@ -149,7 +149,7 @@ function Vector(S, a, b, c) {
         }
         return _magActual;
     };
-    
+        
     /**
      * ang
      * Devuelve y/o define el ángulo que el vector forma con el lado positivo
@@ -169,6 +169,26 @@ function Vector(S, a, b, c) {
         else {
             return Math.atan2(_VEC.x ?? 0, _VEC.y ?? 0);
         }
+    };
+    
+    /**
+     * rotar
+     * Gira el vector según la cantidad de radianes indicada en al argumento "angulo".
+     * Este método funciona de manera bastante similar al método "ang". La diferencia
+     * es que, en lugar de establecer un nuevo ángulo, suma el ángulo recibido como
+     * argumento al ángulo actual del "Vector".
+     */
+    _VEC.rotar = (angulo) => {
+        let _anguloActual = _VEC.ang();
+        if (angulo) {
+            let magnitud = _VEC.mag();
+            let _anguloNuevo = angulo + _anguloActual;
+            _VEC.x = magnitud * Math.cos(_anguloNuevo);
+            _VEC.y = magnitud * Math.sin(_anguloNuevo);
+            _VEC.z = 0;
+            return _anguloNuevo;
+        }
+        return _anguloActual;
     };
         
     /**

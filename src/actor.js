@@ -204,7 +204,7 @@ function Actor(S, origen, velocidad, estilo) {
      * dinámico de sus atributos. En caso de no encontrar los valores se recurre a la
      * herencia, es decir, buscar el valor del atributo en la jerarquía del "Esquema"
      */
-    _ACT.actualizar = () => {
+    _ACT.actualizar = (influenciadores) => {
         
         if (!_finalizado) {
             // 1. CONTEXTO DE EJECUCIÓN DEL ACTOR
@@ -243,9 +243,11 @@ function Actor(S, origen, velocidad, estilo) {
                 }
             }            
 
-            // 3. ACTUALIZACIÓN DEL DESPLAZAMIENTO
+            // 3. ACTUALIZACIÓN DEL DESPLAZAMIENTO DEL ACTOR
             // Actualización de la posición y velocidad del "Actor" en la "Escena".
             // Los vectores de "Origen" y "Velocidad" se evalúan sólo la primera vez.
+            // En caso de haber "Influenciadores" en el "Reparto", sus posiciones
+            // alteran el cálculo de la posición del "Actor" actual.
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             if (_ACT.origen === undefined) {
                 _ACT.origen = _ESQ.val(CONFIG.ACT_ORIGEN);
@@ -255,7 +257,24 @@ function Actor(S, origen, velocidad, estilo) {
             if (_ACT.velocidad === undefined) {
                 _ACT.velocidad = _ESQ.val(CONFIG.ACT_VELOCIDAD);
             }
-            if (_ACT.aceleracion === undefined) {
+            if (!_ACT.influenciador && influenciadores) {
+                _ACT.influencias = [];
+                _ACT.aceleracion = S.O.S.Vector(0, 0, 0);
+                for (let j = 0; j < influenciadores.length; j++) {
+                    if (influenciadores[j].puntoInfluencia) {
+                        // Ajustar el punto de influencia con base en el desplazamiento/rotación del "Actor"
+                        let _puntoInfluencia = S.O.S.Vector(influenciadores[j].puntoInfluencia);
+                        _actualizarPuntoInfluencia(_puntoInfluencia, -1); 
+                        _ACT.influencias.push(_puntoInfluencia);
+
+                        // Calcular la fuerza (atracción/repulsión) del "Actor" al punto de influencia
+                        let _fuerza = S.O.S.Vector(_puntoInfluencia).restar(_ACT.posicion);
+                        _fuerza.multiplicar(influenciadores[j].influencia * CONFIG.RPD_FACTOR_INFLUENCIA);
+                        _ACT.aceleracion.sumar(_fuerza);
+                    }
+                }
+            }
+            else if (_ACT.aceleracion === undefined) {
                 _ACT.aceleracion = S.O.S.Vector(0, 0, 0);
             }
             if (_ACT.velocidad) {
@@ -264,8 +283,19 @@ function Actor(S, origen, velocidad, estilo) {
                 _ACT.velocidad.sumar(_ACT.aceleracion);
                 _ACT.distancia = S.O.S.Vector(_ACT.origen).restar(_ACT.posicion).mag() ?? 0;
             }
+            
+            // 4. ACTUALIZACIÓN DEL "PUNTO DE INFLUENCIA" (SÓLO PARA INFLUENCIADORES)
+            // En caso de tratarse de un "Influenciador", es necesario calcular 
+            // su "Punto de Influencia". Este vector no es más que la posición ya
+            // calculada a la que se le aplica el desplazamiento y la rotación
+            // definida al nivel de su "Repartidor".
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            if (_ACT.influenciador) {
+                _ACT.puntoInfluencia = S.O.S.Vector(_ACT.posicion);
+                _actualizarPuntoInfluencia(_ACT.puntoInfluencia);
+            }
 
-            // 4. ACTUALIZACIÓN DEL ALCANCE & VERIFICACIÓN DE LA VIGENCIA DEL ACTOR
+            // 5. ACTUALIZACIÓN DEL ALCANCE & VERIFICACIÓN DE LA VIGENCIA DEL ACTOR
             // Se verifica, en este punto, si el "Actor" debería ser finalizado, ya
             // sea porque sobrepasó la duración máxima permitida (tiempo de vida) o 
             // porque su recorrido superó la distancia máxima establecida.
@@ -277,10 +307,11 @@ function Actor(S, origen, velocidad, estilo) {
                 _ACT.finalizar();
             }
             
-            // 5. BLANQUEO DE LA SECUENCIA DE ACTORES
+            // 6. BLANQUEO DE LA SECUENCIA DE ACTORES
             // Se blanquean las variables que apuntan al "Actor" previo 
             // y al "Actor" siguiente. Éstas son completadas automáticamente
-            // al procesar cada uno de los "Actores" activos del "Reparto".
+            // al procesar cada uno de los "Actores" activos del "Reparto"
+            // (ver función "actualizar" de la "Escena").
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             _ACT.prev = undefined;
             _ACT.sig  = undefined;
@@ -294,6 +325,36 @@ function Actor(S, origen, velocidad, estilo) {
         
         return _ACT;
     };
+    
+    /**
+     * _actualizarPuntoInfluencia
+     * Actualiza las coordenadas del "Punto de Influencia" (vector) recibido como argumento
+     * para añadir el "desplazamiento" y la "rotación" definidos en cada uno de los "Repartos"
+     * superiores del "Actor" (también recibido como parámetro). El "Punto de Influencia" es 
+     * la posición del "Influenciador", pero a la que se le aplican las transformaciones
+     * (desplazamientos y rotaciones) de los todos los "Repartos" de nivel superior.
+     */
+    function _actualizarPuntoInfluencia(punto, signo = 1) {
+        for (let _superior = _ACT.superior.entidad; ; _superior = _superior.superior.entidad) {
+            if (S.O.S.esUnReparto(_superior)) {
+                if (signo > 0) {
+                    if (_superior.rotacion) {
+                        punto.rotar(Math.PI / 2 + (_superior.rotacion * signo));
+                    }
+                    punto.sumar(_superior.vectorDesplazamiento().multiplicar(signo));
+                }
+                else if (signo < 0) {
+                    punto.sumar(_superior.vectorDesplazamiento().multiplicar(signo));
+                    if (_superior.rotacion) {
+                        punto.rotar((Math.PI / 2) - (_superior.rotacion * signo));
+                        punto.rotar(Math.PI/2);
+                    }
+                }
+            }  
+            if (!_superior.superior)
+                break;
+        }
+    }
     
     /**
      * representar
@@ -398,15 +459,17 @@ function Actor(S, origen, velocidad, estilo) {
         // dinámicos del "Esquema". Son propiedades públicas, accesibles a 
         // través de variables del "Actor" y actualizadas dinámicamente.
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        _ACT.numero     = 0;         // Actualizado por el "Reparto" (si aplica)
-        _ACT.orden      = 0;         // Actualizado por el "Reparto" (si aplica)
-        _ACT.puesto     = 0;         // Actualizado por el "Reparto" (si aplica)
-        _ACT.distancia  = 0;         // Distancia actual del "Actor" a su posición de origen
-        _ACT.recorrido  = 0;         // Cantidad de píxeles recorridos desde el inicio de su desplazamiento
-        _ACT.posicion   = undefined; // Coordenadas <x,y,z> de su posición actual en el lienzo
-        _ACT.prev       = undefined; // Actor previo dentro del "Reparto"
-        _ACT.sig        = undefined; // Actor siguiente dentro del "Reparto"
-        
+        _ACT.numero        = 0;         // Actualizado por el "Reparto" (si aplica)
+        _ACT.orden         = 0;         // Actualizado por el "Reparto" (si aplica)
+        _ACT.puesto        = 0;         // Actualizado por el "Reparto" (si aplica)
+        _ACT.distancia     = 0;         // Distancia actual del "Actor" a su posición de origen
+        _ACT.recorrido     = 0;         // Cantidad de píxeles recorridos desde el inicio de su desplazamiento
+        _ACT.influenciador = undefined; // Boolean para indicar si el "Actor" influye en los demás actores del "Reparto"
+        _ACT.influencias   = [];        // Listado de los "influenciadores" que afectan la trayectoria del "Actor"
+        _ACT.posicion      = undefined; // Coordenadas <x,y,z> de su posición actual en el lienzo
+        _ACT.prev          = undefined; // Actor previo dentro del "Reparto"
+        _ACT.sig           = undefined; // Actor siguiente dentro del "Reparto"
+
         return _ACT;
     }
 

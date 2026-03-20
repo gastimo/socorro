@@ -27,7 +27,7 @@ import Esquema from './esquema';
  */
 function Escena(S) {
     const _ESQ = Esquema(S, CONFIG.SOS_ESCENA);
-    const _ESC = _ESQ.extender(_funcionActuaria());
+    const _ESC = _ESQ.extender();
     
     // Objeto "Contenedor" para gestionar el elemento HTML donde se alojará el "canvas"
     let _contenedor;
@@ -52,32 +52,6 @@ function Escena(S) {
 
 
     
-    /**
-     * _inicializar
-     * Función privada de inicialización de las propiedades públicas de la
-     * "Escena". Estas propiedades son accesibles como variables públicas del
-     * objeto y almacenan los valores evaluados de los atributos del "Esquema".
-     */
-    function _inicializar() {
-        // Inicialización de las PROPIEDADES PÚBLICAS DE LA ESCENA
-        _ESC.estilo          = undefined;
-        _ESC.escalable       = undefined;
-        _ESC.representador   = undefined;
-        _ESC.interpretarGLSL = undefined;
-        
-        // Inicialización de los REGISTROS ("Actores", "Repartos" y "Metarepartos")
-        _REG.actores      = {};
-        _REG.repartos     = {};
-        _REG.metarepartos = {};
-        
-        _REG.actoresFinalizados = [];
-        _REG.repartosFinalizados = [];
-        
-        return _ESC;
-    }
-    
-    
-
 // =====================================================================
 // 
 //  DEFINICIÓN DE ATRIBUTOS DE LA ESCENA
@@ -283,6 +257,20 @@ function Escena(S) {
         for (const [identificador, repartos] of Object.entries(_REG.repartos)) {
             for (let i = 0; i < repartos.length; i++) {
                 repartos[i].actualizar();
+                
+                // Procesar a los "influenciadores" presentes dentro del "Reparto"
+                if (S.O.S.esUnRepartidor(repartos[i])) {
+                    if (_REG.actores.hasOwnProperty(repartos[i].identificador)) {
+                        let _influenciadores = _REG.actores[repartos[i].identificador];
+                        if (!_REG.influenciadores.hasOwnProperty(identificador)) {
+                            _REG.influenciadores[identificador] = [];  // Inicialización del array de "Influenciadres"
+                        }
+                        for (let r = 0; r < _influenciadores.length; r++) {
+                            _REG.influenciadores[identificador].push(_influenciadores[r]);
+                            _influenciadores[r].influencia = repartos[i].influencia;
+                        }
+                    }
+                }
             }
         }
         
@@ -301,7 +289,7 @@ function Escena(S) {
             let _superior = actores.length > 0 ? actores[0].superior.entidad : undefined;
             for (let i = 0; i < actores.length; i++) {
                 if (!actores[i].finalizado()) {
-                    actores[i].actualizar();
+                    actores[i].actualizar(_superior ? _ESC.influenciadores(_superior.superior.identificador) : undefined);
                     if (!actores[i].finalizado()) {
                         actores[i].prev = _actorPrevio;
                         if (_actorPrevio) 
@@ -473,6 +461,26 @@ function Escena(S) {
     };
     
     
+    /**
+     * influenciadores
+     * Retorna la lista de "Influenciadores" registrados bajo el identificador recibido
+     * como argumento (puede ser el identificador de la "Escena", de un "Reparto"
+     * o, incluso, de un "Actor"). En caso de no encontrarlo, retorna "undefined".
+     * Si no se indica identificador, se devuelve el registro completo de "Influenciadores".
+     */
+    _ESC.influenciadores = (identificador) => {
+        if (identificador) {
+            if (_REG.influenciadores.hasOwnProperty(identificador))
+                return _REG.influenciadores[identificador];
+            else
+                return undefined;
+        }
+        else 
+            return _REG.influenciadores;
+    };
+    
+    
+    
 // =====================================================================
 //  RUTINAS PRIVADAS DEL REGISTRO INTERNO
 // =====================================================================    
@@ -615,6 +623,9 @@ function Escena(S) {
             }
         }
         _REG.repartos = _registroRepartosActivos;
+        
+        // Reinicialización del registro de "influenciadores"
+        _REG.influenciadores = {};
         
         // Reinicialización del registro de "finalizados"
         _REG.actoresFinalizados = [];
@@ -871,6 +882,45 @@ function Escena(S) {
             }
         }       
     };
+    
+
+// =====================================================================
+// 
+//  MÉTODOS PRIVADOS DE INICIALIZACIÓN
+//  
+// =====================================================================
+
+    /**
+     * _inicializar
+     * Función privada de inicialización de las propiedades públicas de la
+     * "Escena". Estas propiedades son accesibles como variables públicas del
+     * objeto y almacenan los valores evaluados de los atributos del "Esquema".
+     */
+    function _inicializar() {
+        // Inicialización de las PROPIEDADES PÚBLICAS DE LA ESCENA
+        _ESC.estilo          = undefined;
+        _ESC.escalable       = undefined;
+        _ESC.representador   = undefined;
+        _ESC.interpretarGLSL = undefined;
+        
+        // Inicialización de los REGISTROS ("Actores", "Repartos" y "Metarepartos")
+        _REG.actores         = {};
+        _REG.repartos        = {};
+        _REG.metarepartos    = {};
+        _REG.influenciadores = {};
+        
+        _REG.actoresFinalizados = [];
+        _REG.repartosFinalizados = [];
+        
+        // Definición de la "Función Actuaria"
+        let _fa = _funcionActuaria();
+        for (const f in _fa) {
+            _ESC[f] = _fa[f];
+        }
+        
+        return _ESC;
+    }
+    
     
     return _inicializar();
 }

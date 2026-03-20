@@ -61,8 +61,8 @@ import Esquema from './esquema';
  *  - coreografia : nombre de la función "coreografía" (definido en la lista S.O.S.COREO).
  *  - cantidad    : cantidad de actores a ser introducidos en la "Escena" (a la frecuencia definida por "intervalo").
  *  - puestos     : cantidad de puestos o posiciones de partida (por defecto, hay un único puesto de inicio).
- *  - intervalo   : frecuencia (en fotogramas) para la introducción de un nuevo actor a la "Escena".
  *  - intensidad  : Valor escalar indicando la intensidad del desplazamiento (la dirección la indica la coreografía).
+ *  - intervalo   : frecuencia (en fotogramas) para la introducción de un nuevo actor a la "Escena".
  *  - desvío      : Valor escalar indicando un ángulo de desvío respecto de la dirección indicada por la coreografía).
  *  - separación  : Valor escalar que especifica la distancia de cada puesto respecto del origen del "Reparto".
  * 
@@ -77,7 +77,7 @@ import Esquema from './esquema';
  *  - defMaxRecorrido    : define el recorrido máximo que cada "Actor" del "Reparto" tiene permitido realizar.
  *
  */
-function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion) {
+function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion) {
     const _ESQ = Esquema(S, CONFIG.SOS_REPARTO);
     const _RPT = _ESQ.extender();
     let   _prevIntervalo;
@@ -258,6 +258,9 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
                     // ----------------------------------------------------------------------
                 }
             }
+            if (!nombreAtr || nombreAtr == CONFIG.RPT_INFLUENCIA) {
+                _RPT[CONFIG.RPT_INFLUENCIA] = _ESQ.val(CONFIG.RPT_INFLUENCIA); 
+            }
             
             // 2. DECLARACIÓN DE LA RUTINA INICIALIZADORA
             // Se trata de la rutina encargada de introducir los "Actores" del "Reparto"
@@ -295,22 +298,23 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
             let _nroActores = S.O.S.actores(_ESQ.identificador)?.length ?? 0;
             let _cantidad = _RPT[CONFIG.RPT_CANTIDAD] ?? 1;
             let _puestos  = _RPT[CONFIG.RPT_PUESTOS] ? (_RPT[CONFIG.RPT_PUESTOS] > 1 ? _RPT[CONFIG.RPT_PUESTOS] : 1) : 1;
+            let _coreografia = S.O.S.COREO[_RPT[CONFIG.RPT_COREOGRAFIA] ?? CONFIG.ESTANDAR];
             
             for (let i = _nroActores; i < _cantidad; i++) {
                 let _nuevoActor = S.O.S.Actor();
-                _nuevoActor.numero = _actoresIntroducidos;
-                _nuevoActor.orden  = _actoresIntroducidos % _cantidad;
-                _nuevoActor.puesto = _actoresIntroducidos % _puestos;
+                _nuevoActor.numero        = _actoresIntroducidos;
+                _nuevoActor.orden         = _actoresIntroducidos % _cantidad;
+                _nuevoActor.puesto        = _actoresIntroducidos % _puestos;
+                _nuevoActor.influenciador = _RPT?.influenciador;
                 _actoresIntroducidos++;
                 
                 // Se coreografía el movimiento del "Actor" en la "Escena"
-                S.O.S.COREO[_RPT[CONFIG.RPT_COREOGRAFIA] ?? S.O.S.COREO[CONFIG.ESTANDAR]]
-                                (_nuevoActor,
-                                 _cantidad,                         // Cantidad máxima de actores en "Escena"
-                                 _puestos,                          // Cantidad total de posiciones de partida
-                                 _RPT[CONFIG.RPT_INTENSIDAD] ?? 0,  // Intensidad (magnitud para la velocidad)
-                                 _RPT[CONFIG.RPT_DESVIO]     ?? 0,  // Desvío (angulo en radianes)
-                                 _RPT[CONFIG.RPT_SEPARACION] ?? 0); // Separación (desde el punto de origen)
+                _coreografia(_nuevoActor,
+                             _cantidad,                         // Cantidad máxima de actores en "Escena"
+                             _puestos,                          // Cantidad total de posiciones de partida
+                             _RPT[CONFIG.RPT_INTENSIDAD] ?? 0,  // Intensidad (magnitud para la velocidad)
+                             _RPT[CONFIG.RPT_DESVIO]     ?? 0,  // Desvío (angulo en radianes)
+                             _RPT[CONFIG.RPT_SEPARACION] ?? 0); // Separación (desde el punto de origen)
 
                 // Se incorpora el "Actor" al "Reparto". Al añadirlo bajo un
                 // "nombre de atributo de dinámico", el "Esquema" no lo guarda
@@ -352,12 +356,28 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
      */
     _RPT.posicionar = () => {
         if (_RPT.desplazamiento) {
-            S.O.S.P5.translate((_RPT.desplazamiento.x ?? 0) * S.O.S.ancho() / 2, 
-                               (_RPT.desplazamiento.y ?? 0) * S.O.S.alto()  / 2, 
-                               (_RPT.desplazamiento.z ?? 0) * (S.O.S.ancho() + S.O.S.alto()) / 4) ;
+            let _despl = _RPT.vectorDesplazamiento();
+            S.O.S.P5.translate(_despl.x, _despl.y, _despl.z);
         }
         if (_RPT.rotacion) {
             S.O.S.P5.rotate(_RPT.rotacion);
+        }
+    };
+    
+    /**
+     * vectorDesplazamiento
+     * Calcula los valores en píxeles para el vector de desplazamiento a aplicar al "Reparto",
+     * ya que, originalmente, el desplazamiento es un vector normalizado donde cada coordenada
+     * aloja un valor numérico entre 0 y 1.
+     */
+    _RPT.vectorDesplazamiento = () => {
+        if (_RPT.desplazamiento) {
+            return S.O.S.Vector((_RPT.desplazamiento.x ?? 0) * S.O.S.ancho() / 2, 
+                                (_RPT.desplazamiento.y ?? 0) * S.O.S.alto()  / 2, 
+                                (_RPT.desplazamiento.z ?? 0) * (S.O.S.ancho() + S.O.S.alto()) / 4);
+        }
+        else {
+            return S.O.S.Vector(0, 0, 0);
         }
     };
     
@@ -400,7 +420,7 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
      * _inicializar
      * Método privado de inicialización de las propiedades del "Reparto".
      */
-    function _inicializar(coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion) {
+    function _inicializar(coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion) {
         
         // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESQUEMA")
         // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
@@ -413,10 +433,10 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
             _definicion[CONFIG.RPT_CANTIDAD] = cantidad;
         if (puestos !== undefined && puestos !== null)
             _definicion[CONFIG.RPT_PUESTOS] = puestos;
-        if (intervalo !== undefined && intervalo !== null)
-            _definicion[CONFIG.RPT_INTERVALO] = intervalo;
         if (intensidad !== undefined && intensidad !== null)
             _definicion[CONFIG.RPT_INTENSIDAD] = intensidad;
+        if (intervalo !== undefined && intervalo !== null)
+            _definicion[CONFIG.RPT_INTERVALO] = intervalo;
         if (desvío !== undefined && desvío !== null)
             _definicion[CONFIG.RPT_DESVIO] = desvío;
         if (separacion !== undefined && separacion !== null)
@@ -466,7 +486,7 @@ function Reparto(S, coreografia, cantidad, puestos, intervalo, intensidad, desv�
     }
 
     
-    return  _inicializar(coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion);
+    return  _inicializar(coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion);
 }
 
 

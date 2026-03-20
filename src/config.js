@@ -81,10 +81,11 @@ const Config = (() => {
         ESQ_NOMBRE              : 'nombre',
         ESQ_CLAVE               : 'clave',
         ESQ_IDENTIFICADOR       : 'identificador',
+        ESQ_ENTIDAD             : 'entidad',
         ESQ_SUPERIOR            : 'superior',
         ESQ_CONTENEDOR          : 'contenedor',
         ESQ_AGRUPACION          : 'agrupacion',
-        ESQ_ALIAS               : 'alias',
+        ESQ_ATRIBUTO            : 'atributo',
         
         // Nombres de los atributos de la entidad "Estilo"
         // Sólo hay dos, los restantes se forman añadiendo los sufijos "$alfa" y "$trazo"
@@ -102,12 +103,13 @@ const Config = (() => {
         ESC_GUARDAR_PROPORCION  : 'guardarProporciones',
         ESC_INTERPRETAR_GLSL    : 'interpretarGLSL',
 
-        // Nombres de los atributos de la entidad "Reparto"
+        // Nombres de los atributos de la entidad "Reparto" y "Repartidor"
         RPT_COREOGRAFIA         : 'coreografia', 
         RPT_CANTIDAD            : 'cantidad', 
         RPT_PUESTOS             : 'puestos',
-        RPT_INTERVALO           : 'intervalo', 
         RPT_INTENSIDAD          : 'intensidad',
+        RPT_INFLUENCIA          : 'influencia',
+        RPT_INTERVALO           : 'intervalo', 
         RPT_DESVIO              : 'desvio',
         RPT_SEPARACION          : 'separacion',
         RPT_ESTILO              : 'estilo',
@@ -125,6 +127,9 @@ const Config = (() => {
         ACT_REPRESENTADOR       : 'representador',
         ACT_MAX_DURACION        : 'duracionMaxima',
         ACT_MAX_RECORRIDO       : 'recorridoMaximo',
+        
+        // Constantes del "Repartidor" y los "Influenciadores"
+        RPD_FACTOR_INFLUENCIA   : 1 / 161000, // Factor de reducción de la aceleración hacia o en contra del influenciador
     };
     
     return _PARAM;
@@ -138,72 +143,85 @@ const Config = (() => {
 // "Esquemas" de cada una de las "entidades del socorro".
 // 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-Config.Esquema  = [Config.ESQ_NOMBRE,
-                   Config.ESQ_CLAVE,
-                   Config.ESQ_IDENTIFICADOR,
-                   Config.ESQ_SUPERIOR,
-                   Config.ESQ_CONTENEDOR,
-                   Config.ESQ_AGRUPACION,
-                   Config.ESQ_ALIAS];
+Config.Esquema    = [Config.ESQ_NOMBRE,
+                     Config.ESQ_CLAVE,
+                     Config.ESQ_IDENTIFICADOR,
+                     Config.ESQ_ENTIDAD,
+                     Config.ESQ_SUPERIOR,
+                     Config.ESQ_CONTENEDOR,
+                     Config.ESQ_AGRUPACION,
+                     Config.ESQ_ATRIBUTO];
 
-Config.Escena   = [Config.ESC_ANCHO,
-                   Config.ESC_ALTO,
-                   Config.ESC_ESCALABLE,
-                   Config.ESC_ESTILO,
-                   Config.ESC_REPRESENTADOR,
-                   Config.ESC_GUARDAR_PROPORCION,
-                   Config.ESC_INTERPRETAR_GLSL];
+Config.Escena     = [Config.ESC_ANCHO,
+                     Config.ESC_ALTO,
+                     Config.ESC_ESCALABLE,
+                     Config.ESC_ESTILO,
+                     Config.ESC_REPRESENTADOR,
+                     Config.ESC_GUARDAR_PROPORCION,
+                     Config.ESC_INTERPRETAR_GLSL];
 
-Config.Estilo   = [Config.EST_COLOR,
-                   Config.EST_GRANDOR, 
-                   Config.EST_TRAZO,
-                   Config.EST_GROSOR];
+Config.Estilo     = [Config.EST_COLOR,
+                     Config.EST_GRANDOR, 
+                     Config.EST_TRAZO,
+                     Config.EST_GROSOR];
 
 Config.DesgloseEstilo = 
-                  [Config.EST_COLOR,                                                           // Color de la forma
-                   Config.EST_GRANDOR,                                                         // Tamaño de la forma
-                   Config.EST_COLOR   + Config.ATR_VARIABLE_TRAZO,                             // Color del trazo
-                   Config.EST_GRANDOR + Config.ATR_VARIABLE_TRAZO,                             // Grosor del trazo
-                   Config.EST_COLOR   + Config.ATR_VARIABLE_ALFA,                              // Opacidad de la forma
-                   Config.EST_COLOR   + Config.ATR_VARIABLE_TRAZO + Config.ATR_VARIABLE_ALFA]; // Opacidad del trazo
+                    [Config.EST_COLOR,                                                           // Color de la forma
+                     Config.EST_GRANDOR,                                                         // Tamaño de la forma
+                     Config.EST_COLOR   + Config.ATR_VARIABLE_TRAZO,                             // Color del trazo
+                     Config.EST_GRANDOR + Config.ATR_VARIABLE_TRAZO,                             // Grosor del trazo
+                     Config.EST_COLOR   + Config.ATR_VARIABLE_ALFA,                              // Opacidad de la forma
+                     Config.EST_COLOR   + Config.ATR_VARIABLE_TRAZO + Config.ATR_VARIABLE_ALFA]; // Opacidad del trazo
 
-Config.Actor    = [Config.ACT_ORIGEN, 
-                   Config.ACT_VELOCIDAD, 
-                   Config.ACT_ACELERACION, 
-                   Config.ACT_ESTILO,
-                   Config.ACT_REPRESENTADOR,
-                   Config.ACT_MAX_DURACION,
-                   Config.ACT_MAX_RECORRIDO];
+Config.Actor      = [Config.ACT_ORIGEN, 
+                     Config.ACT_VELOCIDAD, 
+                     Config.ACT_ACELERACION, 
+                     Config.ACT_ESTILO,
+                     Config.ACT_REPRESENTADOR,
+                     Config.ACT_MAX_DURACION,
+                     Config.ACT_MAX_RECORRIDO];
 
-Config.Reparto   = [Config.RPT_COREOGRAFIA, 
-                    Config.RPT_CANTIDAD, 
-                    Config.RPT_PUESTOS,
-                    Config.RPT_INTERVALO, 
-                    Config.RPT_INTENSIDAD,
-                    Config.RPT_DESVIO,
-                    Config.RPT_SEPARACION,
-                    Config.RPT_ESTILO,
-                    Config.RPT_REPRESENTADOR,
-                    Config.RPT_DESPLAZAMIENTO,
-                    Config.RPT_ROTACION,
-                    Config.RPT_MAX_DURACION,
-                    Config.RPT_MAX_RECORRIDO];
+Config.Repartidor = [Config.RPT_COREOGRAFIA,
+                     Config.RPT_INTENSIDAD,
+                     Config.RPT_INFLUENCIA,
+                     Config.RPT_DESVIO,
+                     Config.RPT_SEPARACION,
+                     Config.RPT_ESTILO,
+                     Config.RPT_REPRESENTADOR,
+                     Config.RPT_DESPLAZAMIENTO,
+                     Config.RPT_ROTACION,
+                     Config.RPT_MAX_DURACION,
+                     Config.RPT_MAX_RECORRIDO];
 
-Config.Variable  = [Config.VAR_METODO,
-                    Config.VAR_VALOR,
-                    Config.VAR_VALOR_DESDE,
-                    Config.VAR_VALOR_HASTA,
-                    Config.VAR_MODULADOR,
-                    Config.VAR_ORIGEN_DESDE,
-                    Config.VAR_ORIGEN_HASTA,
-                    Config.VAR_RUIDO_VELOCIDAD,
-                    Config.VAR_RUIDO_ESCALA];
+Config.Reparto    = [Config.RPT_COREOGRAFIA, 
+                     Config.RPT_CANTIDAD, 
+                     Config.RPT_PUESTOS,
+                     Config.RPT_INTERVALO, 
+                     Config.RPT_INTENSIDAD,
+                     Config.RPT_DESVIO,
+                     Config.RPT_SEPARACION,
+                     Config.RPT_ESTILO,
+                     Config.RPT_REPRESENTADOR,
+                     Config.RPT_DESPLAZAMIENTO,
+                     Config.RPT_ROTACION,
+                     Config.RPT_MAX_DURACION,
+                     Config.RPT_MAX_RECORRIDO];
 
-Config.Variador  = [Config.VAR_VALOR_DESDE, 
-                    Config.VAR_VALOR_HASTA,
-                    Config.VAR_MODULADOR];
+Config.Variable   = [Config.VAR_METODO,
+                     Config.VAR_VALOR,
+                     Config.VAR_VALOR_DESDE,
+                     Config.VAR_VALOR_HASTA,
+                     Config.VAR_MODULADOR,
+                     Config.VAR_ORIGEN_DESDE,
+                     Config.VAR_ORIGEN_HASTA,
+                     Config.VAR_RUIDO_VELOCIDAD,
+                     Config.VAR_RUIDO_ESCALA];
 
-Config.Vector    = ['x', 'y', 'z'];
+Config.Variador   = [Config.VAR_VALOR_DESDE, 
+                     Config.VAR_VALOR_HASTA,
+                     Config.VAR_MODULADOR];
+
+Config.Vector     = ['x', 'y', 'z'];
 
 Config.EstiloBase = {};
 Config.EstiloBase[Config.EST_COLOR]   = 0;

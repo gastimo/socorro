@@ -12,6 +12,7 @@ import VectorInterno from './vector';
 import EstiloInterno from './estilo';
 import ActorInterno from './actor';
 import RepartoInterno from './reparto';
+import RepartidorInterno from './repartidor';
 import TransicionadorInterno from './transicionador';
 
 
@@ -231,14 +232,18 @@ const Auxiliadora = (S, utilizaP5) => {
               else if (_cumplimentaDef(objeto, CONFIG.Actor)) {
                   return S.O.S.Actor;
               }
-                
+              // --------------------------------------
+              // Se verifica si es un "REPARTIDOR"
+              // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+              else if (_cumplimentaDef(objeto, CONFIG.Repartidor)) {
+                  return S.O.S.Repartidor;
+              }                
               // --------------------------------------
               // Se verifica si es un "REPARTO"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
               else if (_cumplimentaDef(objeto, CONFIG.Reparto, CONFIG.Reparto, CONFIG.Actor)) {
                   return S.O.S.Reparto;
               }
-
           }
         
           // Si no corresponde a ningún objeto, se retorna "undefined"
@@ -331,7 +336,7 @@ const Auxiliadora = (S, utilizaP5) => {
           let _aux = objeto ? objeto?.nombre : undefined;
           return _aux !== undefined && _aux === CONFIG.SOS_ACTOR;
         },
-        
+
         /**
          * esUnReparto
          * Función para indicar si el objeto recibido como argumento es un "Reparto".
@@ -342,6 +347,15 @@ const Auxiliadora = (S, utilizaP5) => {
         },
         
         /**
+         * esUnRepartidor
+         * Función para indicar si el objeto recibido como argumento es un "Repartidor".
+         */
+        esUnRepartidor: (objeto) => {
+          let _aux = objeto ? objeto?.nombre : undefined;
+          return _aux !== undefined && _aux === CONFIG.SOS_REPARTO && objeto?.influenciador;
+        },
+        
+        /**
          * esUnaEntidadDelSocorro
          * Función para indicar si el objeto recibido como argumento es una
          * de las "entidades del socorro" que extienden del objeto "Esquema".
@@ -349,10 +363,10 @@ const Auxiliadora = (S, utilizaP5) => {
         esUnaEntidadDelSocorro: (objeto) => {
             let _aux = objeto ? objeto?.nombre : undefined;
             return _aux !== undefined && 
-                  (_aux == CONFIG.SOS_ESQUEMA  || _aux == CONFIG.SOS_ESCENA   ||
-                   _aux == CONFIG.SOS_REPARTO  || _aux == CONFIG.SOS_ACTOR    ||
-                   _aux == CONFIG.SOS_ESTILO   || _aux == CONFIG.SOS_VARIABLE ||
-                   _aux == CONFIG.SOS_VARIADOR || _aux == CONFIG.SOS_VECTOR   || _aux == CONFIG.SOS_VECTORVAR);
+                  (_aux == CONFIG.SOS_ESQUEMA  || _aux == CONFIG.SOS_ESCENA     || _aux == CONFIG.SOS_ACTOR ||
+                   _aux == CONFIG.SOS_REPARTO  || _aux == CONFIG.SOS_REPARTIDOR ||
+                   _aux == CONFIG.SOS_ESTILO   || _aux == CONFIG.SOS_VARIABLE   ||
+                   _aux == CONFIG.SOS_VARIADOR || _aux == CONFIG.SOS_VECTOR     || _aux == CONFIG.SOS_VECTORVAR);
         },
 
         
@@ -385,10 +399,14 @@ const Auxiliadora = (S, utilizaP5) => {
             return ActorInterno(S, origen, velocidad, estilo);  
         },
           
-        Reparto: (coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion) => {
-            return RepartoInterno(S, coreografia, cantidad, puestos, intervalo, intensidad, desvío, separacion);  
+        Repartidor: (coreografia, intensidad, influencia, desvío, separacion) => {
+            return RepartidorInterno(S, coreografia, intensidad, influencia, desvío, separacion);
         },
 
+        Reparto: (coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion) => {
+            return RepartoInterno(S, coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion);  
+        },
+        
         Transicionador: (valorIni, valorFin, cuadrosDuracion, cuadrosRetardo) => {
             return TransicionadorInterno(S, valorIni, valorFin, cuadrosDuracion, cuadrosRetardo, cuadros);
         }

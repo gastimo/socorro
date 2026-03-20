@@ -80,20 +80,21 @@ import CONFIG from './config';
 function Esquema(S, nombreEsquema) {
     const _ESQ = {};   // Esquema corriente (funciones y propiedades del "Esquema" en sí).
     const _VAL = {};   // Definición de atributos variables del esquema y sus valores.
-    const _DEF = {};   // Configuraciones de atributos
+    const _ALS = {};   // Alias o equivalencias entre nombres de atributos
+    //--------------------------------------------------------------------------------
+    const _DEF = {};   // Configuraciones de atributos (sólo usado por el método "config")
           
     // Inicialización del "Esquema"
-    _ESQ.nombre = nombreEsquema ?? CONFIG.SOS_ESQUEMA;
-    _ESQ.clave  = S.O.S.obtenerClave(_ESQ.nombre);
-    _ESQ.identificador = _ESQ.nombre + CONFIG.ATR_SEPARADOR + _ESQ.clave;
-    _ESQ.visible = true;
+    _ESQ[CONFIG.ESQ_NOMBRE]        = nombreEsquema ?? CONFIG.SOS_ESQUEMA;
+    _ESQ[CONFIG.ESQ_CLAVE ]        = S.O.S.obtenerClave(_ESQ.nombre);
+    _ESQ[CONFIG.ESQ_IDENTIFICADOR] = _ESQ.nombre + CONFIG.ATR_SEPARADOR + _ESQ.clave;
     
-    // Variables para almacenar información relacional del esquema
-    _ESQ.entidad    = undefined;  // Entidad del socorro que extiende y hace uso del "Esquema" actual
-    _ESQ.superior   = undefined;  // Esquema superior o maestro. Por ejemplo, la "Escena" o el "Reparto" para un "Actor"
-    _ESQ.contenedor = undefined;  // Subesquema del esquema maestro donde se encuentra alojado este esquema
-    _ESQ.agrupacion = undefined;  // Nombre del arreglo —dentro del esquema maestro— al cual pertenece este esquema
-    _ESQ.alias      = undefined;  // Nombre —del atributo— bajo el cual este esquema está definido en el esquema maestro
+    // Infor relacional del "Esquema"
+    _ESQ[CONFIG.ESQ_ENTIDAD]    = undefined;  // Entidad del socorro (superior) que extiende y hace uso del "Esquema" actual
+    _ESQ[CONFIG.ESQ_SUPERIOR]   = undefined;  // Esquema de superior o maestro. Por ejemplo, la "Escena" o el "Reparto" para un "Actor"
+    _ESQ[CONFIG.ESQ_CONTENEDOR] = undefined;  // Subesquema del esquema maestro donde se encuentra alojado este esquema
+    _ESQ[CONFIG.ESQ_AGRUPACION] = undefined;  // Nombre del arreglo —dentro del esquema maestro— al cual pertenece este esquema
+    _ESQ[CONFIG.ESQ_ATRIBUTO]   = undefined;  // Nombre —del atributo— bajo el cual este esquema está definido en el esquema maestro
     
     
     /**
@@ -136,7 +137,7 @@ function Esquema(S, nombreEsquema) {
      */  
     _ESQ.def = (atributos) => {
         if (atributos) {
-            _defEsquema(_VAL, atributos);
+            _DEF$atributos(_VAL, atributos);
         }
         return _ESQ;
     };    
@@ -219,47 +220,7 @@ function Esquema(S, nombreEsquema) {
      *   
      */
     _ESQ.val = (...atributos) => {
-        if (atributos.length > 0) {
-            let _valoresDeAtributos = _VAL;
-            for (let i = 0; i < atributos.length; i++) {
-                if (_valoresDeAtributos.hasOwnProperty(atributos[i])) {
-                    
-                    // Si se trata del último nombre de la lista, se retorna su valor almacenado.
-                    // Podría tratarse de un valor simple o un objeto ("Vector", "Estilo", etc).
-                    // Ejemplo: en la instrucción de abajo "colorFondo" es el valor solicitado.
-                    // 
-                    //   escena.val("paletas", "nocturna", "colorFondo");
-                    //                 ^           ^            ^
-                    //             subesquema  subesquema    atributo                   
-                    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-                    if (i == atributos.length - 1) {
-                      return _obtenerValor(_valoresDeAtributos, atributos[i]);
-                    }
-                    else {
-                        // Si no se trata del último valor, se verifica si se está solicitando el 
-                        // atributo de un objeto (ej. "Estilo", "Actor"). En ese caso, se delega el
-                        // llamado a la función homónima del objeto en cuestión.
-                        // Ejemplo: si el valor del atributo "opciones" fuese un objeto "Estilo".
-                        // 
-                        //    escena.val("opciones")          => Retorna un objeto de tipo "Estilo"
-                        //    escena.val("opciones", "color") => Retorna el color del objeto "Estilo"
-                        //                 
-                        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-                        let _subesquema = _valoresDeAtributos[atributos[i]];
-                        if (S.O.S.esUnEstilo(_subesquema) || S.O.S.esUnActor(_subesquema) || S.O.S.esUnReparto(_subesquema)) {
-                            return _subesquema.val(atributos.slice(i+1));
-                        }
-                        // Sino, se baja un nivel más en la jerarquía (al subesquema) y se continúa 
-                        // con la búsqueda del valor del atributo solicitado en el "loop" principal.
-                        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-                        else {
-                            _valoresDeAtributos = _subesquema;
-                        }
-                    }
-                }
-            }
-        }
-        return null;
+        return atributos.length > 0 ? _VAL$obtener(_VAL, ...atributos) : null;
     };
   
     
@@ -269,14 +230,15 @@ function Esquema(S, nombreEsquema) {
      * indicado en la jerarquía de "Esquemas".
      */
     _ESQ.heredar = (nombreAtr, incluirEscena = false) => {
-        if (!_ESQ.superior) {
+        let _entidadSuperior = _ESQ[CONFIG.ESQ_SUPERIOR];
+        if (!_entidadSuperior) {
             return undefined;
         }
-        else if (!incluirEscena && _ESQ.superior.identificador === S.O.S.identificador) {
+        else if (!incluirEscena && _entidadSuperior.identificador === S.O.S.identificador) {
             return undefined;
         }
-        let _sup = _ESQ.superior.entidad ?? _ESQ.superior;
-        return _sup.hasOwnProperty(nombreAtr) ? (_sup[nombreAtr] ?? _ESQ.superior.heredar(nombreAtr, incluirEscena)) : undefined; 
+        let _sup = _entidadSuperior.entidad ?? _entidadSuperior;
+        return _sup.hasOwnProperty(nombreAtr) ? (_sup[nombreAtr] ?? _entidadSuperior.heredar(nombreAtr, incluirEscena)) : undefined; 
     };
     
 
@@ -286,8 +248,8 @@ function Esquema(S, nombreEsquema) {
      * actual para ser utilizado como "entidad del socorro".
      */
     _ESQ.extender = (subentidad) => {
-        _ESQ.entidad = subentidad ? S.O.S.revelar({}, subentidad, _ESQ) : S.O.S.revelar({}, _ESQ);
-        return _ESQ.entidad;
+        _ESQ[CONFIG.ESQ_ENTIDAD] = subentidad ? S.O.S.revelar({}, subentidad, _ESQ) : S.O.S.revelar({}, _ESQ);
+        return _ESQ[CONFIG.ESQ_ENTIDAD];
     };
     
     
@@ -297,7 +259,31 @@ function Esquema(S, nombreEsquema) {
      * convertido a texto (en formato JSON).
      */
     _ESQ.exportar = (indentacion = "") => {
-      return _convertirATexto(_VAL, indentacion);
+      return _EXPORT$convertirATexto(_VAL, indentacion);
+    };
+    
+    
+    /**
+     * alias
+     * Método para definir equivalencias entre nombres de atributos, es decir,
+     * los "alias" dentro del "Esquema". Un alias es una forma alternativa de
+     * acceder al valor de un atributo del "Esquema". La definición del alias
+     * no se almacena realmente en el "Esquema", es simplemente un nombre que
+     * establece una equivalencia entre identificadores, pero es el nombre bajo
+     * el cual se realiza la exportación de la definición de dicho atributo.
+     */
+    _ESQ.alias = (nombreAlias, nombreAtr) => {
+        if (_ALS.hasOwnProperty(nombreAlias)) {
+            if (nombreAtr) {
+                _ALS[nombreAlias] = nombreAtr;
+            }
+            return _ALS[nombreAlias];
+        }
+        else if (nombreAlias && nombreAtr) {
+            _ALS[nombreAlias] = nombreAtr;
+            return _ALS[nombreAlias];           
+        }
+        return nombreAlias;
     };
     
     
@@ -372,7 +358,7 @@ function Esquema(S, nombreEsquema) {
     
     
     /**
-     * _defEsquema
+     * _DEF$atributos
      * Función privada, utilizada internamente por el método "def" para definir los valores de los
      * atributos del "Esquema" (de manera recursiva). Lo relevante de la definición de los atributos 
      * de un "Esquema" es que posibilitan no sólo la asociación de valores simples a los atributos, 
@@ -423,8 +409,10 @@ function Esquema(S, nombreEsquema) {
      *   esc.val('actor', 'estilo')  =>  Retorna un objeto "Estilo" con los atributos de su representación visual 
      *  
      */
-    function _defEsquema(subesquema, subatributos, arreglo) {
+    function _DEF$atributos(subesquema, subatributos, arreglo) {
         for (const [atrNombre, atrValor] of Object.entries(subatributos)) {
+            let _esAtributoDinamico = (atrNombre == CONFIG.ATR_NOMBRE_DINAMICO);
+            let _atrNombreReal = _esAtributoDinamico ? atrNombre : _ESQ.alias(atrNombre);
             
             // --------------------------------------------
             // DEFINCIÓN DE VALORES DEL OBJETO SUBESQUEMA
@@ -435,52 +423,139 @@ function Esquema(S, nombreEsquema) {
               // decir, "Estilo", "Actor", "Reparto", "Variable", "Variador", "Vector" o "VectorVar" 
               let _entidadSocorrista = S.O.S.entidad(atrValor);
               if (_entidadSocorrista !== undefined) {
-                  let _entidad = _entidadSocorrista().def(atrValor); // Se crea la "entidad del socorro"
-                  if (atrNombre !== CONFIG.ATR_NOMBRE_DINAMICO) 
-                      subesquema[atrNombre] = _entidad;              // Se almacena sólo si no es una entidad dinámica
-                  _metaDef(_entidad, _ESQ, subesquema, atrNombre, arreglo);
+                  let _entidad = _entidadSocorrista().def(atrValor);  // Se crea la "entidad del socorro"
+                  if (!_esAtributoDinamico)  // Se almacena si no es una entidad dinámica (ej. un "Actor de Reparto") 
+                      subesquema[_atrNombreReal] = _entidad;
+                  _DEF$metadefinicion(_entidad, _ESQ, subesquema, _atrNombreReal, arreglo);
                   continue;
               }
               else if (S.O.S.esUnVector(atrValor)   || S.O.S.esUnVectorVar(atrValor) || S.O.S.esUnaVariable(atrValor) || 
                        S.O.S.esUnVariador(atrValor) || S.O.S.esUnEstilo(atrValor)    || S.O.S.esUnActor(atrValor) || 
                        S.O.S.esUnReparto(atrValor)) {
-                  let _entidad = atrValor;                   // La "entidad del socorro" vino ya creada en la definición
-                  if (atrNombre !== CONFIG.ATR_NOMBRE_DINAMICO) 
-                    subesquema[atrNombre] = _entidad;        // Se almacena sólo si no es una entidad dinámica
-                  _metaDef(_entidad, _ESQ, subesquema, atrNombre, arreglo);
+                  let _entidad = atrValor;   // La "entidad del socorro" vino ya creada en la definición
+                  if (!_esAtributoDinamico)  // Se almacena si no es una entidad dinámica (ej. un "Actor de Reparto")
+                    subesquema[_atrNombreReal] = _entidad; 
+                  _DEF$metadefinicion(_entidad, _ESQ, subesquema, _atrNombreReal, arreglo);
                   continue;
               }
               // Si el nombre del "subesquema" no está definido actualmente o ya existe pero
               // no se trata de un objeto "subesquema" o es un "array", se inicializa en blanco
-              else if (!subesquema.hasOwnProperty(atrNombre) || typeof subesquema[atrNombre] !== 'object' || Array.isArray(subesquema[atrNombre])) {
-                subesquema[atrNombre] = {};
+              else if (!subesquema.hasOwnProperty(_atrNombreReal) || typeof subesquema[_atrNombreReal] !== 'object' || Array.isArray(subesquema[_atrNombreReal])) {
+                subesquema[_atrNombreReal] = {};
               }
               // Invocación recursiva para definir los valores del "subesquema"
-              _defEsquema(subesquema[atrNombre], atrValor);
+              _DEF$atributos(subesquema[_atrNombreReal], atrValor);
             }
 
             // ------------------------------------------
             // DEFINICIÓN DE VALORES DE ARREGLOS (ARRAYS)
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             else if (Array.isArray(atrValor)) {
-                subesquema[atrNombre] = [];
+                subesquema[_atrNombreReal] = [];
                 // Invocación recursiva para definir los valores del "arreglo"
-                _defEsquema(subesquema[atrNombre], atrValor, atrNombre);
+                _DEF$atributos(subesquema[_atrNombreReal], atrValor, _atrNombreReal);
             }  
 
             // ---------------------------------------------
             // DEFINICIÓN DE VALORES SIMPLES (ÚLTIMO NIVEL)
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             else {
-                if (atrNombre !== CONFIG.ATR_NOMBRE_DINAMICO) 
-                    subesquema[atrNombre] = atrValor;
+                if (!_esAtributoDinamico)  // Se almacena si no es una entidad dinámica (ej. un "Actor de Reparto")
+                    subesquema[_atrNombreReal] = atrValor;
             }
         }
     }
-
     
     /**
-     * _obtenerValor
+     * _DEF$metadefinicion
+     * Función de uso interno que permite completar la definición de un atributo del "Esquema"
+     * añadiendo información relacional o complementaria. Esta función sólo es invocada cuando
+     * una "entidad del socorro" es utilizada como valor de un atributo del "Esquema" durante
+     * su definición (con el método "def"). Por ejemplo, desde esta función se indica cuál es
+     * el esquema superior (maestro) o bajo qué nombre de atributo la entidad se está almacenando
+     * en el esquema maestro.
+     */
+    function _DEF$metadefinicion(esquema, esquemaSuperior, subesquemaContenedor, nombreAtributo, nombreArreglo) {
+        let _esquemaBase = S.O.S.esquema(esquema);
+        
+        // Se completa la información relacional en el esquema base del objeto recibido
+        if (_esquemaBase) {
+            _esquemaBase[CONFIG.ESQ_SUPERIOR]   = esquemaSuperior;
+            _esquemaBase[CONFIG.ESQ_CONTENEDOR] = subesquemaContenedor;
+            _esquemaBase[CONFIG.ESQ_AGRUPACION] = nombreArreglo;
+            _esquemaBase[CONFIG.ESQ_ATRIBUTO]   = nombreAtributo;
+            
+            // Finalmente, se registra al esquema en la "Escena"
+            S.O.S.registrar(esquema);
+        }
+    }
+    
+    /**
+     * _VAL$obtener
+     * Función privada para extraer el valor del atributo existente en el esquema.
+     * En caso de recibir una cadena de nombres de atributos, la función se ocupa
+     * recorrer el esquema, bajando uno a uno en los niveles de profundidad de la 
+     * definición ("tree traversal"). 
+     * Esta función se ocupa, también, de llevar a cabo los reemplazos de nombres
+     * de atributos por sus "alias" en caso que existan.
+     */
+    function _VAL$obtener(valoresDeAtributos, ...atributos) {
+        for (let i = 0; i < atributos.length; i++) {
+            if (valoresDeAtributos.hasOwnProperty(atributos[i])) {
+
+                // Si se trata del último nombre de la lista, se retorna su valor almacenado.
+                // Podría tratarse de un valor simple o un objeto ("Vector", "Estilo", etc).
+                // Ejemplo: en la instrucción de abajo "colorFondo" es el valor solicitado.
+                // 
+                //   escena.val("paletas", "nocturna", "colorFondo");
+                //                 ^           ^            ^
+                //             subesquema  subesquema    atributo                   
+                // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                if (i == atributos.length - 1) {
+                  return _VAL$evaluarDefinicion(valoresDeAtributos, atributos[i]);
+                }
+                else {
+                    // Si no se trata del último valor, se verifica si se está solicitando el 
+                    // atributo de un objeto (ej. "Estilo", "Actor"). En ese caso, se delega el
+                    // llamado a la función homónima del objeto en cuestión.
+                    // Ejemplo: si el valor del atributo "opciones" fuese un objeto "Estilo".
+                    // 
+                    //    escena.val("opciones")          => Retorna un objeto de tipo "Estilo"
+                    //    escena.val("opciones", "color") => Retorna el color del objeto "Estilo"
+                    //                 
+                    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                    let _subesquema = valoresDeAtributos[atributos[i]];
+                    if (S.O.S.esUnEstilo(_subesquema) || S.O.S.esUnActor(_subesquema) || S.O.S.esUnReparto(_subesquema)) {
+                        return _subesquema.val(atributos.slice(i+1));
+                    }
+                    // Sino, se baja un nivel más en la jerarquía (al subesquema) y se continúa 
+                    // con la búsqueda del valor del atributo solicitado en el "loop" principal.
+                    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                    else {
+                        valoresDeAtributos = _subesquema;
+                    }
+                }
+            }
+            // Si el atributo no existe y no se trata de un atributo combinado
+            // (por ejemplo: "color$alfa", "grandro$trazo", etc), se evalúa si
+            // no se trata de un "alias" de algún otro atributo base.
+            // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+            else if (atributos[i].indexOf(CONFIG.ATR_SEPARADOR) < 0) {
+                let _nombreAtributoOriginal = _ESQ.alias(atributos[i]);
+                if (_nombreAtributoOriginal != atributos[i]) {
+                    let _subatr = [_nombreAtributoOriginal];
+                    for (let j = i+1; j < atributos.length; j++)
+                        _subatr.push(atributos[j]);
+                    return _VAL$obtener(valoresDeAtributos, ..._subatr);
+                }
+                break;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * _VAL$evaluarDefinicion
      * Función privada para extraer el valor del atributo existente en el esquema.
      * Esta función tiene en cuenta los siguientes tipos de valores de atributos:
      *
@@ -501,7 +576,7 @@ function Esquema(S, nombreEsquema) {
      *   del objeto "VectorVar" es un caso particular: se evalúan primero sus componentes
      *   y se termina retornando un "Vector" evaluado. Nunca se retorna un "VectorVar".
      */
-    function _obtenerValor(_valores, atrNombre) {
+    function _VAL$evaluarDefinicion(_valores, atrNombre) {
       let _valor = _valores[atrNombre];
       if (_valor) {
         if (S.O.S.esUnaVariable(_valor) || S.O.S.esUnVariador(_valor) || S.O.S.esUnVectorVar(_valor))
@@ -509,7 +584,7 @@ function Esquema(S, nombreEsquema) {
         if (S.O.S.esUnColor(_valor)) {
           let _atrNombreExtra = atrNombre + CONFIG.ATR_VARIABLE_ALFA;
           if (_valores.hasOwnProperty(_atrNombreExtra)) {
-            let _alfa = _obtenerValor(_valores, _atrNombreExtra); // Busca la opacidad como atributo "vecino"
+            let _alfa = _VAL$evaluarDefinicion(_valores, _atrNombreExtra); // Busca la opacidad como atributo "vecino"
             if (_alfa) {
               _valor.setAlpha(_alfa * 255);
             }
@@ -517,39 +592,20 @@ function Esquema(S, nombreEsquema) {
         }
       }
       return _valor;
-    }    
+    } 
+    
+    
+// --------------------------------------------------------------------------------------------------
+//   FUNCIONES PRIVADAS PARA LA EXPORTACIÓN
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
     /**
-     * _metaDef
-     * Función de uso interno que permite completar la definición de un atributo del "Esquema"
-     * añadiendo información relacional o complementaria. Esta función sólo es invocada cuando
-     * una "entidad del socorro" es utilizada como valor de un atributo del "Esquema" durante
-     * su definición (con el método "def"). Por ejemplo, desde esta función se indica cuál es
-     * el esquema superior (maestro) o bajo qué nombre de atributo la entidad se está almacenando
-     * en el esquema maestro.
-     */
-    function _metaDef(esquema, esquemaSuperior, subesquemaContenedor, nombreAtributo, nombreArreglo) {
-        let _esquemaBase = S.O.S.esquema(esquema);
-        
-        // Se completa la información relacional en el esquema base del objeto recibido
-        if (_esquemaBase) {
-            _esquemaBase.superior   = esquemaSuperior;
-            _esquemaBase.contenedor = subesquemaContenedor;
-            _esquemaBase.agrupacion = nombreArreglo;
-            _esquemaBase.alias      = nombreAtributo;
-            
-            // Finalmente, se registra al esquema en la "Escena"
-            S.O.S.registrar(esquema);
-        }
-    }
-    
-    /**
-     * _convertirATexto
+     * _EXPORT$convertirATexto
      * Función privada que convierte a texto (en formato JSON) cada uno de
      * los pares <atributo, valor> del esquema recibido como argumento.
      * La función se invoca recursivamente en caso de detectar subesquemas.
      */
-    function _convertirATexto(atributos, indentacion = "") {
+    function _EXPORT$convertirATexto(atributos, indentacion = "") {
       let esUnObjeto = true;
       if (atributos && Object.keys(atributos).length === 1 && Object.keys(atributos)[0] === CONFIG.ATR_ARRAY_CLAVE_AUX)
           esUnObjeto = false;
@@ -564,26 +620,26 @@ function Esquema(S, nombreEsquema) {
           if (typeof atrValor === "object" && !Array.isArray(atrValor)) {
             let subesquema = atrValor.exportar?.(indentacion + "\t");
             if (subesquema === undefined) {
-              subesquema = _convertirATexto(atrValor, indentacion + "\t");
+              subesquema = _EXPORT$convertirATexto(atrValor, indentacion + "\t");
             }
             if (subesquema !== null) {
-              salida += _formatearRegistroExportado(indentacion, atrNombre, subesquema, esUnObjeto);
+              salida += _EXPORT$formatearRegistroExportado(indentacion, atrNombre, subesquema, esUnObjeto);
               existenValores = true;  
             }
           }
           else if (Array.isArray(atrValor)) {
-            salida += indentacion + "\t\"" + atrNombre + "\"\t:\t[";
+            salida += indentacion + "\t\"" + _EXPORT$obtenerAliasAtributo(atrNombre) + "\"\t:\t[";
             for (let j = 0; j < atrValor.length; j++) {
                 let elementoArray = {};
                 elementoArray[CONFIG.ATR_ARRAY_CLAVE_AUX] = atrValor[j];
-                salida += _convertirATexto(elementoArray, indentacion + "\t") + (j < atrValor.length - 1 ? "," : "");              
+                salida += _EXPORT$convertirATexto(elementoArray, indentacion + "\t") + (j < atrValor.length - 1 ? "," : "");              
             }
             salida += "\n" + indentacion + "\t],\n";
             existenValores = true;
           }
           else {
             let valor = typeof atrValor === "number" || typeof atrValor === "boolean" ? atrValor : "\"" + atrValor + "\"";
-            salida += _formatearRegistroExportado(indentacion, atrNombre, valor, esUnObjeto);
+            salida += _EXPORT$formatearRegistroExportado(indentacion, atrNombre, valor, esUnObjeto);
             existenValores = true;
           }
         }
@@ -600,14 +656,30 @@ function Esquema(S, nombreEsquema) {
     }
     
     /**
-     * _formatearRegistroExportado
+     * _EXPORT$formatearRegistroExportado
      * Función interna que construye una línea del formato de exportación
      */
-    function _formatearRegistroExportado(indentacion, atrNombre, atrValor, esUnObjeto = true) {
+    function _EXPORT$formatearRegistroExportado(indentacion, atrNombre, atrValor, esUnObjeto = true) {
         if (esUnObjeto)
-            return indentacion + "\t\"" + atrNombre + "\"\t:\t" + atrValor + ",\n";
+            return indentacion + "\t\"" + _EXPORT$obtenerAliasAtributo(atrNombre) + "\"\t:\t" + atrValor + ",\n";
         else
             return indentacion + "\t" + atrValor;
+    }
+    
+    /**
+     * _EXPORT$obtenerAliasAtributo
+     * Método para obtener el "alias" de exportación de un atributo del "Esquema"
+     * (los atributos se exportan siempre bajo su nombre de su "alias", si existe).
+     */
+    function _EXPORT$obtenerAliasAtributo(nombreAtr) {
+        let _nombreExportacion = nombreAtr;
+        for (const [atrAlias, atrNombre] of Object.entries(_ALS)) {
+            if (atrNombre == nombreAtr) {
+                _nombreExportacion = atrAlias;
+                break;
+            }
+        }
+        return _nombreExportacion;
     }
         
     return _ESQ;

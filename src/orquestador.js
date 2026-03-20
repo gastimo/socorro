@@ -214,7 +214,7 @@ function Orquestador(sos, contenedor) {
         _escena = escena;
         const _repertorios = Repertorio(S);
         asociar('Repertorio', _repertorios.funciones());   // Para la personalización de repertorios
-        S.O.S.revelar(S.O.S, _repertorios.publicar(), Auxiliadora(S, _utilizaP5), Cargador(), escena);
+        S.O.S.revelar(S.O.S, Auxiliadora(S, _utilizaP5), _repertorios.publicar(), Cargador(), escena);
     }  
     
     /**
