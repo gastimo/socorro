@@ -391,6 +391,9 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv√
         const _sr = Reparto(S);
         _sr.replicarDef(_ESQ);
         _sr.metadef = _RPT;
+        if (_RPT.hasOwnProperty(CONFIG.RPD_INFLUENCIADOR)) {
+            _sr[CONFIG.RPD_INFLUENCIADOR] = _RPT[CONFIG.RPD_INFLUENCIADOR];
+        }
         return _sr;
     };
     

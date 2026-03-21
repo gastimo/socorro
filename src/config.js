@@ -130,6 +130,7 @@ const Config = (() => {
         
         // Constantes del "Repartidor" y los "Influenciadores"
         RPD_FACTOR_INFLUENCIA   : 1 / 161000, // Factor de reducción de la aceleración hacia o en contra del influenciador
+        RPD_INFLUENCIADOR       : 'influenciador',
     };
     
     return _PARAM;

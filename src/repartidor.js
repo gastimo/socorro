@@ -41,7 +41,7 @@ function Repartidor(S, coreografia, intensidad, influencia, desvío, separacion)
     _RPD.def(_definicion);
 
     // Se marca al "Reparto" como la entidad generadora del "Influenciador"
-    _RPD.influenciador = true;
+    _RPD[CONFIG.RPD_INFLUENCIADOR] = true;
     
     return _RPD;
 }

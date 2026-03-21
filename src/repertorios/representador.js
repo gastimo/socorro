@@ -96,7 +96,28 @@ _REP[CIRCULO] = (actor) => {
 _REP[CIRCULARIA] = (actor) => {
     let _grosorDefinido = false;
     let _trazoDefinido  = false;
+
+    // Función para trazar las líneas que conectan al "Actor" con sus puntos de influencia
+    const _trazarConexiones = () => {
+        if (actor.superior && actor.influencias) {
+            S.O.S.P5.strokeWeight(1);
+            if (!_trazoDefinido) {
+                let _canal = actor.superior.clave * 71562373;
+                S.O.S.P5.stroke('rgb(' + (_canal % 255) + ',' + (_canal % 241) + ',' + (_canal % 207) + ')');
+            }
+            for (let i = 0; i < actor.influencias.length; i++) {
+                let _puntoI = actor.influencias[i];
+                S.O.S.P5.line(S.O.S.escalar(actor.posicion.x), 
+                              S.O.S.escalar(actor.posicion.y), 
+                              S.O.S.escalar(actor.posicion.z), 
+                              S.O.S.escalar(_puntoI.x),
+                              S.O.S.escalar(_puntoI.y),
+                              S.O.S.escalar(_puntoI.z));
+            }
+        }        
+    };
     
+    // Dibujo del "Actor" propiamente dicho (y sus conexiones por debajo)
     if (actor.estilo.grandor !== undefined && actor.estilo.grandor !== null) {
         if (actor.estilo.color !== undefined && actor.estilo.color !== null)
             S.O.S.P5.fill(actor.estilo.color);
@@ -114,29 +135,12 @@ _REP[CIRCULARIA] = (actor) => {
             S.O.S.P5.strokeWeight(S.O.S.escalar(actor.estilo.grosor));
             _grosorDefinido = true;
         }
-
+        
+        _trazarConexiones();
         S.O.S.P5.circle(actor.posicion.x ? S.O.S.escalar(actor.posicion.x) : 0, 
                         actor.posicion.y ? S.O.S.escalar(actor.posicion.y) : 0, 
                         S.O.S.escalar(actor.estilo.grandor));
-    }
-    
-    // Trazado de las líneas que conectan al actor con sus puntos de influencia
-    if (actor.superior && actor.influencias) {
-        S.O.S.P5.strokeWeight(1);
-        if (!_trazoDefinido) {
-            let _canal = actor.superior.clave * 71562373;
-            S.O.S.P5.stroke('rgb(' + (_canal % 255) + ',' + (_canal % 241) + ',' + (_canal % 207) + ')');
-        }
-        for (let i = 0; i < actor.influencias.length; i++) {
-            let _puntoI = actor.influencias[i];
-            S.O.S.P5.line(S.O.S.escalar(actor.posicion.x), 
-                          S.O.S.escalar(actor.posicion.y), 
-                          S.O.S.escalar(actor.posicion.z), 
-                          S.O.S.escalar(_puntoI.x),
-                          S.O.S.escalar(_puntoI.y),
-                          S.O.S.escalar(_puntoI.z));
-        }
-    }
+    }    
 };
 
     

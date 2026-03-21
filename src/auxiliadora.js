@@ -241,7 +241,7 @@ const Auxiliadora = (S, utilizaP5, reloj, contador) => {
               // --------------------------------------
               // Se verifica si es un "REPARTO"
               // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-              else if (_cumplimentaDef(objeto, CONFIG.Reparto, CONFIG.Reparto, CONFIG.Actor)) {
+              else if (_cumplimentaDef(objeto, CONFIG.Reparto, CONFIG.Reparto, CONFIG.Actor, CONFIG.Repartidor)) {
                   return S.O.S.Reparto;
               }
           }

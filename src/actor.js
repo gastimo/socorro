@@ -369,7 +369,8 @@ function Actor(S, origen, velocidad, estilo) {
         else if (_posX < 0 && _posY < 0) 
             _angulo = (Math.sign(_angulo) * Math.PI / 2 * 3) - _angulo;   // Cuadrante: SUPERIOR-IZQUIERDO
 
-        // Operaciones de desplazamiento y rotación del lienzo
+        // Se realizan las transformaciones de desplazamiento y rotación del lienzo para que
+        // aplique, luego, en la representación de los "Actores" del "Subreparto".
         S.O.S.P5.translate(S.O.S.escalar(_posX), S.O.S.escalar(_posY), S.O.S.escalar(_posZ));
         S.O.S.P5.rotate(_angulo);
     };
@@ -407,36 +408,45 @@ function Actor(S, origen, velocidad, estilo) {
      * (desplazamientos y rotaciones) de los todos los "Repartos" de nivel superior.
      */
     function _PUNTO_INFLUENCIA$actualizar(punto, signo = 1) {
-        for (let _superior = _ACT.superior.entidad; ; _superior = _superior.superior.entidad) {
+        if (_ACT.superior) {
+            let _superior = _ACT.superior.entidad;
             if (S.O.S.esUnReparto(_superior)) {
-                
-                // INFLUENCIADOR -----------------------------------------------------------
-                // Actualización del "Punto de Influencia" de un "Influenciador", es decir,
-                // se ajusta su "posición" actual aplicando las rotaciones/desplazamientos
-                // del "Repartidor" al que el "Influenciador" pertenece
-                // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-                if (signo > 0) {
-                    if (_superior.rotacion) {
-                        punto.rotar((_superior.rotacion * signo) - Math.PI / 2 + ((_ACT.desvio ?? 0) * 2));
-                    }
-                    punto.sumar(_superior.vectorDesplazamiento().multiplicar(signo / (S.O.S.escalable ? S.O.S.escala() : 1)));
-                }
-                
-                // ACTOR CONVENCIONAL --------------------------------------------------------
-                // Actualización del "Punto de Influencia" para un "Actor" que es atraído o
-                // repelido por este punto. Se le aplican las rotaciones/desplazamientos del
-                // "Reparto" al que el "Actor" pertenece (con efecto contrario => signo=-1).
-                // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-                else if (signo < 0) {
-                    punto.sumar(_superior.vectorDesplazamiento().multiplicar(signo / (S.O.S.escalable ? S.O.S.escala() : 1)));
-                    if (_superior.rotacion) {
-                        punto.rotar((Math.PI / 2) - (_superior.rotacion * signo));
-                        punto.rotar(Math.PI/2);
-                    }
-                }
-            }  
-            if (!_superior.superior)
-                break;
+                _PUNTO_INFLUENCIA$aplicar(punto, signo, _superior.rotacion, _superior.vectorDesplazamiento(), _ACT.desvio ?? 0);
+            }
+        }
+    }
+
+    /**
+     * _PUNTO_INFLUENCIA$aplicar
+     * Esta función privada es la que efectivamente actualiza las coordenadas del "Punto 
+     * de Influencia" (vector) recibido como argumento para añadir el "desplazamiento",  
+     * la "rotación" y el "desvío" recibidos como argumentos.
+     */
+    function _PUNTO_INFLUENCIA$aplicar(punto, signo, rotacion, desplazamiento, desvio = 0) {
+        
+        // INFLUENCIADOR -----------------------------------------------------------
+        // Actualización del "Punto de Influencia" de un "Influenciador", es decir,
+        // se ajusta su "posición" actual aplicando las rotaciones/desplazamientos
+        // del "Repartidor" al que el "Influenciador" pertenece
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        if (signo > 0) {
+            if (rotacion) {
+                punto.rotar((rotacion * signo) - Math.PI / 2 + (desvio * 2));
+            }
+            punto.sumar(desplazamiento.multiplicar(signo / (S.O.S.escalable ? S.O.S.escala() : 1)));
+        }
+
+        // ACTOR CONVENCIONAL --------------------------------------------------------
+        // Actualización del "Punto de Influencia" para un "Actor" que es atraído o
+        // repelido por este punto. Se le aplican las rotaciones/desplazamientos del
+        // "Reparto" al que el "Actor" pertenece (con efecto contrario => signo=-1).
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        else if (signo < 0) {
+            punto.sumar(desplazamiento.multiplicar(signo / (S.O.S.escalable ? S.O.S.escala() : 1)));
+            if (rotacion) {
+                punto.rotar((Math.PI / 2) - (rotacion * signo));
+                punto.rotar(Math.PI/2);
+            }
         }
     }
     
@@ -488,15 +498,15 @@ function Actor(S, origen, velocidad, estilo) {
         _ACT.puesto = 0;          // Número de puesto o posición de partida (entre 0 y puestos-1)
         _ACT.prev   = undefined;  // Actor previo dentro del "Reparto"
         _ACT.sig    = undefined;  // Actor siguiente dentro del "Reparto"
-        
-        // REPARTO - Propiedades del "Reparto" al que pertenece
-        // -----------------------------------------------------
+                
+        // REPARTO - Propiedades del "Reparto" al que pertenece este "Actor"
+        // ------------------------------------------------------------------
         _ACT.intensidad = undefined;
         _ACT.desvio     = undefined;
         _ACT.separacion = undefined;
         
-        // INFLUENCIAS - Propiedades vinculadas con los "Puntos de Influencia" e "Influenciadores"
-        // ----------------------------------------------------------------------------------------
+        // INFLUENCIA - Propiedades de los "Puntos de Influencia" (del "Actor") y de la influencia (del "Influenciador")
+        // -------------------------------------------------------------------------------------------------------------
         _ACT.influenciador = undefined;  // Boolean para indicar si el "Actor" influye en los demás actores del "Reparto"
         _ACT.influencia    = undefined;  // Valor dinámico de la magnitud de influencia del "Actor" ("Influenciador") 
         _ACT.influencias   = [];         // Listado de los "influenciadores" que afectan la trayectoria de este "Actor"
