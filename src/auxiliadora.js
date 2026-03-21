@@ -251,23 +251,24 @@ const Auxiliadora = (S, utilizaP5, reloj, contador) => {
         },
         
         /**
-         * esquema
-         * Retorna el "Esquema Base" del cual extiende la "entidad del socorro"
-         * recibida como argumento.
+         * desglose
+         * Dada una "Entidad del Socorro" (recibida como argumento), esta función
+         * retorna el objeto que alberga su definición desglosada (su "Desglose").
+         * En otras palabras, la función devuelve el "Desglose" del cual extiende.
          */
-        esquema: (entidad) => {
+        desglose: (entidad) => {
             if (entidad) {
-                let _esUnEsquema = true;
-                for (let i = 0; i < CONFIG.Esquema.length; i++) {
-                    if (!entidad.hasOwnProperty(CONFIG.Esquema[i])) {
-                        _esUnEsquema = false;
+                let _esUnDesglose = true;
+                for (let i = 0; i < CONFIG.Desglose.length; i++) {
+                    if (!entidad.hasOwnProperty(CONFIG.Desglose[i])) {
+                        _esUnDesglose = false;
                         break;
                     }
                 }
-                if (_esUnEsquema)
+                if (_esUnDesglose)
                     return entidad;
                 else
-                    return _AUX.esquema(Object.getPrototypeOf(entidad)) ?? undefined;
+                    return _AUX.desglose(Object.getPrototypeOf(entidad)) ?? undefined;
             }
             else {
                 return undefined;
@@ -358,15 +359,15 @@ const Auxiliadora = (S, utilizaP5, reloj, contador) => {
         /**
          * esUnaEntidadDelSocorro
          * Función para indicar si el objeto recibido como argumento es una
-         * de las "entidades del socorro" que extienden del objeto "Esquema".
+         * de las "Entidades del Socorro" (todas se basan en un "Desglose").
          */
         esUnaEntidadDelSocorro: (objeto) => {
             let _aux = objeto ? objeto?.nombre : undefined;
             return _aux !== undefined && 
-                  (_aux == CONFIG.SOS_ESQUEMA  || _aux == CONFIG.SOS_ESCENA     || _aux == CONFIG.SOS_ACTOR ||
-                   _aux == CONFIG.SOS_REPARTO  || _aux == CONFIG.SOS_REPARTIDOR ||
-                   _aux == CONFIG.SOS_ESTILO   || _aux == CONFIG.SOS_VARIABLE   ||
-                   _aux == CONFIG.SOS_VARIADOR || _aux == CONFIG.SOS_VECTOR     || _aux == CONFIG.SOS_VECTORVAR);
+                  (_aux == CONFIG.SOS_DESGLOSE || _aux == CONFIG.SOS_VARIABLE || _aux == CONFIG.SOS_VARIADOR   ||
+                   _aux == CONFIG.SOS_ESTILO   || _aux == CONFIG.SOS_VECTOR   || _aux == CONFIG.SOS_VECTORVAR  ||
+                   _aux == CONFIG.SOS_ACTOR    || _aux == CONFIG.SOS_REPARTO  || _aux == CONFIG.SOS_REPARTIDOR || 
+                   _aux == CONFIG.SOS_ESCENA);
         },
 
         

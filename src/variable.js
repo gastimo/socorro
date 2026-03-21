@@ -6,16 +6,16 @@
  * =============================================================================
  */
 import CONFIG from './config';
-import Esquema from './esquema';
+import Desglose from './desglose';
 
 
 /**
  * Variable
  * Una "Variable" es un objeto JavaScript utilitario para evaluar/calcular, en tiempo 
- * de ejecución, el valor de un atributo NUMÉRICO de un "Esquema". La "Variable" puede 
+ * de ejecución, el valor de un atributo NUMÉRICO de un "Desglose". La "Variable" puede 
  * ser usada, entonces, para variar dinámicamente los valores de aquellos atributos 
  * cuya representación interna sea numérica como, por ejemplo, el color, la opacidad, 
- * el grosor, el tamaño o, incluso, las coordenadas <x, y> de un "Esquema". También
+ * el grosor, el tamaño o, incluso, las coordenadas <x, y> de un "Desglose". También
  * puede ser utilizada para hacer variar valores de tipo "Vector".
  * 
  * Los "Métodos de Evaluación" para el cálculo dinámico del valor de la "Variable",  
@@ -31,18 +31,18 @@ import Esquema from './esquema';
  * Independientemente del método de cálculo configurado, también se le puede aplicar
  * ruido aleatorio adicional (perlin) al valor resultante calculado de la "Variable". 
  * 
- * Por último, vale aclarar que una "Variable" es también un "Esquema", por lo tanto,
- * hereda todas las funciones de éste, además de incorporar nuevas:
- *  - def()   - Definición de atributos y valores. Función heredada de "Esquema".
+ * Por último, vale aclarar que una "Variable" es también hace uso del "Desglose", por 
+ * lo tanto, hereda todas las funciones de éste y además de incorporar nuevas:
+ *  - def()   - Definición de atributos y valores. Función heredada de "Desglose".
  *  - map()   - Configuración del "Método de Evaluación" para realizar el mapeo dinámico.
  *  - mod()   - Definición del valor "modulador" utilizado en las funciones de mapeo dinámico.
  *  - ruido() - Define el ruido aleatorio a incorporar al resultado final de la evaluación.
- *  - val()   - Obtención del valor. Redefine la función heredada de "Esquema" para hacer el mapeo.
+ *  - val()   - Obtención del valor. Redefine la función heredada de "Desglose" para hacer el mapeo.
  * 
  */
 function Variable(S, ...parametros) {
-    const _ESQ = Esquema(S, CONFIG.SOS_VARIABLE);
-    const _VAR = _ESQ.extender();
+    const _DES = Desglose(S, CONFIG.SOS_VARIABLE);
+    const _VAR = _DES.extender();
     
     let _calculadora = null;
     _VAR$inicializar();
@@ -50,19 +50,19 @@ function Variable(S, ...parametros) {
     
     /**
      * def
-     * Esta función es la misma que la del objeto "Esquema" de quien la
-     * "Variable" extiende. Se redefine simplemente para retornar, al final,
-     * el objeto "Variable" actual para permitir definiciones encadenadas.
+     * Esta función es la misma que la del "Desglose" del cual la "Variable"
+     * extiende. Se redefine simplemente para retornar, al final, el objeto 
+     * "Variable" actual para permitir definiciones encadenadas.
      */
     _VAR.def = (atributos) => {
-        _ESQ.def(atributos);
+        _DES.def(atributos);
         return _VAR;
     };
     
     /**
      * map
      * Define los parámetros de la "Variable" dinámica para realizar, en tiempo de ejecución, 
-     * el mapeo o cálculo  del valor numérico del atributo del "Esquema", mediante los diferentes 
+     * el mapeo o cálculo  del valor numérico del atributo del "Desglose", mediante los diferentes 
      * "Métodos de Evaluación" admitidos. El formato general de los argumentos es:
      * 
      *   var.map(<método>, <[rango-origen]>, <[rango-destino]>, <modulador>);
@@ -105,79 +105,79 @@ function Variable(S, ...parametros) {
     _VAR.map = (...parametros) => {
         _VAR$inicializar();  // Primero, se inicializan TODOS los parámetros de la "Variable" en nulo
         _calculadora = null;
-        let _metodoEvaluacion = _ESQ.val('metodo');
+        let _metodoEvaluacion = _DES.val('metodo');
         if (parametros.length >= 1) {
             if (_EVALUADOR$perteneceAlRepertorio(parametros[0])) {
                 _metodoEvaluacion = parametros[0];
-                _ESQ.def({metodo : _metodoEvaluacion});            
+                _DES.def({metodo : _metodoEvaluacion});            
             }
             else {
-                _ESQ.def({valor : parametros[0]});
+                _DES.def({valor : parametros[0]});
                 return _VAR;
             } 
             // ---------------------------------------------------------------------------
             // ANÁLISIS DE LOS ARGUMENTOS DE LA INVOCACIÓN (2+ ARGUMENTOS)
             if (parametros.length >= 2) {
                 if (_metodoEvaluacion === null || S.O.S.EVAL.esEstatico(_metodoEvaluacion)) {
-                    _ESQ.def({valor : parametros[1]});
+                    _DES.def({valor : parametros[1]});
                     return _VAR;
                 }                
                 // 2 ARGUMENTOS ---------------------------------------------------------
                 if (_COLOR$perteneceAlRepertorio(parametros[1])) { 
-                    _ESQ.def({valor : parametros[1]});
+                    _DES.def({valor : parametros[1]});
                     if (parametros.length > 2)
-                        _ESQ.def({modulador : parametros[2]});
+                        _DES.def({modulador : parametros[2]});
                 }
                 // ANÁLISIS DE LOS ARGUMENTOS DE LA INVOCACIÓN (3+ ARGUMENTOS)
                 else if (parametros.length >= 3) {
                     // 3 ARGUMENTOS ----------------------------------------------------
                     if (parametros.length == 3) {
-                        _ESQ.def({valorDesde : parametros[1]});
-                        _ESQ.def({valorHasta : parametros[2]});  
+                        _DES.def({valorDesde : parametros[1]});
+                        _DES.def({valorHasta : parametros[2]});  
                     }
                     // 4 ARGUMENTOS ----------------------------------------------------
                     else if (parametros.length == 4) {
                         if (_COLOR$perteneceAlRepertorio(parametros[3])) {
-                            _ESQ.def({origenDesde : parametros[1]});
-                            _ESQ.def({origenHasta : parametros[2]}); 
-                            _ESQ.def({valor       : parametros[3]});
+                            _DES.def({origenDesde : parametros[1]});
+                            _DES.def({origenHasta : parametros[2]}); 
+                            _DES.def({valor       : parametros[3]});
                         }
                         else {
-                            _ESQ.def({valorDesde : parametros[1]});
-                            _ESQ.def({valorHasta : parametros[2]}); 
-                            _ESQ.def({modulador  : parametros[3]});
+                            _DES.def({valorDesde : parametros[1]});
+                            _DES.def({valorHasta : parametros[2]}); 
+                            _DES.def({modulador  : parametros[3]});
                         }
                     }
                     // 5 ARGUMENTOS ----------------------------------------------------
                     else if (parametros.length == 5) {
                         if (_COLOR$perteneceAlRepertorio(parametros[3])) {
-                            _ESQ.def({origenDesde : parametros[1]});
-                            _ESQ.def({origenHasta : parametros[2]}); 
-                            _ESQ.def({valor       : parametros[3]});
-                            _ESQ.def({modulador   : parametros[4]});
+                            _DES.def({origenDesde : parametros[1]});
+                            _DES.def({origenHasta : parametros[2]}); 
+                            _DES.def({valor       : parametros[3]});
+                            _DES.def({modulador   : parametros[4]});
                         }
                         else {
-                            _ESQ.def({origenDesde : parametros[1]});
-                            _ESQ.def({origenHasta : parametros[2]}); 
-                            _ESQ.def({valorDesde  : parametros[3]});
-                            _ESQ.def({valorHasta  : parametros[4]});
+                            _DES.def({origenDesde : parametros[1]});
+                            _DES.def({origenHasta : parametros[2]}); 
+                            _DES.def({valorDesde  : parametros[3]});
+                            _DES.def({valorHasta  : parametros[4]});
                         }                            
                     }
                     // 6+ ARGUMENTOS ---------------------------------------------------
                     else if (parametros.length >= 6) {
-                        _ESQ.def({origenDesde : parametros[1]});
-                        _ESQ.def({origenHasta : parametros[2]}); 
-                        _ESQ.def({valorDesde  : parametros[3]});
-                        _ESQ.def({valorHasta  : parametros[4]});
-                        _ESQ.def({modulador   : parametros[5]});
+                        _DES.def({origenDesde : parametros[1]});
+                        _DES.def({origenHasta : parametros[2]}); 
+                        _DES.def({valorDesde  : parametros[3]});
+                        _DES.def({valorHasta  : parametros[4]});
+                        _DES.def({modulador   : parametros[5]});
                     }
                 }
                 // CASO DE EXCEPCIÓN: La invocación tiene 2 argumentos. El primero es un
                 // método de evaluación válido. Sólo hay un argumento adicional y no se  
                 // trata de un array de valores predefinido (un "gradiente", por ejemplo).
                 else {
-                    _ESQ.def({valorDesde : 0});
-                    _ESQ.def({valorHasta : parametros[1]});  
+                    _DES.def({valorDesde : 0});
+                    _DES.def({valorHasta : parametros[1]});  
                 }
             }
         }
@@ -201,7 +201,7 @@ function Variable(S, ...parametros) {
      * - AZAR       : Indica cada cuantos milisegundos se genera un nuevo valor aleatorio
      */
     _VAR.mod = (modulador) => {
-        _ESQ.def({modulador : modulador});
+        _DES.def({modulador : modulador});
         return _VAR;
     };    
     
@@ -217,8 +217,8 @@ function Variable(S, ...parametros) {
      *                 un porcentaje de la "escala" que será adicionado.
      */
     _VAR.ruido = (velocidad = 0.012, escala = 1.0) => {
-        _ESQ.def({ruidoVelocidad : velocidad});
-        _ESQ.def({ruidoEscala    : escala});
+        _DES.def({ruidoVelocidad : velocidad});
+        _DES.def({ruidoEscala    : escala});
         return _VAR;
     };
     
@@ -229,24 +229,24 @@ function Variable(S, ...parametros) {
      */
     _VAR.val = () => {
         let _contextoEjecucion;
-        let _metodo = _ESQ.val('metodo');
+        let _metodo = _DES.val('metodo');
 
         // 1. CREACIÓN DE LA "CALCULADORA" (OBJETO AUXILIAR)
         // La primera vez que es invocado este método, se crea su "Calculadora"
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         if (!_calculadora) {
             _calculadora = _Calculadora(S);
-            let _valorVar   = _ESQ.val('valor');
-            let _valorDesde = _ESQ.val('valorDesde');
-            let _valorHasta = _ESQ.val('valorHasta');
+            let _valorVar   = _DES.val('valor');
+            let _valorDesde = _DES.val('valorDesde');
+            let _valorHasta = _DES.val('valorHasta');
             if (_COLOR$perteneceAlRepertorio(_valorVar)) {  // TODO: Sólo está controlando rangos de colores (GRADIENTES)
-                _calculadora.desde(_metodo, _ESQ.val('origenDesde'), _ESQ.val('origenHasta')).hasta(...S.O.S.COLOR[_valorVar]);
+                _calculadora.desde(_metodo, _DES.val('origenDesde'), _DES.val('origenHasta')).hasta(...S.O.S.COLOR[_valorVar]);
             }
             else if (_valorDesde || _valorHasta) {
-                _calculadora.desde(_metodo, _ESQ.val('origenDesde'), _ESQ.val('origenHasta')).hasta(_valorDesde, _valorHasta);
+                _calculadora.desde(_metodo, _DES.val('origenDesde'), _DES.val('origenHasta')).hasta(_valorDesde, _valorHasta);
             }
             else { 
-                _calculadora.desde(_metodo, _ESQ.val('origenDesde'), _ESQ.val('origenHasta')).hasta(_valorVar);
+                _calculadora.desde(_metodo, _DES.val('origenDesde'), _DES.val('origenHasta')).hasta(_valorVar);
             }
         }
 
@@ -255,8 +255,8 @@ function Variable(S, ...parametros) {
         // Si bien el objeto auxiliar "Calculadora" es único para la "Variable", sus contextos de
         // ejecución son múltiples. La "Calculadora" crea un contexto diferente por cada 
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        let _claveContexto = S.O.S.hasOwnProperty('ACTOR') ? S.O.S.ACTOR.identificador : _ESQ.identificador;
-        _contextoEjecucion = _calculadora.contexto(_claveContexto, _ESQ.val('modulador') ?? S.O.S.EVAL[_metodo]?.mod, _ESQ.val('ruidoVelocidad'));
+        let _claveContexto = S.O.S.hasOwnProperty('ACTOR') ? S.O.S.ACTOR.identificador : _DES.identificador;
+        _contextoEjecucion = _calculadora.contexto(_claveContexto, _DES.val('modulador') ?? S.O.S.EVAL[_metodo]?.mod, _DES.val('ruidoVelocidad'));
         let _v = _calculadora.calc(_contextoEjecucion);
         
         // 3. ADICIÓN DEL RUIDO
@@ -266,9 +266,9 @@ function Variable(S, ...parametros) {
         let _ruido = _contextoEjecucion.ruido?.();
         if (!S.O.S.esUnColor(_v) && _ruido) {
             if (S.O.S.esUnVector(_v))
-                _v.sumar(_ruido * _ESQ.val('ruidoEscala') ?? 1);
+                _v.sumar(_ruido * _DES.val('ruidoEscala') ?? 1);
             else 
-                _v += _ruido * _ESQ.val('ruidoEscala') ?? 1;
+                _v += _ruido * _DES.val('ruidoEscala') ?? 1;
         }
         return _v;
     };
@@ -285,15 +285,15 @@ function Variable(S, ...parametros) {
      * Método privado de inicialización de las propiedades de la "Variable".
      */
     function _VAR$inicializar() {
-        _ESQ.def({metodo         : null});
-        _ESQ.def({valor          : null});
-        _ESQ.def({origenDesde    : null});
-        _ESQ.def({origenHasta    : null});
-        _ESQ.def({valorDesde     : null});
-        _ESQ.def({valorHasta     : null});
-        _ESQ.def({modulador      : null});
-        _ESQ.def({ruidoVelocidad : null});
-        _ESQ.def({ruidoEscala    : null});
+        _DES.def({metodo         : null});
+        _DES.def({valor          : null});
+        _DES.def({origenDesde    : null});
+        _DES.def({origenHasta    : null});
+        _DES.def({valorDesde     : null});
+        _DES.def({valorHasta     : null});
+        _DES.def({modulador      : null});
+        _DES.def({ruidoVelocidad : null});
+        _DES.def({ruidoEscala    : null});
     }
 
     /**

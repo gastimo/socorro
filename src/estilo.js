@@ -6,7 +6,7 @@
  * =============================================================================
  */
 import CONFIG from './config';
-import Esquema from './esquema';
+import Desglose from './desglose';
 
 
 /**
@@ -17,8 +17,8 @@ import Esquema from './esquema';
  * de su trazo o contorno (si aplica).
  */
 function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo) {
-    const _ESQ = Esquema(S, CONFIG.SOS_ESTILO);
-    const _EST = _ESQ.extender();
+    const _DES = Desglose(S, CONFIG.SOS_ESTILO);
+    const _EST = _DES.extender();
 
         
     /**
@@ -66,7 +66,7 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
                     _definicion[atrNombre] = atrValor;
                 }
             }
-            _ESQ.def(_definicion);
+            _DES.def(_definicion);
         }
         return _EST;
     };
@@ -82,10 +82,10 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
      * incluye también el canal "alfa" (aplica tanto a "color" como "color$trazo").
      */
     _EST.actualizar = () => {
-        _EST.color   = _ESQ.val(CONFIG.EST_COLOR);
-        _EST.trazo   = _ESQ.val(CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO);
-        _EST.grandor = _ESQ.val(CONFIG.EST_GRANDOR);
-        _EST.grosor  = _ESQ.val(CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO);
+        _EST.color   = _DES.val(CONFIG.EST_COLOR);
+        _EST.trazo   = _DES.val(CONFIG.EST_COLOR + CONFIG.ATR_VARIABLE_TRAZO);
+        _EST.grandor = _DES.val(CONFIG.EST_GRANDOR);
+        _EST.grosor  = _DES.val(CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO);
         return _EST;
     };
     
@@ -116,9 +116,9 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
      */
     function _EST$inicializar(color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTrazo) {
         
-        // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESTILO")
-        // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
-        // los atributos del "Estilo", recibidas como argumento.
+    // 1. DEFINICIÓN DESGLOSADA DE LOS ATRIBUTOS DINÁMICOS
+        // Se inicializa el "Desglose" con las definiciones (dinámicas) 
+        // de los atributos del "Estilo", recibidas como argumento.
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         let _definicion = {};
         
@@ -138,7 +138,7 @@ function Estilo(S, color, opacidad, grandor, colorTrazo, opacidadTrazo, grosorTr
         if (grosorTrazo !== undefined && grosorTrazo !== null)
             _definicion[CONFIG.EST_GRANDOR + CONFIG.ATR_VARIABLE_TRAZO] = grosorTrazo;
     
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         
         // 2. INICIALIZACIÓN DE PROPIEDADES PÚBLICAS (DEL "ESTILO")
         // Las propiedades públicas son las variables del "Estilo" donde 

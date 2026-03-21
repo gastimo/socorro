@@ -6,7 +6,7 @@
  * =============================================================================
  */
 import CONFIG from './config';
-import Esquema from './esquema';
+import Desglose from './desglose';
 
 
 /**
@@ -23,11 +23,12 @@ import Esquema from './esquema';
  * OBSERVACIONES:
  * 1. Según los parámetros de creación de la "Escena" se utilizan las función de la librería "p5js" 
  *    o de "Three.js" (o ambas) para la generación de la gráfica.
- * 2. Al igual que la mayoría de los objetos del módulo, la "Escena" es un "Esquema".
+ * 2. Al igual que la mayoría de los objetos del módulo, la "Escena" hace uso del "Desglose"
+ *    para guardar las definiciones de sus atributos.
  */
 function Escena(S) {
-    const _ESQ = Esquema(S, CONFIG.SOS_ESCENA);
-    const _ESC = _ESQ.extender();
+    const _DES = Desglose(S, CONFIG.SOS_ESCENA);
+    const _ESC = _DES.extender();
     
     // Objeto "Contenedor" para gestionar el elemento HTML donde se alojará el "canvas"
     let _contenedor;
@@ -60,12 +61,12 @@ function Escena(S) {
 
     /**
      * def
-     * Esta función es la misma que la del objeto "Esquema" de quien 
-     * "Escena" extiende. Se redefine simplemente para retornar, al final,
-     * el objeto "Escena" actual, que permite definiciones encadenadas.
+     * Esta función es la misma que la del "Desglose" del cual la "Escena" 
+     * extiende. Se redefine simplemente para retornar, al final, el objeto 
+     * "Escena" actual, que permite definiciones encadenadas.
      */
     _ESC.def = (atributos) => {
-        _ESQ.def(atributos);
+        _DES.def(atributos);
         return _ESC;
     };
 
@@ -86,7 +87,7 @@ function Escena(S) {
     _ESC.defEstilo = (estilo) => {
         const _definicion = {};
         _definicion[CONFIG.ESC_ESTILO] = estilo;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         return _ESC;
     };    
 
@@ -95,7 +96,7 @@ function Escena(S) {
      * Función que permite definir el "representador" por defecto para dibujar a los 
      * los "Actores" de la "Escena". Se trata de una función utilitaria que permite 
      * definir el valor del atributo "representador" de una manera simplificada (lo 
-     * mismo podría ser llevado a cabo mediante la función "def" del "Esquema"). 
+     * mismo podría ser llevado a cabo mediante la función "def" del "Desglose"). 
      * Las siguientes dos instrucciones hacen exactamente lo mismo:
      * 
      *     defRepresentador(<nombre-representador>);
@@ -104,7 +105,7 @@ function Escena(S) {
     _ESC.defRepresentador = (representador) => {
         const _definicion = {};
         _definicion[CONFIG.ESC_REPRESENTADOR] = representador;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         return _ESC;
     };
     
@@ -113,7 +114,7 @@ function Escena(S) {
      * Función para determinar si el contenido de la "Escena" debe ser escalado cuando
      * ocurre cualquier cambio de tamaño del lienzo HTML. Se trata de una función 
      * utilitaria que permite definir el valor del atributo "escalable" de una forma
-     * simplificada (lo mismo podría realizarse mediante el método "def" del "Esquema").
+     * simplificada (lo mismo podría realizarse mediante el método "def" del "Desglose").
      * Las siguientes dos instrucciones hacen exactamente lo mismo:
      * 
      *     defEscalable(true);
@@ -122,7 +123,7 @@ function Escena(S) {
     _ESC.defEscalable = (esEscalable) => {
         const _definicion = {};
         _definicion[CONFIG.ESC_ESCALABLE] = esEscalable;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         return _ESC;
     };
     
@@ -132,7 +133,7 @@ function Escena(S) {
      * también la reproducción de los programas GLSL que hayan sido definidos ("shaders").
      * Se trata de una función utilitaria que permite definir el valor del atributo
      * "interpretarGLSL" (lo mismo podría realizarse mediante el método "def" del 
-     * "Esquema"). Las siguientes dos instrucciones hacen exactamente lo mismo:
+     * "Desglose"). Las siguientes dos instrucciones hacen exactamente lo mismo:
      * 
      *     defInterpretarGLSL(true);
      *     def({interpretarGLSL: true});
@@ -140,7 +141,7 @@ function Escena(S) {
     _ESC.defInterpretarGLSL = (mostrarShader) => {
         const _definicion = {};
         _definicion[CONFIG.ESC_INTERPRETAR_GLSL] = mostrarShader;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         return _ESC;
     };    
 
@@ -159,16 +160,16 @@ function Escena(S) {
      */
     _ESC.actualizar = () => {
         // Actualización del indicador "escalable"
-        _ESC.escalable = _ESQ.val(CONFIG.ESC_ESCALABLE) ?? _ESC.escalable;
+        _ESC.escalable = _DES.val(CONFIG.ESC_ESCALABLE) ?? _ESC.escalable;
 
         // Actualización del "Representador" por defecto para la "Escena"
-        _ESC.representador = _ESQ.val(CONFIG.ESC_REPRESENTADOR) ?? _ESC.representador;
+        _ESC.representador = _DES.val(CONFIG.ESC_REPRESENTADOR) ?? _ESC.representador;
         
         // Actualizar la variable que indica si se debe interpretar el código GLSL
-        _ESC.interpretarGLSL = _ESQ.val(CONFIG.ESC_INTERPRETAR_GLSL) ?? _ESC.interpretarGLSL;
+        _ESC.interpretarGLSL = _DES.val(CONFIG.ESC_INTERPRETAR_GLSL) ?? _ESC.interpretarGLSL;
 
         // Actualización del "Estilo" por defecto
-        _ESC.estilo = _ESQ.val(CONFIG.ESC_ESTILO);  // Devuelve el "Estilo" sin evaluar
+        _ESC.estilo = _DES.val(CONFIG.ESC_ESTILO);  // Devuelve el "Estilo" sin evaluar
         if (_ESC.estilo) {
             _ESC.estilo.actualizar(); // Recién acá se evalúa. Se aplica luego con el método "estilar"
         }
@@ -284,7 +285,7 @@ function Escena(S) {
      * Actualiza el registro interno de la "Escena" para incorporar al "Actor", 
      * "Reparto" o "Metareparto" recibido como argumento. El registro almacena 
      * automáticamente todas aquellas entidades que hayan sido añadidas a la 
-     * "Escena" (o algún "Reparto") a través del método "def" (del "Esquema"). 
+     * "Escena" (o algún "Reparto") a través del método "def" (del "Desglose"). 
      * Cualquier "Actor" o "Reparto" independiente no queda registrado.
      * Este registro es, luego, utilizado para la actualización automática de
      * los "Actores"/"Repartos" de la "Escena" y para su representación.
@@ -901,7 +902,7 @@ function Escena(S) {
      * _ESC$inicializar
      * Función privada de inicialización de las propiedades públicas de la
      * "Escena". Estas propiedades son accesibles como variables públicas del
-     * objeto y almacenan los valores evaluados de los atributos del "Esquema".
+     * objeto y almacenan los valores evaluados de los atributos del "Desglose".
      */
     function _ESC$inicializar() {
         // Inicialización de las PROPIEDADES PÚBLICAS DE LA ESCENA

@@ -6,7 +6,7 @@
  * =============================================================================
  */
 import CONFIG from './config';
-import Esquema from './esquema';
+import Desglose from './desglose';
 
 
 /**
@@ -78,8 +78,8 @@ import Esquema from './esquema';
  *
  */
 function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion) {
-    const _ESQ = Esquema(S, CONFIG.SOS_REPARTO);
-    const _RPT = _ESQ.extender();
+    const _DES = Desglose(S, CONFIG.SOS_REPARTO);
+    const _RPT = _DES.extender();
     let   _prevIntervalo;
     let   _rutinaIniciadora;
     let   _actoresIntroducidos = 0;
@@ -88,9 +88,9 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
             
     /**
      * def
-     * Esta función es la misma que la del objeto "Esquema" de quien el "Reparto"
-     * extiende. Se redefine simplemente para retornar, al final, el objeto "Reparto"
-     * actual, que permite definiciones encadenadas.
+     * Esta función es la misma que la del "Desglose" del cual el "Reparto"
+     * extiende. Se redefine simplemente para retornar, al final, el objeto 
+     * "Reparto" actual, que permite definiciones encadenadas.
      */
     _RPT.def = (atributos) => {
         if (atributos) {
@@ -99,7 +99,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
             for (const [atrNombre, atrValor] of Object.entries(atributos)) {
                 _definicion[atrNombre] = atrValor;
             }
-            _ESQ.def(_definicion);
+            _DES.def(_definicion);
         }
         return _RPT;
     };
@@ -121,7 +121,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
     _RPT.defEstilo = (estilo) => {
         const _definicion = {};
         _definicion[CONFIG.RPT_ESTILO] = estilo;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         return _RPT;
     };
 
@@ -130,7 +130,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
      * Función que permite definir el "representador" por defecto para dibujar a  
      * los "Actores". Se trata de una función utilitaria que permite definir el  
      * valor del atributo "representador" de una manera simplificada (lo mismo 
-     * podría ser llevado a cabo mediante la función "def" del "Esquema"). 
+     * podría ser llevado a cabo mediante la función "def" del "Desglose"). 
      * Las siguientes dos instrucciones hacen exactamente lo mismo:
      * 
      *     defRepresentador(<nombre-representador>);
@@ -139,7 +139,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
     _RPT.defRepresentador = (representador) => {
         const _definicion = {};
         _definicion[CONFIG.RPT_REPRESENTADOR] = representador;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         return _RPT;
     };
     
@@ -149,7 +149,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
      * origen del "Reparto". El argumento puede ser tanto un objeto de tipo
      * "Vector" como su definición en JSON. Se trata de una función utilitaria que
      * permite definir el valor del atributo "desplazamiento" de forma simplificada
-     * (lo mismo podría realizarse con el método "def" del "Esquema"). 
+     * (lo mismo podría realizarse con el método "def" del "Desglose"). 
      * Las siguientes cuatro instrucciones hacen todas exactamente lo mismo: 
      * 
      *    defDesplazamiento({x: 10, y: -100, z: 0});
@@ -160,7 +160,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
     _RPT.defDesplazamiento = (vector) => {
         const _definicion = {};
         _definicion[CONFIG.RPT_DESPLAZAMIENTO] = vector;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         return _RPT;
     };
     
@@ -170,7 +170,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
      * los actores del "Reparto" que son dibujados. Se trata de una función 
      * utilitaria que permite definir el valor del atributo "rotacion" de una
      * manera simplificada (lo mismo podría ser realizado mediante la función
-     * "def" del "Esquema"). Por ejemplo, ambas instrucciones hacen lo mismo:
+     * "def" del "Desglose"). Por ejemplo, ambas instrucciones hacen lo mismo:
      * 
      *    defRotacion(Math.PI / 2);
      *    def({rotacion: Math.PI / 2});
@@ -178,7 +178,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
     _RPT.defRotacion = (angulo) => {
         const _definicion = {};
         _definicion[CONFIG.RPT_ROTACION] = angulo;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         return _RPT;
     };
     
@@ -197,7 +197,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
     _RPT.defMaxDuracion = (tiempoMaximo) => {
         const _definicion = {};
         _definicion[CONFIG.RPT_MAX_DURACION] = tiempoMaximo;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         return _RPT;
     };
     
@@ -216,7 +216,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
     _RPT.defMaxRecorrido = (distanciaMaxima) => {
         const _definicion = {};
         _definicion[CONFIG.RPT_MAX_RECORRIDO] = distanciaMaxima;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         return _RPT;
     };
     
@@ -234,7 +234,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
             // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
             for (let i = 0; i < CONFIG.Reparto.length; i++) {
                 if (!nombreAtr || nombreAtr == CONFIG.Reparto[i]) {
-                    let _valor = _ESQ.val(CONFIG.Reparto[i]);
+                    let _valor = _DES.val(CONFIG.Reparto[i]);
 
                     // En caso de tratarse del "intervalo", se verifica que siempre
                     // tenga un valor. Un intervalor de cero significa que todos los 
@@ -249,7 +249,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
                     }
                     else {
                         // El único atributo "heredable" del "Reparto" es el "Representador"
-                        _RPT[CONFIG.Reparto[i]] = _valor ?? (nombreAtr == CONFIG.RPT_REPRESENTADOR ? _ESQ.heredar(CONFIG.Reparto[i]) : _valor);
+                        _RPT[CONFIG.Reparto[i]] = _valor ?? (nombreAtr == CONFIG.RPT_REPRESENTADOR ? _DES.heredar(CONFIG.Reparto[i]) : _valor);
                     }
 
                     // ----------------------------------------------------------------------
@@ -261,7 +261,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
                 }
             }
             if (!nombreAtr || nombreAtr == CONFIG.RPT_INFLUENCIA) {
-                _RPT[CONFIG.RPT_INFLUENCIA] = _ESQ.val(CONFIG.RPT_INFLUENCIA); 
+                _RPT[CONFIG.RPT_INFLUENCIA] = _DES.val(CONFIG.RPT_INFLUENCIA); 
             }
             
             // 2. DECLARACIÓN DE LA RUTINA INICIALIZADORA
@@ -297,7 +297,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
     _RPT.iniciadorDelReparto = () => {
         let _intervalo = _RPT[CONFIG.RPT_INTERVALO] <= 0 ? 1 : _RPT[CONFIG.RPT_INTERVALO];
         _rutinaIniciadora = S.O.S.accionador(_intervalo, () => {
-            let _nroActores = S.O.S.actores(_ESQ.identificador)?.length ?? 0;
+            let _nroActores = S.O.S.actores(_DES.identificador)?.length ?? 0;
             let _cantidad = _RPT[CONFIG.RPT_CANTIDAD] ?? 1;
             let _puestos  = _RPT[CONFIG.RPT_PUESTOS] ? (_RPT[CONFIG.RPT_PUESTOS] > 1 ? _RPT[CONFIG.RPT_PUESTOS] : 1) : 1;
             let _coreografia = S.O.S.COREO[_RPT[CONFIG.RPT_COREOGRAFIA] ?? CONFIG.ESTANDAR];
@@ -317,12 +317,12 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
                 _coreografia(_nuevoActor, _cantidad, _puestos);
                 
                 // Se incorpora el "Actor" al "Reparto". Al añadirlo bajo un
-                // "nombre de atributo de dinámico", el "Esquema" no lo guarda
-                // internamente (y por lo tanto, tampoco se incluye en futuras 
+                // "nombre de atributo de dinámico", no se guarda internamente
+                // en el "Desglose" (y por lo tanto, tampoco se incluye en futuras 
                 // exportaciones), pero sí se incorpora al "Reparto" general.
                 const _definicionActor = {};
                 _definicionActor[CONFIG.ATR_NOMBRE_DINAMICO] = _nuevoActor;
-                _ESQ.def(_definicionActor);
+                _DES.def(_definicionActor);
                 
                 // Si existen "Subrepartos", se crean nuevas instancias colocando
                 // a "Actor" creado como cabeza de dichos "Repartos"
@@ -389,7 +389,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
      */
     _RPT.subreparto = () => {
         const _sr = Reparto(S);
-        _sr.replicarDef(_ESQ);
+        _sr.replicarDef(_DES);
         _sr.metadef = _RPT;
         if (_RPT.hasOwnProperty(CONFIG.RPD_INFLUENCIADOR)) {
             _sr[CONFIG.RPD_INFLUENCIADOR] = _RPT[CONFIG.RPD_INFLUENCIADOR];
@@ -427,9 +427,9 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
      */
     function _RPT$inicializar(coreografia, cantidad, puestos, intensidad, intervalo, desvío, separacion) {
         
-        // 1. DEFINICIÓN DE ATRIBUTOS DINÁMICOS (DEL "ESQUEMA")
-        // Se inicializa el "Esquema" con las definiciones (dinámicas) de  
-        // los atributos del "Reparto", recibidas como argumento.
+        // 1. DEFINICIÓN DESGLOSADA DE LOS ATRIBUTOS DINÁMICOS
+        // Se inicializa el "Desglose" con las definiciones (dinámicas)  
+        // de los atributos del "Reparto", recibidas como argumento.
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         let _definicion = {};        
         if (coreografia !== undefined && coreografia !== null)
@@ -446,7 +446,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
             _definicion[CONFIG.RPT_DESVIO] = desvío;
         if (separacion !== undefined && separacion !== null)
             _definicion[CONFIG.RPT_SEPARACION] = separacion;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
         
         // 2. INICIALIZACIÓN DE PROPIEDADES PÚBLICAS (DEL "REPARTO")
         // Las propiedades públicas son las variables del "Reparto" donde 
@@ -458,7 +458,7 @@ function Reparto(S, coreografia, cantidad, puestos, intensidad, intervalo, desv�
         
         // 3. INICIALIZACIÓN DE PROPIEDADES ADICIONALES 
         // Estas propiedades no forman parte de la definición de los atributos
-        // dinámicos del "Esquema". Son propiedades públicas, accesibles a 
+        // dinámicos del "Desglose". Son propiedades públicas, accesibles a 
         // través de variables del "Reparto" y actualizadas dinámicamente.
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         _RPT.metareparto = false;  // Definición de un "Reparto" dentro de otro "Reparto"

@@ -6,16 +6,16 @@
  * =============================================================================
  */
 import CONFIG from './config';
-import Esquema from './esquema';
+import Desglose from './desglose';
 
 
 /**
  * Vector
  * Objeto utilitario para operar con vectores. El "Vector" permite
  * definir coordenadas en la "Escena" correspondientes al eje X, al
- * eje Y y al eje Z. Si bien el objeto "Vector" no extiende de "Esquema", 
+ * eje Y y al eje Z. Si bien el objeto "Vector" no es un "Desglose", 
  * implementa la gran mayoría de sus métodos (ej. "nombre", "exportar", 
- * "def, etc.), pero incorpora funciones propias del manejo de vectores
+ * "def, etc.) e incorpora funciones propias del manejo de vectores
  * (ej. "sumar", "mult", "mag", "dist", etc).
  */
 function Vector(S, a, b, c) {
@@ -31,19 +31,19 @@ function Vector(S, a, b, c) {
     _VEC.nombre = CONFIG.SOS_VECTOR;
     
     /**
-     * _convertirEnEsquema
-     * Función privada que retorna la definición del "Vector" corriente
-     * como un objeto de tipo "Esquema".
+     * _desglosar
+     * Función privada que retorna la definición desglosada del "Vector"
+     * actual (devuelve un objeto de tipo "Desglose").
      */
-    function _convertirEnEsquema() {
-        let _esq = Esquema(S, CONFIG.SOS_VECTOR);
+    function _desglosar() {
+        let _des = Desglose(S, CONFIG.SOS_VECTOR);
         if (_VEC.x !== null && _VEC.x !== undefined)
-            _esq.def({x: _VEC.x});
+            _des.def({x: _VEC.x});
         if (_VEC.y !== null && _VEC.y !== undefined)
-            _esq.def({y: _VEC.y});
+            _des.def({y: _VEC.y});
         if (_VEC.z !== null && _VEC.z !== undefined)
-            _esq.def({z: _VEC.z});
-        return _esq;
+            _des.def({z: _VEC.z});
+        return _des;
     }
 
     /**
@@ -79,7 +79,7 @@ function Vector(S, a, b, c) {
     /**
      * val
      * Esta función no hace nada en realidad. Se añade para mantener la compatibilidad
-     * con los restantes objetos que extienden de "Esquema". La función retorna el 
+     * con los restantes objetos que extienden de "Desglose". La función retorna el 
      * mismo objeto "Vector" sin realizar ninguna modificación.
      */
     _VEC.val = () => {
@@ -222,7 +222,7 @@ function Vector(S, a, b, c) {
      * Devuelve un texto con la representación JSON del vector.
      */
     _VEC.exportar = (indentacion = "") => {
-        return _convertirEnEsquema().exportar(indentacion);
+        return _desglosar().exportar(indentacion);
     };
        
     return _VEC;    
@@ -241,20 +241,20 @@ function Vector(S, a, b, c) {
  * Objeto utilitario para operar con "Vectores Variables", en otras palabras,
  * se trata de vectores que admiten el uso de objetos "Variable" en cualquiera
  * de sus componentes (<x,y,z>).
- * A diferencia del objeto "Vector" simple, este objeto extiende del objeto 
- * "Esquema". La invocación al método "val()" es lo que permite evaluar 
+ * A diferencia del objeto "Vector" simple, este objeto hace uso del "Desglose"
+ * (lo extiende). La invocación al método "val()" es lo que permite evaluar 
  * dinámicamente la variables de cualquiera de sus componentes.
  */
 function VectorVar(S, a, b, c) {
-    const _ESQ = Esquema(S, CONFIG.SOS_VECTORVAR);
-    const _VEV = _ESQ.extender();
+    const _DES = Desglose(S, CONFIG.SOS_VECTORVAR);
+    const _VEV = _DES.extender();
     let _vectorial = S.O.S.esUnVector(a);
     _VEV$inicializar(a, b, c);
 
     
     /**
      * def
-     * Esta función es la misma que la del objeto "Esquema" de quien el
+     * Esta función es la misma que la del objeto "Desglose" de quien el
      * "VectorVar" extiende. Se redefine simplemente para retornar, al final,
      * el objeto "VectorVar" actual, que permite definiciones encadenadas.
      */
@@ -266,7 +266,7 @@ function VectorVar(S, a, b, c) {
                     _definicion[atrNombre] = atrValor;
                 }
             }
-            _ESQ.def(_definicion);
+            _DES.def(_definicion);
         }
         return _VEV;
     };
@@ -280,9 +280,9 @@ function VectorVar(S, a, b, c) {
      */
     _VEV.val = (...atributos) => {
         if (atributos.length == 0) {
-            return Vector(S, _ESQ.val('x'), _ESQ.val('y'), _ESQ.val('z'));
+            return Vector(S, _DES.val('x'), _DES.val('y'), _DES.val('z'));
         }
-        return _ESQ.val(...atributos);
+        return _DES.val(...atributos);
     };
     
     /**
@@ -305,7 +305,7 @@ function VectorVar(S, a, b, c) {
     _VEV.copiar = (v) => {
         if (v) {
             if (S.O.S.esUnVectorVar(v))
-                _ESQ.def(v.defincion());
+                _DES.def(v.defincion());
             else
                 _VEV$inicializar(v?.x, v?.y, v?.z);
         }
@@ -319,7 +319,7 @@ function VectorVar(S, a, b, c) {
      * "VectorVar" en otro "VectorVar".
      */
     _VEV.definicion = () => {
-        return _ESQ.val();  
+        return _DES.val();  
     };
     
     /**
@@ -334,7 +334,7 @@ function VectorVar(S, a, b, c) {
             _definicion.y = _vectorial ? a.y : b;
         if (c !== undefined && c !== null)
             _definicion.z = _vectorial ? a.z : c;
-        _ESQ.def(_definicion);
+        _DES.def(_definicion);
     }
 
     return _VEV;

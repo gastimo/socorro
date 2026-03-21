@@ -6,7 +6,7 @@
  * =============================================================================
  */
 import CONFIG from './config';
-
+import Variable from './variable';
 
 /**
  * Variador
@@ -19,7 +19,7 @@ import CONFIG from './config';
  * sólo los métodos que son necesarios.
  */
 function Variador(S, valorDesde, valorHasta, modulador) {
-    const _VAR = S.O.S.Variable(S.O.S.EVAL.Perlin, valorDesde, valorHasta, modulador);
+    const _VAR = Variable(S, S.O.S.EVAL.Perlin, valorDesde, valorHasta, modulador);
     const _VRD = {};
     _VRD.nombre = CONFIG.SOS_VARIADOR;
     _VRD.clave  = S.O.S.obtenerClave(_VRD.nombre);

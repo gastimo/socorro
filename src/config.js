@@ -22,21 +22,21 @@ const Config = (() => {
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
         // Singleton del Obsequioso Socorro (S.O.S)
-        SOS                     : '_SOS',
+        SOS           : '_SOS',
 
-        // Entidades que internamente son "Esquema"
-        SOS_ESQUEMA             : '_ESQ',   // Estructura de definición atributos/valores de las entidades del "socorro"
-        SOS_ESCENA              : '_ESC',   // Entidad principal para las representaciones de la "Obra"
-        SOS_REPARTO             : '_RPT',   // Conjunto de "Actores" con dispociones y movimients coordinados entre sí
-        SOS_ACTOR               : '_ACT',   // Intérpretes principales de la "Escena"
-        SOS_ESTILO              : '_EST',   // Conjunto de variables para la represención visual de objetos de la escena
-        SOS_VARIABLE            : '_VAR',   // Variables para cálculo dinámico de los valores de los atributos
-        SOS_VARIADOR            : '_VRD',   // Generador de valores numéricos aleatorios dentro rangos preestablecidos
-        SOS_VECTOR              : '_VEC',   // Objeto genérico para realizar operaciones con vectores
-        SOS_VECTORVAR           : '_VEV',   // Objeto "Vector" que admite "Variables" en sus componentes x, y, z.
+        // Entidades del Socorro (todas ellas son definidas internamente mediante su "Desglose")
+        SOS_DESGLOSE  : '_DES',     // Documento detallado sobre los atributos dinámicos de "Entidades del Socorro"
+        SOS_ESCENA    : '_ESC',     // Entidad principal para las representaciones de la "Obra"
+        SOS_REPARTO   : '_RPT',     // Conjunto de "Actores" con dispociones y movimients coordinados entre sí
+        SOS_ACTOR     : '_ACT',     // Intérpretes principales de la "Escena"
+        SOS_ESTILO    : '_EST',     // Conjunto de variables para la represención visual de objetos de la escena
+        SOS_VARIABLE  : '_VAR',     // Variables para cálculo dinámico de los valores de los atributos
+        SOS_VARIADOR  : '_VRD',     // Generador de valores numéricos aleatorios dentro rangos preestablecidos
+        SOS_VECTOR    : '_VEC',     // Objeto genérico para realizar operaciones con vectores
+        SOS_VECTORVAR : '_VEV',     // Objeto "Vector" que admite "Variables" en sus componentes x, y, z.
         
         // Constantes de uso general
-        ESTANDAR                : 'estandar', // Constante utilizada para acceder a "Repertorios" estándar
+        ESTANDAR      : 'estandar', // Constante utilizada para acceder a "Repertorios" estándar
         
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
@@ -56,15 +56,15 @@ const Config = (() => {
         
         
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv        
-    // > NOMBRES DE ATRIBUTOS DE ESQUEMAS (SEGÚN ENTIDAD)
+    // > NOMBRES DE ATRIBUTOS PARA DESGLOSE DE ENTIDADES
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         
-        // Constantes usadas para la nomenclatura los "Atributos" de un "Esquema"
+        // Constantes usadas para la nomenclatura los "Atributos" en las definiciones desglosadas
         ATR_SEPARADOR           : "$",
         ATR_VARIABLE_ALFA       : "$alfa",           // Sufijo para cálculo dinámico (ej. 'color$alfa')
         ATR_VARIABLE_TRAZO      : "$trazo",          // Sufijo para cálculo dinámico (ej. 'color$trazo')
         ATR_NOMBRE_DINAMICO     : "$claveDinamica$", // Clave para nombres de atributos dinámicos (no se almacenan)
-        ATR_ARRAY_CLAVE_AUX     : '$claveAuxiliar$', // Clave interna usada durante la conversión a texto de un "Esquema"
+        ATR_ARRAY_CLAVE_AUX     : '$claveAuxiliar$', // Clave interna usada durante la conversión a texto de un "Desglose"
 
         // Nombres de los atributos de la entidad "Variable"
         VAR_METODO              : 'metodo',
@@ -77,18 +77,18 @@ const Config = (() => {
         VAR_RUIDO_VELOCIDAD     : 'ruidoVelocidad',
         VAR_RUIDO_ESCALA        : 'ruidoEscala',
         
-        // Nombres de los atributos básicos de la entidad "Esquema"
-        ESQ_NOMBRE              : 'nombre',
-        ESQ_CLAVE               : 'clave',
-        ESQ_IDENTIFICADOR       : 'identificador',
-        ESQ_ENTIDAD             : 'entidad',
-        ESQ_SUPERIOR            : 'superior',
-        ESQ_CONTENEDOR          : 'contenedor',
-        ESQ_AGRUPACION          : 'agrupacion',
-        ESQ_ATRIBUTO            : 'atributo',
+        // Nombres de los atributos básicos de la entidad "Desglose"
+        DES_NOMBRE              : 'nombre',
+        DES_CLAVE               : 'clave',
+        DES_IDENTIFICADOR       : 'identificador',
+        DES_ENTIDAD             : 'entidad',
+        DES_SUPERIOR            : 'superior',
+        DES_CONTENEDOR          : 'contenedor',
+        DES_AGRUPACION          : 'agrupacion',
+        DES_ATRIBUTO            : 'atributo',
         
         // Nombres de los atributos de la entidad "Estilo"
-        // Sólo hay dos, los restantes se forman añadiendo los sufijos "$alfa" y "$trazo"
+        // (sólo hay dos, los restantes se forman añadiendo los sufijos "$alfa" y "$trazo")
         EST_COLOR               : 'color',
         EST_GRANDOR             : 'grandor',
         EST_TRAZO               : 'trazo',
@@ -104,6 +104,7 @@ const Config = (() => {
         ESC_INTERPRETAR_GLSL    : 'interpretarGLSL',
 
         // Nombres de los atributos de la entidad "Reparto" y "Repartidor"
+        // (un "Repartidor" es un caso particular de "Reparto" con cantidad=1 y con "influencia")
         RPT_COREOGRAFIA         : 'coreografia', 
         RPT_CANTIDAD            : 'cantidad', 
         RPT_PUESTOS             : 'puestos',
@@ -141,17 +142,17 @@ const Config = (() => {
 // 
 // LISTADO DE ATRIBUTOS DINÁMICOS DE "ENTIDADES DEL SOCORRO"
 // Enumeraciones de nombres de atributos para la definición de los
-// "Esquemas" de cada una de las "entidades del socorro".
+// "Desgloses" de cada una de las "Entidades del Socorro".
 // 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-Config.Esquema    = [Config.ESQ_NOMBRE,
-                     Config.ESQ_CLAVE,
-                     Config.ESQ_IDENTIFICADOR,
-                     Config.ESQ_ENTIDAD,
-                     Config.ESQ_SUPERIOR,
-                     Config.ESQ_CONTENEDOR,
-                     Config.ESQ_AGRUPACION,
-                     Config.ESQ_ATRIBUTO];
+Config.Desglose   = [Config.DES_NOMBRE,
+                     Config.DES_CLAVE,
+                     Config.DES_IDENTIFICADOR,
+                     Config.DES_ENTIDAD,
+                     Config.DES_SUPERIOR,
+                     Config.DES_CONTENEDOR,
+                     Config.DES_AGRUPACION,
+                     Config.DES_ATRIBUTO];
 
 Config.Escena     = [Config.ESC_ANCHO,
                      Config.ESC_ALTO,
