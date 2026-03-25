@@ -13,12 +13,14 @@ import CONFIG from './config';
  * El "Desglose" es el documento fundamental para la especificación de las "Entidades
  * del Socorro", ya que permite la definición de éstas no como objetos estáticos, sino
  * como colecciones de atributos dinámicos cuyos valores pueden ser recalculados durante  
- * el ciclo de ejecución de la "Escena". En otras palabras, la mayoría de las "Entidades 
- * del Socorro" son desglosadas en listados de de atributos que se evalúan en tiempo de
+ * el ciclo de ejecución de la "Obra". En otras palabras, la mayoría de las "Entidades 
+ * del Socorro" son desglosadas en listados de atributos que se evalúan en tiempo de
  * ejecución permitiendo, de esta manera, la implementación de lógica generativa.
  * 
- * DESGLOSE DE LOS PROTAGONISTAS DE LA OBRA
- * Los "Desgloses" que definen a las "Entidades del Socorro" protagonistas de la "Obra":
+ * DEFINICIÓN DESGLOSADA DE LOS PROTAGONISTAS DE LA OBRA
+ * Existen tres "Entidades del Socorro"(*) con un rol protagónico en la representación de
+ * la "Obra": la "Escena", el "Actor" y el "Reparto". Todas ellas hacen uso del objeto 
+ * "Desglose" (lo extienden) para almacenar las definiciones de sus atributos dinámicos.
  * 
  *  - La "Escena"  : representación de contenidos visuales en el espacio (lienzo HTML) 
  *                   y en en el tiempo. Una "Obra" puede incluir múltiples "Escenas". 
@@ -30,24 +32,26 @@ import CONFIG from './config';
  *                   predeterminados dentro de la "Escena". El "Reparto" dirige a los
  *                   "Actores", determina sus posiciones en la "Escena", controla sus
  *                   entradas y salidas de cuadro y, también, puede coreografiar a otros
- *                   "Repartos" (subrepartos) dentro de éste. 
- * NOTA: Existe una cuarta entidad que es el "Repartidor". Éste no es más que un caso
- * particular de "Reparto" conformado por un único "Actor", denominado "Influenciador",
- * que tiene injerencia en las trayectorias de los restantes "Actores" del "Reparto".
+ *                   "Repartos" (subrepartos) dentro de éste.
  * 
- * DESGLOSES PARA DEFINICIONES DINÁMICAS
+ * (*) Existe una cuarta entidad importante que es el "Repartidor". Éste no es más que un 
+ * caso particular de "Reparto" conformado por un único "Actor", denominado "Influenciador",
+ * y que tiene injerencia en las trayectorias de los restantes "Actores" del "Reparto".
+ * 
+ * DEFINICIONES DINÁMICAS DESGLOSADAS
  * Una de las funciones principales del "Desglose" es la definición de los atributos de las
  * "Entidades del Socorro", pero su relevancia radica en el hecho que, en lugar de definir
  * valores estáticos para los atributos, posibilita detallar la manera en que sus valores serán
  * calculados (evaluados) dinámicamente durante la representación de la "Obra". El "Desglose"
  * especifica la manera de calcular el valor de estos atributos en tiempo de ejecución. Para 
- * esto, hay dos "Entidades del Socorro" cuyos "Desgloses" representan el motor para el cálculo
- * dinámico y la lógica generativa (rasgo fundamental del módulo "S.O.S").
+ * esto, hay dos "Entidades del Socorro" que representan el motor para el cálculo dinámico y 
+ * para la implementación de la la lógica generativa (rasgo fundamental del módulo "S.O.S").
+ * Estas entidades son la "Variable" y el "Variador", ambas definidas, también, como "Desgloses".
  * 
  * - La "Variable" : representación de un método de cálculo dinámico de un atributo del
  *                   "Desglose". En general, definen un mapeo entre un rango de valores 
  *                   de origen y un rango de valores de destino, donde es posible añadir
- *                   variaciones aleatorias o ruido en el cálculo del resultado.
+ *                   variaciones aleatorias o ruido sobre el cálculo del resultado.
  * - El "Variador" : es simplemente un caso particular de una "Variable", donde el método
  *                   de cálculo es aleatorio (por ruido "perlin"). Es decir, se trata de
  *                   una "Variable" que mapea ruido al azar entre 0 y 1 a un rango.
@@ -106,8 +110,8 @@ function Desglose(S, nombreDesglose) {
      * remarcar de esta función es que, si bien permite definir los valores individuales
      * de los atributos, en la mayoría de los casos, lo que se almacena es la definición
      * acerca de cómo calcular el valor del atributo dinámicamente en tiempo de ejecución.
-     * Esto se consigue asociando objetos de tipo "Variable" o "Variador" en el desglose
-     * de la definición del atributo.
+     * Esto se consigue asociando objetos de tipo "Variable" o "Variador" en la definición
+     * desglosada del atributo.
      * 
      * Adicionalmente, la función "def" permite asociar otras "Entidades del Socorro" en 
      * el "Desglose" de un atributo, estableciendo de esta forma jerarquías de entidades. 
@@ -127,9 +131,9 @@ function Desglose(S, nombreDesglose) {
      * Mediante esta función es posible definir jerarquías dentro del "Desglose". En decir,
      * además de poder definir valores simples para los atributos, es posible definir otro
      * "Desglose" como valor de un atributo. En este caso, el valor del atributo pasa a ser
-     * otro objeto JavaScript con el "Desglose" de segundo nivel ("Subdesglose").
+     * otro objeto JavaScript con la definición desglosada de segundo nivel ("Subdesglose").
      * 
-     *   def({atributo: {subatributo1 : valor1,
+     *   def({atributo: {subatributo1 : valor1,   // El valor de "atributo" es otro desglose 
      *                   subatributo2 : valor2,
      *                   ...
      *                   subatributoN : valorN}
@@ -181,7 +185,7 @@ function Desglose(S, nombreDesglose) {
      * 
      * La función puede recibir un único argumento (el nombre del atributo del "Desglose"
      * del que se quiere obtener su valor) o más de un argumento (en caso que se desee
-     * obtener el valor de un atributo de un subnibel del "Desglose"). 
+     * obtener el valor de un atributo de un subnivel del "Desglose"). 
      * EJEMPLOS:
      * 
      *  val(<nombre>)            : Devuelve el valor (evaluado) del atributo indicado 
@@ -211,9 +215,11 @@ function Desglose(S, nombreDesglose) {
      *           });
      *
      * Los dos ejemplos anteriores hacen exactamente lo mismo. Independientemente de la forma en
-     * que se detalle, el "Desglose" termina almacenando las "Entidades del Socorro" referenciadas. 
-     * Luego, al momento se solicitar el valor de estos atributos, la evaluación sólo tendrá lugar
-     * al tratarse de una "Variable" o "Variador". En cualquier otro caso, se retorna el objeto.
+     * que se detalle, el "Desglose" termina almacenando internamente las "Entidades del Socorro"
+     * referenciadas, es decir, a partir de las definciones desglosadas se instancian las "Entidades
+     * del Socorro" correspondientes para ser almacenadas. Luego, al momento se solicitar el valor
+     * de estos atributos, la evaluación sólo tendrá lugar al tratarse de una "Variable" o "Variador".
+     * En cualquier otro caso, se retorna el objeto o enttidad que se haya definido en el "Desglose".
      * 
      *   esc.val('actor')                    => Retorna el objeto de tipo "Actor" almacenado (sin evaluar)
      *   esc.val('actor', 'estilo')          => Retorna el objeto de tipo "Estilo" almacenado (sin evaluar)
@@ -228,7 +234,6 @@ function Desglose(S, nombreDesglose) {
         return atributos.length > 0 ? _VAL$obtener(_VAL, ...atributos) : null;
     };
   
-    
     /**
      * heredar
      * Busca el valor del atributo con el nombre indicado en el argumento, 
@@ -247,21 +252,19 @@ function Desglose(S, nombreDesglose) {
         return _sup.hasOwnProperty(nombreAtr) ? (_sup[nombreAtr] ?? _entidadSuperior.heredar(nombreAtr, incluirEscena)) : undefined; 
     };
     
-
     /**
      * extender
-     * Devuelve un nuevo objeto (vacío) que extiende del "Desglose" actual
-     * para ser albergar las definiciones de una "Entidad del Socorro". Toda
-     * "Entidad del Socorro" extiende del "Desglose" que aloja sus definiciones.
+     * Devuelve un nuevo objeto (vacío) que extiende del "Desglose" actual para 
+     * albergar las definiciones de una "Entidad del Socorro". Toda "Entidad del 
+     * Socorro" extiende de un objeto "Desglose" que aloja sus definiciones.
      * El argumento "subentidad" es opcional. En caso de ser indicado, se incluye
-     * a ésta en el medio de la cadena de herencias. En otras palabras, la entidad
+     * a ésta en el medio de la cadena de herencia. En otras palabras, la entidad
      * extenderá de la subentidad quien, a su vez, extenderá del "Desglose". 
      */
     _DES.extender = (subentidad) => {
         _DES[CONFIG.DES_ENTIDAD] = subentidad ? S.O.S.revelar({}, subentidad, _DES) : S.O.S.revelar({}, _DES);
         return _DES[CONFIG.DES_ENTIDAD];
     };
-    
     
     /**
      * exportar
@@ -271,7 +274,6 @@ function Desglose(S, nombreDesglose) {
     _DES.exportar = (indentacion = "") => {
       return _EXPORT$convertirATexto(_VAL, indentacion);
     };
-    
     
     /**
      * alias
@@ -312,7 +314,7 @@ function Desglose(S, nombreDesglose) {
      * de un "Desglose" es que posibilitan no sólo la asociación de valores simples a los atributos, 
      * sino la definición de la manera en que dicho valor debe ser calculado. En otras palabras: 
      * 
-     *            EL DESGLOSE DE UN ATRIBUTO DE UNA ENTIDAD DETALLA LA MANERA  
+     *            LA DEFINICIÓN DESGLOSADA DE UN ATRIBUTO DETALLA LA MANERA  
      *            DE CALCULAR SU VALOR DINÁMICAMENTE, EN TIEMPO DE EJECUCIÓN.
      * 
      * En el "Desglose", cada atributo puede albergar:
@@ -328,8 +330,8 @@ function Desglose(S, nombreDesglose) {
      * dinámicamente, en tiempo de ejecución (implementación de la lógica generativa de la "Obra").
      * 
      * En el caso de las "Entidades del Socorro", esta función admite que sean definidas, ya sea mediante
-     * un objeto JSON conteniendo una colección de pares <nombreAtributo: valor> o mediante el uso de 
-     * las entidades propiamente dichas. Por ejemplo:
+     * un objeto JSON conteniendo una colección de pares <nombreAtributo: valor> o mediante la instanciación
+     * de las entidades propiamente dichas. Por ejemplo:
      * 
      *   esc.def({actor: {origen   : {x:10, y:-50, z:0},         // Definición de un "Actor" de la "Escena" a 
      *                    velocidad: {x:2, y:1}                  // través de un objeto JSON. Esta definición 
@@ -416,7 +418,7 @@ function Desglose(S, nombreDesglose) {
     
     /**
      * _DEF$metadefinicion
-     * Función de uso interno que permite completar, en el "Desglose" actual, la información de tipo
+     * Función de uso interno que permite definir, en el "Desglose" actual, la información de tipo
      * complementaria que lo vincula con un "Desglose" superior. Estos datos se rellenan cuando
      * una "Entidad del Socorro" es utilizada como valor de un atributo en la definición desglosada
      * de otra entidad. Por ejemplo, cuando a través del método "def" se define un "Actor" como
@@ -563,7 +565,9 @@ function Desglose(S, nombreDesglose) {
      * _EXPORT$convertirATexto
      * Función privada que convierte a texto (en formato JSON) cada uno de
      * los pares <atributo, valor> del "Desglose" recibido como argumento.
-     * La función se invoca recursivamente en caso de detectar "Subdesgloses".
+     * En otras palabras, retorna la definición desglosada de una "Entidad
+     * del Socorro". La función se invoca a sí misma, recursivamente en 
+     * caso de detectar "Subdesgloses".
      */
     function _EXPORT$convertirATexto(atributos, indentacion = "") {
       let esUnObjeto = true;
@@ -617,7 +621,7 @@ function Desglose(S, nombreDesglose) {
     
     /**
      * _EXPORT$formatearRegistroExportado
-     * Función interna que construye una línea del formato de exportación
+     * Función interna que construye una línea de la salida del texto de exportación
      */
     function _EXPORT$formatearRegistroExportado(indentacion, atrNombre, atrValor, esUnObjeto = true) {
         if (esUnObjeto)
